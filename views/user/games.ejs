@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Store</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary-color: #4d4752;
+      --secondary-color: #444346;
+      --accent-color: #5d5961;
+      --dark-color: #121212;
+      --light-color: #ffffff;
+      --gray-color: #333333;
+      --light-gray: #f5f5f5;
+      --text-color: #333333;
+      --transition-speed: 0.3s;
+      --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+      --hover-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+      --star-color: #FFD700;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      color: var(--text-color);
+      line-height: 1.6;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Store Header */
+    .store-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .store-header h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--dark-color);
+      position: relative;
+    }
+
+    .store-header h1::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background-color: var(--primary-color);
+      border-radius: 2px;
+    }
+
+    /* Search Container */
+    .search-container {
+      display: flex;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px 0 0 8px;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(126, 34, 206, 0.2);
+    }
+
+    .search-btn {
+      padding: 0 20px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0 8px 8px 0;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .search-btn:hover {
+      background-color: var(--secondary-color);
+    }
+
+    /* Main Layout */
+    .main-content {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    /* Filter Section */
+    .filter-container {
+      background-color: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: fit-content;
+    }
+
+    .filter-container h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--dark-color);
+      margin-bottom: 5px;
+    }
+
+    .filter-group {
+      margin-bottom: 20px;
+    }
+
+    .filter-group h3 {
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      color: var(--gray-color);
+      font-weight: 600;
+    }
+
+    .filter-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .filter-options label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--gray-color);
+      padding: 5px 0;
+      transition: color 0.3s ease;
+    }
+
+    .filter-options label:hover {
+      color: var(--primary-color);
+    }
+
+    .filter-options input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary-color);
+      cursor: pointer;
+    }
+
+    .price-range {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .price-slider {
+      width: 100%;
+    }
+
+    .price-slider input {
+      width: 100%;
+      accent-color: var(--primary-color);
+      height: 8px;
+      cursor: pointer;
+    }
+
+    .price-values {
+      font-size: 15px;
+      color: var(--gray-color);
+      text-align: right;
+    }
+
+    .apply-btn, .reset-btn {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      font-size: 15px;
+      width: 100%;
+      margin-bottom: 20px;
+      margin-top: 30px;
+    }
+
+    .apply-btn {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .apply-btn:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .reset-btn {
+      background-color: #e0e0e0;
+      color: var(--gray-color);
+    }
+
+    .reset-btn:hover {
+      background-color: #d0d0d0;
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Sort Section */
+    .sort-container {
+      margin-bottom: 30px;
+    }
+
+    .sort-container h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--dark-color);
+      margin-bottom: 15px;
+    }
+
+    .sort-select {
+      padding: 10px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-color);
+      background-color: #f0f0f0;
+      width: 100%;
+      max-width: 100px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23333333' width='18px' height='18px'%3E%3Cpath d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .sort-select:hover {
+      border-color: var(--primary-color);
+      background-color: #e0e0e0;
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(126, 34, 206, 0.2);
+    }
+
+    /* Games Section */
+    .games-section {
+      margin-bottom: 50px;
+    }
+
+    .games-section h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--dark-color);
+      margin-bottom: 25px;
+      position: relative;
+      padding-bottom: 10px;
+    }
+
+    .games-section h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 50px;
+      height: 3px;
+      background-color: var(--primary-color);
+      border-radius: 2px;
+    }
+
+    /* Games Grid */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 30px;
+      width: 100%;
+    }
+
+    /* Enhanced Game Card */
+    .game-card {
+      background-color: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(0);
+    }
+
+    .game-card:hover {
+      transform: translateY(-10px);
+      box-shadow: var(--hover-shadow);
+    }
+
+    .game-image-container {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 2/3;
+    }
+
+    .game-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .game-card:hover .game-image {
+      transform: scale(1.05);
+    }
+
+    /* Wishlist Button */
+    .wishlist-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+      transition: all 0.3s ease;
+      border: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .wishlist-btn:hover {
+      background-color: white;
+      transform: scale(1.1);
+    }
+
+    .wishlist-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: transparent;
+      stroke: var(--primary-color);
+      stroke-width: 2;
+      transition: all 0.3s ease;
+    }
+
+    .wishlist-btn.active svg {
+      fill: rgb(214, 41, 41);
+    }
+
+    /* Enhanced Game Info Section */
+    .game-info {
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-grow: 1;
+      position: relative;
+    }
+
+    /* Enhanced Game Title */
+    .game-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--dark-color);
+      text-align: center;
+      margin-bottom: 10px;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Enhanced Price Display */
+    .game-price {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gray-color);
+      text-align: center;
+    }
+
+    .free-tag {
+      color: #4CAF50;
+      font-weight: bold;
+      background-color: rgba(76, 175, 80, 0.1);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      display: inline-block;
+    }
+
+    .original-price {
+      text-decoration: line-through;
+      color: #999;
+      font-size: 0.85rem;
+      margin-right: 5px;
+    }
+
+    .regular-price {
+      color: var(--gray-color);
+      font-weight: 600;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+      margin-top: 30px;
+    }
+
+    .empty-state i {
+      font-size: 50px;
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+
+    .empty-state p {
+      margin-bottom: 25px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .empty-state button {
+      padding: 14px 25px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .empty-state button:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(126, 34, 206, 0.3);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 30px 0;
+      gap: 8px;
+    }
+
+    .pagination a {
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      background-color: white;
+      color: var(--gray-color);
+      border-radius: 4px;
+      min-width: 40px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .pagination a:hover:not(.disabled) {
+      background-color: var(--light-gray);
+    }
+
+    .pagination a.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    .pagination a.disabled {
+      color: #ccc;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Footer */
+    footer {
+      background-color: var(--dark-color);
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin-top: 50px;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.5s ease-out forwards;
+      animation-delay: calc(var(--animation-order) * 0.1s);
+    }
+
+    /* New tag for popular games */
+    .popular-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #ff6b6b;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 1;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .new-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #4ecdc4;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 1;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 1200px) {
+      .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 25px;
+      }
+    }
+
+    @media (max-width: 992px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+
+      .filter-container {
+        order: 2;
+      }
+
+      .games-section {
+        order: 1;
+      }
+
+      .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+      }
+
+      .store-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .search-container {
+        display: none;
+        position: relative;
+        margin-right: 10px;
+      }
+
+      .search-container.active {
+        display: block;
+      }
+
+      .search-input {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        color: rgb(0, 0, 0);
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 14px;
+        width: 180px;
+        outline: none;
+      }
+
+      .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .search-btn i {
+        font-size: 16px;
+      }
+
+      .search-btn:hover {
+        background-color: #0056b3;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 20px;
+      }
+
+      .sort-select {
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .games-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      .game-title {
+        font-size: 1rem;
+      }
+
+      .game-price {
+        font-size: 0.9rem;
+      }
+
+      .store-header h1 {
+        font-size: 2rem;
+      }
+    }
+
+    /* Touch-friendly Improvements */
+    @media (hover: none) {
+      .filter-options label, 
+      .apply-btn, 
+      .reset-btn, 
+      .sort-select {
+        padding: 12px;
+        min-height: 44px;
+      }
+
+      .wishlist-btn {
+        width: 44px;
+        height: 44px;
+      }
+    }
+  </style>
+</head>
+<body class="<%= user ? 'logged-in' : '' %>">
+  <%- include('partials/header') %>
+
+  <!-- Main Content -->
+  <main>
+    <div class="container">
+      <!-- Header with title and search -->
+      <header class="store-header">
+        <h1>Game Store</h1>
+      </header>
+
+      <!-- Main Layout -->
+      <div class="main-content">
+        <!-- Games Section -->
+        <section class="games-section">
+          <!-- Sort Section -->
+          <div class="sort-container">
+            <form action="/games" method="GET" id="sortForm" class="search-form">
+              <!-- Search Input -->
+              <input
+                type="text"
+                name="search"
+                placeholder="Search games..."
+                value="<%= filters.search %>"
+                class="search-input"
+              />
+
+              <!-- Sort Dropdown -->
+              <select name="sort" class="sort-select" onchange="document.getElementById('sortForm').submit()">
+                <option value="#">Sort By</option>
+                <option value="name-asc" <%= filters.sort === 'name-asc' ? 'selected' : '' %>>A - Z</option>
+                <option value="name-desc" <%= filters.sort === 'name-desc' ? 'selected' : '' %>>Z - A</option>
+                <option value="price-asc" <%= filters.sort === 'price-asc' ? 'selected' : '' %>>Price: Low to High</option>
+                <option value="price-desc" <%= filters.sort === 'price-desc' ? 'selected' : '' %>>Price: High to Low</option>
+              </select>
+
+              <!-- Hidden inputs to preserve filters -->
+              <% if (Array.isArray(filters.category) && filters.category.length > 0) { %>
+                <% filters.category.forEach(cat => { %>
+                  <input type="hidden" name="category" value="<%= cat %>">
+                <% }) %>
+              <% } else if (typeof filters.category === 'string' && filters.category) { %>
+                <% filters.category.split(',').forEach(cat => { %>
+                  <input type="hidden" name="category" value="<%= cat %>">
+                <% }) %>
+              <% } %>
+
+              <% if (Array.isArray(filters.company) && filters.company.length > 0) { %>
+                <% filters.company.forEach(comp => { %>
+                  <input type="hidden" name="company" value="<%= comp %>">
+                <% }) %>
+              <% } else if (typeof filters.company === 'string' && filters.company) { %>
+                <% filters.company.split(',').forEach(comp => { %>
+                  <input type="hidden" name="company" value="<%= comp %>">
+                <% }) %>
+              <% } %>
+
+              <% if (filters.isFree) { %>
+                <input type="hidden" name="isFree" value="true" />
+              <% } %>
+
+              <% if (filters.maxPrice) { %>
+                <input type="hidden" name="maxPrice" value="<%= filters.maxPrice %>">
+              <% } %>
+
+              <input type="hidden" name="page" value="1">
+            </form>
+          </div>
+
+          <!-- Games Grid -->
+          <h2>All Games</h2>
+          <div class="games-grid" id="gamesGrid">
+            <% if (products.length > 0) { %>
+              <% products.forEach((product, index) => { %>
+                <div class="game-card fade-in-up" style="--animation-order: <%= index % 4 %>;">
+                  <div class="game-image-container">
+                    <button class="wishlist-btn" data-product-id="<%= product._id %>" aria-label="Add to wishlist">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    </button>
+                    <a href="/product-details/<%= product._id %>">
+                      <img src="<%= product.poster || 'https://placehold.co/400x600/333/white?text=' + encodeURIComponent(product.name) %>" alt="<%= product.name %>" class="game-image">
+                    </a>
+                  </div>
+                  <div class="game-info">
+                    <a href="/product-details/<%= product._id %>">
+                      <h3 class="game-title"><%= product.name %></h3>
+                    </a>
+                    <div class="game-price">
+                      <% if (product.isFree) { %>
+                        <span class="free-tag">FREE TO PLAY</span>
+                      <% } else { %>
+                        <% if (product.salesPrice < product.regularPrice) { %>
+                          <span class="original-price">₹<%= product.regularPrice.toLocaleString() %></span>
+                          <span class="discounted-price">₹<%= product.salesPrice.toLocaleString() %></span>
+                        <% } else { %>
+                          <span class="regular-price">₹<%= product.salesPrice.toLocaleString() %></span>
+                        <% } %>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+
+          <!-- Empty State -->
+          <% if (products.length === 0) { %>
+            <div class="empty-state">
+              <i class="fas fa-search"></i>
+              <h3>No games found</h3>
+              <p>We couldn't find any games matching your criteria.</p>
+              <a href="/games"><button>Clear All Filters</button></a>
+            </div>
+          <% } %>
+
+          <!-- Pagination -->
+          <% if (totalPages > 1) { %>
+            <div class="pagination">
+              <a href="/games?<%= queryString ? queryString.replace(/&?page=[^&]*/, '') + '&' : '' %>page=<%= currentPage - 1 %>" class="<%= currentPage === 1 ? 'disabled' : '' %>"><i class="fas fa-chevron-left"></i></a>
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                <a href="/games?<%= queryString ? queryString.replace(/&?page=[^&]*/, '') + '&' : '' %>page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+              <% } %>
+              <a href="/games?<%= queryString ? queryString.replace(/&?page=[^&]*/, '') + '&' : '' %>page=<%= currentPage + 1 %>" class="<%= currentPage === totalPages ? 'disabled' : '' %>"><i class="fas fa-chevron-right"></i></a>
+            </div>
+          <% } %>
+        </section>
+
+        <!-- Filter Section -->
+        <aside class="filter-container">
+          <h2>Filters</h2>
+          <form action="/games" method="GET" id="filterForm">
+            <!-- Hidden inputs to preserve other query parameters -->
+            <% if (filters.search) { %>
+              <input type="hidden" name="search" value="<%= filters.search %>" placeholder:"search games...">
+            <% } %>
+            <% if (filters.sort) { %>
+              <input type="hidden" name="sort" value="<%= filters.sort %>">
+            <% } %>
+            <input type="hidden" name="page" value="1">
+
+            <!-- Category Filter -->
+            <div class="filter-group">
+              <h3>Category</h3>
+              <div class="filter-options">
+                <% category.forEach(cat => { %>
+                  <label>
+                    <input type="checkbox" name="category" value="<%= cat._id %>" 
+                      <%= Array.isArray(filters.category) ? 
+                          filters.category.includes(cat._id.toString()) ? 'checked' : '' : 
+                          typeof filters.category === 'string' && filters.category.split(',').includes(cat._id.toString()) ? 'checked' : '' 
+                      %>> <%= cat.name %>
+                  </label>
+                <% }) %>
+              </div>
+            </div>
+
+            <!-- Price Range Filter -->
+            <div class="filter-group">
+              <h3>Price Range</h3>
+              <div class="price-range">
+                <div class="price-slider">
+                  <input type="range" name="maxPrice" id="priceSlider" min="0" max="5000" step="100" value="<%= filters.maxPrice || 5000 %>">
+                </div>
+                <div class="price-values">
+                  <span>Max Price: ₹<span id="priceValue"><%= filters.maxPrice || 5000 %></span></span>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="apply-btn">Apply Filters</button>
+            <a href="/games" class="reset-btn">Reset Filters</a>
+          </form>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Price Slider
+      const priceSlider = document.getElementById('priceSlider');
+      const priceValue = document.getElementById('priceValue');
+      if (priceSlider && priceValue) {
+        priceSlider.addEventListener('input', function() {
+          priceValue.textContent = this.value;
+        });
+      }
+
+      // Search Form Submission
+      const searchForm = document.getElementById('sortForm');
+      if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+          const pageInput = document.createElement('input');
+          pageInput.type = 'hidden';
+          pageInput.name = 'page';
+          pageInput.value = '1';
+          this.appendChild(pageInput);
+        });
+      }
+
+      // Wishlist Functionality
+      const wishlistBtns = document.querySelectorAll('.wishlist-btn');
+      let isShowingNotification = false;
+
+      async function checkWishlistStatus(productId, button) {
+        try {
+          console.log('Checking wishlist status for product:', productId);
+          const response = await fetch(`/wishlist/status/${productId}`, {
+            credentials: 'same-origin'
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to check wishlist status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Wishlist status response:', data);
+
+          if (typeof data.isInWishlist !== 'boolean') {
+            throw new Error('Invalid wishlist status response');
+          }
+
+          if (data.isInWishlist) {
+            button.classList.add('active');
+          } else {
+            button.classList.remove('active');
+          }
+        } catch (err) {
+          console.error('Error checking wishlist status:', err);
+        }
+      }
+
+      wishlistBtns.forEach(btn => {
+        const productId = btn.dataset.productId;
+
+        if (!productId) {
+          console.error('Missing product ID on wishlist button');
+          return;
+        }
+
+        console.log('Initializing wishlist button for product:', productId);
+        checkWishlistStatus(productId, btn);
+
+        btn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Wishlist button clicked for product:', productId);
+
+          const isLoggedIn = document.body.classList.contains('logged-in');
+          console.log('Is logged in:', isLoggedIn);
+
+          if (!isLoggedIn) {
+            showNotification('Please log in to use wishlist');
+            window.location.href = '/login';
+            return;
+          }
+
+          const isActive = this.classList.contains('active');
+          const url = isActive
+            ? `/removefromwishlist/${productId}`
+            : `/addwishlist/${productId}`;
+          const method = isActive ? 'DELETE' : 'POST';
+          console.log('Sending request:', method, url);
+
+          try {
+            const response = await fetch(url, {
+              method: method,
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'same-origin'
+            });
+
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+              if (response.status === 400) {
+                const result = await response.json();
+                showNotification(result.message || 'Product is already in the cart');
+                return;
+              }
+              if (response.status === 401) {
+                showNotification('Please log in to use wishlist');
+                window.location.href = '/login';
+                return;
+              }
+              throw new Error(`Request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Response data:', result);
+
+            this.classList.toggle('active');
+            showNotification(result.message);
+
+            // Animation
+            this.animate([
+              { transform: 'scale(1)' },
+              { transform: 'scale(1.3)' },
+              { transform: 'scale(1)' }
+            ], {
+              duration: 300,
+              easing: 'ease-in-out'
+            });
+
+          } catch (err) {
+            console.error('Error updating wishlist:', err);
+            showNotification('Failed to update wishlist');
+          }
+        });
+      });
+
+      function showNotification(message) {
+        if (isShowingNotification) return;
+        isShowingNotification = true;
+
+        const notification = document.createElement('div');
+        notification.className = 'wishlist-notification';
+        notification.textContent = message;
+
+        Object.assign(notification.style, {
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: 'var(--primary-color, #4d4752)',
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '4px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          zIndex: '1000',
+          opacity: '0',
+          transition: 'opacity 0.3s ease'
+        });
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.style.opacity = '1';
+        }, 10);
+
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          setTimeout(() => {
+            document.body.removeChild(notification);
+            isShowingNotification = false;
+          }, 300);
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>

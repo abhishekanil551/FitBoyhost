@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITBOY Admin - Category Management</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <%- include('partials/sidebar', {page: 'category-management'}) %>
+        
+        <div class="main-content">
+            <%- include('partials/header') %>
+        
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <h1 class="page-title">Category Management</h1>
+                    <button class="add-button" id="addCategoryBtn">Add New Category</button>
+                </div>
+                
+                <!-- Add Category Modal -->
+                <div id="categoryModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h2>Add New Category</h2>
+                        <form id="categoryForm" method="post" action="/admin/add-Category" onsubmit="return handleFormSubmit(event)">
+                            <div class="form-group">
+                                <label for="categoryName">Category Name:</label>
+                                <input type="text" id="categoryName" name="categoryName" >
+                                <div id="categoryNameError" class="error-message" style="display: none;"></div>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoryDescription">Description:</label>
+                                <textarea id="categoryDescription" name="categoryDescription"></textarea>
+                                <div id="categoryDescriptionError" class="error-message" style="display: none;"></div>
+                            </div>
+                            <button type="submit" class="submit-button">Save Category</button>
+                        </form>
+                    </div>
+                </div>
+                
+
+
+
+                <!-- Edit Category Modal -->
+                <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Edit Category</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editCategoryForm">
+                                    <input type="hidden" id="editCategoryId">
+                                    
+                                    <div class="mb-3">
+                                        <label for="editCategoryName" class="form-label">Category Name</label>
+                                        <input type="text" class="form-control" id="editCategoryName" required>
+                                        <div id="editCategoryNameError" class="invalid-feedback"></div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="editCategoryDescription" class="form-label">Description</label>
+                                        <textarea class="form-control" id="editCategoryDescription" rows="3" required></textarea>
+                                        <div id="editCategoryDescriptionError" class="invalid-feedback"></div>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                
+              <!-- searchContainer -->
+                <div class="filter-bar">
+                    <form method="get" action="/admin/category-management">
+                        <div class="search-box">
+                            <input type="text" name="search" placeholder="Search categories..." value="<%= search || '' %>">
+                            <button type="submit" class="search-button">Search</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="data-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% categoryData.forEach((category) => { %>
+                                <tr>
+                                    <td><%= category.name %></td>
+                                    <td><%= category.description %></td>
+                                    <td>
+                                        <span class="status-badge <%= category.isListed ? 'status-active' : 'status-inactive' %>">
+                                            <%= category.isListed ? 'Active' : 'Inactive' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <%if(!category.isListed){%>
+                                            <a href="/admin/list-category?id=<%=category._id%>" class="action-btn">List</a>
+                                        <%}else{%>
+                                            <a href="/admin/unlist-category?id=<%=category._id%>" class="action-btnn">Unlist</a>
+                                        <%}%>
+                                        <button type="button" class="action-btn" onclick="openEditModal('<%= category._id %>', '<%= category.name %>', '<%= category.description %>')">Edit</button>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <%- include('partials/pagination', {currentPage: 1, totalPages: 2}) %>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    
+    <script>
+        // Initialize modal
+const editCategoryModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+
+// Function to open edit modal
+function openEditModal(categoryId, categoryName, categoryDescription) {
+    document.getElementById('editCategoryId').value = categoryId;
+    document.getElementById('editCategoryName').value = categoryName;
+    document.getElementById('editCategoryDescription').value = categoryDescription;
+    
+    // Clear previous errors
+    document.getElementById('editCategoryNameError').textContent = '';
+    document.getElementById('editCategoryDescriptionError').textContent = '';
+    
+    editCategoryModal.show();
+}
+
+// Handle edit form submission
+document.getElementById('editCategoryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const categoryId = document.getElementById('editCategoryId').value;
+    const name = document.getElementById('editCategoryName').value.trim();
+    const description = document.getElementById('editCategoryDescription').value.trim();
+    
+    // Validate form
+    if (!validateEditForm(name, description)) {
+        return;
+    }
+
+    // Show loading state
+    const submitBtn = document.querySelector('#editCategoryForm button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+    try {
+        const response = await fetch(`/admin/edit-category/${categoryId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                categoryName: name,
+                description: description
+            })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to update category');
+        }
+
+        editCategoryModal.hide();
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: data.message || 'Category updated successfully',
+        }).then(() => {
+            location.reload();
+        });
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: error.message || 'An error occurred while updating the category',
+        });
+        console.error('Error:', error);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Save Changes';
+    }
+});
+
+// Validate edit form
+function validateEditForm(name, description) {
+    let isValid = true;
+    
+    // Clear previous errors
+    document.getElementById('editCategoryNameError').textContent = '';
+    document.getElementById('editCategoryDescriptionError').textContent = '';
+    
+    // Validate name
+    if (!name) {
+        document.getElementById('editCategoryNameError').textContent = 'Category name is required';
+        isValid = false;
+    } else if (name.length < 3) {
+        document.getElementById('editCategoryNameError').textContent = 'Name must be at least 3 characters';
+        isValid = false;
+    }
+    
+    // Validate description
+    if (!description) {
+        document.getElementById('editCategoryDescriptionError').textContent = 'Description is required';
+        isValid = false;
+    } else if (description.length < 10) {
+        document.getElementById('editCategoryDescriptionError').textContent = 'Description must be at least 10 characters';
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+        // Handle add form submission
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            if (!validateForm()) {
+                return false;
+            }
+
+            const name = document.getElementById('categoryName').value.trim();
+            const description = document.getElementById('categoryDescription').value.trim();
+
+            fetch('/admin/add-category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name, description })
+            })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Status: ${response.status}, Message: ${errorText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data.message,
+                }).then(() => {
+                    location.reload();
+                });
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops!',
+                    text: error.message,
+                });
+            });
+        }
+
+        function validateForm() {
+            clearErrorMessages();
+
+            const nameInput = document.getElementById('categoryName');
+            const descInput = document.getElementById('categoryDescription');
+
+            const name = nameInput.value.trim();
+            const description = descInput.value.trim();
+
+            let isValid = true;
+
+            // Validate Name
+            if (!name) {
+                displayErrorMessage('categoryNameError', 'Category name is required');
+                isValid = false;
+            } else if (name.length < 3) {
+                displayErrorMessage('categoryNameError', 'Category name must be at least 3 characters');
+                isValid = false;
+            } else if (name.length > 50) {
+                displayErrorMessage('categoryNameError', 'Category name must not exceed 50 characters');
+                isValid = false;
+            }
+
+            // Validate Description
+            if (!description) {
+                displayErrorMessage('categoryDescriptionError', 'Category description is required');
+                isValid = false;
+            } else if (description.length < 10) {
+                displayErrorMessage('categoryDescriptionError', 'Description must be at least 10 characters');
+                isValid = false;
+            } else if (description.length > 200) {
+                displayErrorMessage('categoryDescriptionError', 'Description must not exceed 200 characters');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        function displayErrorMessage(errorId, message) {
+            const errorElement = document.getElementById(errorId);
+            if (errorElement) {
+                errorElement.innerText = message;
+                errorElement.style.display = 'block';
+                errorElement.style.color = 'red';
+            }
+        }
+
+        function clearErrorMessages() {
+            const errorElements = document.getElementsByClassName('error-message');
+            Array.from(errorElements).forEach(el => {
+                el.innerText = '';
+                el.style.display = 'none';
+            });
+        }
+    </script>
+    
+    <%- include('partials/footer') %>
+</body>
+</html>

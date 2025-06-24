@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITBOY Admin - Customer Management</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+
+</head>
+<body>
+    <div class="admin-container">
+        <%- include('partials/sidebar', {page: 'customer-management'}) %>
+        
+        <div class="main-content">
+            <%- include('partials/header') %>
+            
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <h1 class="page-title">Customer Management</h1>
+                </div>
+                
+                <form method="GET" action="/admin/customer-management" class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" name="search" placeholder="Search customers..." value="<%= search %>">
+                        <button type="submit" class="search-button">Search</button>
+                    </div>
+                </div>
+            </form>
+                
+                <div class="data-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th> Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <%for(let i=0; i<userData.length; i++){%>
+                            <tr>
+                                <td><%=userData[i].name%></td>
+                                <td><%=userData[i].email%></td>
+                    
+                                <td class="actions">
+                                    <!-- <button class="action-button edit" >Edit</button> -->
+                                    <%if(userData[i].isBlocked===false){%>
+                                            <a href="/admin/block-customer?id=<%=userData[i]._id%>" class="text-white"><button class="btn btn-success ">block</button></a>
+                            
+                                          <%}else{%>
+                                                <a href="/admin/unblock-customer?id=<%=userData[i]._id%>" class="text-white"><button class="btn btn-danger">unblock</button></a>
+                                              <%}%>
+                                <%}%>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+
+
+                <!-- Add Customer Modal -->
+<div id="add-customer-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Add New Customer</h2>
+            <button class="close-button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="add-customer-form">
+                <div class="form-group">
+                    <label for="add-name">Full Name</label>
+                    <input type="text" id="add-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="add-email">Email Address</label>
+                    <input type="email" id="add-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="add-password">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="add-password" name="password" required>
+                        <button type="button" class="toggle-password">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-button">Cancel</button>
+                    <button type="submit" class="save-button">Add Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Customer Modal -->
+<div id="edit-customer-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Customer</h2>
+            <button class="close-button">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="edit-customer-form">
+                <input type="hidden" id="edit-id" name="id">
+                <div class="form-group">
+                    <label for="edit-name">Full Name</label>
+                    <input type="text" id="edit-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-email">Email Address</label>
+                    <input type="email" id="edit-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-password">Password</label>
+                    <div class="password-input-container">
+                        <input type="password" id="edit-password" name="password" placeholder="Leave blank to keep current password">
+                        <button type="button" class="toggle-password">
+                            <i class="fa fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit-status">Status</label>
+                    <select id="edit-status" name="status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-button">Cancel</button>
+                    <button type="submit" class="save-button">Update Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+                
+                <%- include('partials/pagination', {currentPage: 1, totalPages: 10}) %>
+            </div>
+            
+        </div>
+    </div>
+    <script src="/js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+
+    <%- include('partials/footer') %>
+</body>
+</html>
+
+
+
+
+<script>
+    // Wait for the DOM to load
+    document.addEventListener('DOMContentLoaded', function () {
+        // MODAL ELEMENTS
+        const addModal = document.getElementById('add-customer-modal');
+        const editModal = document.getElementById('edit-customer-modal');
+        const addButton = document.querySelector('.add-button');
+        const closeButtons = document.querySelectorAll('.close-button');
+        const cancelButtons = document.querySelectorAll('.cancel-button');
+    
+        // OPEN ADD MODAL
+        if (addButton) {
+            addButton.addEventListener('click', function () {
+                addModal.classList.add('active');
+            });
+        }
+    
+        // CLOSE MODALS
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                button.closest('.modal').classList.remove('active');
+            });
+        });
+    
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                button.closest('.modal').classList.remove('active');
+            });
+        });
+    
+        // CLOSE MODAL when clicking outside modal-content
+        window.addEventListener('click', function (e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+    
+        // TOGGLE PASSWORD VISIBILITY
+        const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+        togglePasswordButtons.forEach(toggle => {
+            toggle.addEventListener('click', function () {
+                const input = this.previousElementSibling;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.innerHTML = '<i class="fa fa-eye-slash"></i>';
+                } else {
+                    input.type = 'password';
+                    this.innerHTML = '<i class="fa fa-eye"></i>';
+                }
+            });
+        });
+    
+        // (Optional) Setup Edit Modal Open when clicking edit button
+        const editButtons = document.querySelectorAll('.edit');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                editModal.classList.add('active');
+            });
+        });
+    
+    });
+    </script>
+    

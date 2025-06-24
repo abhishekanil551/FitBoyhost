@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Successful - FitBoy Games</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            color:white;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .nav-toggle span {
+            width: 25px;
+            height: 3px;
+            background: #333;
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+
+        /* Main Content */
+        .checkout-container {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+
+        .order-success {
+            background: white;
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .order-success::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .success-icon {
+            margin-bottom: 2rem;
+        }
+
+        .success-icon i {
+            font-size: 4rem;
+            color: #4CAF50;
+            animation: checkmark 0.6s ease-in-out;
+        }
+
+        @keyframes checkmark {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-title {
+            font-size: 2.5rem;
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .success-subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .order-details {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .order-id {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .order-id strong {
+            color: #333;
+        }
+
+        .order-id span {
+            color: #667eea;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            background: #e3f2fd;
+            padding: 0.3rem 0.8rem;
+            border-radius: 8px;
+            margin-left: 0.5rem;
+        }
+
+        .order-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-item {
+            text-align: left;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #333;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+
+        .info-value {
+            color: #666;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .success-btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 180px;
+            justify-content: center;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .secondary-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .secondary-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .email-notice {
+            background: #e8f5e8;
+            border: 1px solid #4CAF50;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            color: #2e7d32;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .email-notice i {
+            font-size: 2rem;
+        }
+
+        .email-notice-content {
+            flex: 1;
+            min-width: 200px;
+            text-align: left;
+        }
+
+        .email-notice-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .virtual-game-info {
+            background: #f0f7ff;
+            border: 1px solid #667eea;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            color: #333;
+        }
+
+        .virtual-game-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            color: #667eea;
+        }
+
+        .virtual-steps {
+            text-align: left;
+            list-style-position: inside;
+            margin: 1rem 0;
+        }
+
+        .virtual-steps li {
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .virtual-steps li i {
+            color: #667eea;
+            margin-right: 0.8rem;
+            margin-top: 0.2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .nav-toggle {
+                display: flex;
+            }
+
+            .checkout-container {
+                margin: 2rem auto;
+                padding: 0 1rem;
+            }
+
+            .order-success {
+                padding: 2rem 1.5rem;
+            }
+
+            .success-title {
+                font-size: 2rem;
+            }
+
+            .success-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .success-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .order-info {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .info-item {
+                text-align: center;
+            }
+        }
+
+        /* Loading animation for order ID */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Confetti animation */
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="checkout-container">
+        <div class="order-success">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1 class="success-title">Order Placed Successfully!</h1>
+            <p class="success-subtitle">
+                Thank you for purchasing from FitBoy Games, <%= userData.name || 'Customer' %>! Your virtual game order has been received.
+            </p>
+
+            <div class="order-details">
+                <div class="order-id">
+                    <strong>Order ID:</strong>
+                    <span id="success-order-id"><%= order._id || 'N/A' %></span>
+                </div>
+                <div class="order-info">
+                    <div class="info-item">
+                        <span class="info-label">Order Date:</span>
+                        <span class="info-value"><%= order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A' %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Customer Name:</span>
+                        <span class="info-value"><%= userData.name || 'N/A' %></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Payment Status:</span>
+                        <span class="info-value" style="color: #4CAF50; font-weight: 600;">
+                            <i class="fas fa-check"></i> <%= order.paymentStatus || 'Confirmed' %>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Delivery Method:</span>
+                        <span class="info-value">Digital Download</span>
+                    </div>
+                </div>
+                <% if (order.order_items && order.order_items.length > 0) { %>
+                    <div class="order-items">
+                        <h3 style="color: #333; margin-bottom: 1rem;">Ordered Items</h3>
+                        <ul class="virtual-steps">
+                            <% order.order_items.forEach(item => { %>
+                                <li>
+                                    <i class="fas fa-gamepad"></i>
+                                    <span style="color: black;"><%= item.productId.name %>  Price: $<%= item.price.toFixed(2) %></span>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="email-notice">
+                <i class="fas fa-envelope"></i>
+                <div class="email-notice-content">
+                    <div class="email-notice-title">Order Confirmation Sent</div>
+                    <p>A confirmation email with your order details has been sent to <%= userData.email || 'your email' %>. Please check your inbox (and spam folder).</p>
+                </div>
+            </div>
+
+            <div class="success-actions">
+                <a href="/library" class="success-btn primary-btn">
+                    <i class="fas fa-receipt"></i>
+                    View library
+                </a>
+                <a href="/games" class="success-btn secondary-btn">
+                    <i class="fas fa-gamepad"></i>
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Remove loading animation since order ID is provided by backend
+            const orderIdElement = document.getElementById('success-order-id');
+            if (!orderIdElement.textContent || orderIdElement.textContent === 'N/A') {
+                orderIdElement.textContent = 'N/A';
+            }
+            createConfetti();
+
+            // Prevent back navigation
+            history.pushState(null, null, window.location.href);
+            window.addEventListener('popstate', function(event) {
+                history.pushState(null, null, window.location.href);
+                // Optionally redirect to /games if back is attempted
+                // window.location.replace('/games');
+            });
+
+            // Redirect to /games after 5 seconds
+            setTimeout(() => {
+                window.location.replace('/games');
+            }, 15000);
+        });
+
+        // Simple confetti effect
+        function createConfetti() {
+            const colors = ['#667eea', '#764ba2', '#4CAF50', '#FFC107', '#FF5722'];
+            const confettiCount = 50;
+
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.left = Math.random() * 100 + 'vw';
+                    confetti.style.top = '-10px';
+                    confetti.style.width = '10px';
+                    confetti.style.height = '10px';
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.borderRadius = '50%';
+                    confetti.style.pointerEvents = 'none';
+                    confetti.style.zIndex = '9999';
+                    confetti.style.animation = 'fall 3s linear forwards';
+
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => {
+                        confetti.remove();
+                    }, 3000);
+                }, i * 100);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= product.name %></title>
+  <style>
+    :root {
+      --primary-color: #8B4513;
+      --text-color: #333333;
+      --background-color: #ffffff;
+      --card-bg: #f8f8f8;
+      --hover-color: #A0522D;
+      --light-brown: #D2B48C;
+      --border-color: rgba(139, 69, 19, 0.3);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    
+    .hero-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.9) 100%);
+      z-index: 1;
+    }
+    
+    .hero-video-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    .hero-video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 150%;
+      min-height: 150%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+    }
+    
+    .hero-content {
+      position: absolute;
+      bottom: 10%;
+      left: 5%;
+      z-index: 2;
+      max-width: 600px;
+      padding: 0 1rem;
+    }
+    
+    .hero-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      color: #fff;
+    }
+    
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: transparent;
+      color: #fff;
+      border: 1px solid var(--primary-color);
+    }
+    
+    .btn:hover {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+    
+    .btn-primary {
+      border-color: var(--primary-color);
+    }
+    
+    .btn-secondary {
+      border-color: var(--primary-color);
+    }
+
+    .btn-secondary.active {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+
+    .breadcrumbs {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: #fff;
+    }
+
+    .breadcrumbs a {
+      color: #fff;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .breadcrumbs a:hover {
+      color: var(--primary-color);
+    }
+
+    .breadcrumbs span {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .breadcrumbs .separator {
+      margin: 0 0.5rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .game-info-container {
+      position: absolute;
+      top: 50%;
+      right: 5%;
+      transform: translateY(-50%);
+      z-index: 2;
+      width: clamp(250px, 25%, 300px);
+      background: transparent;
+      border-radius: 8px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      color: var(--text-color);
+    }
+    
+    .game-poster {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .info-section {
+      margin-bottom: 1rem;
+    }
+    
+    .info-label {
+      color: #666;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+      font-weight: 500;
+    }
+    
+    .category-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    
+    .category-tag {
+      background-color: rgba(139, 69, 19, 0.1);
+      color: wheat;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      transition: background-color 0.2s;
+    }
+    
+    .category-tag:hover {
+      background-color: rgba(139, 69, 19, 0.2);
+    }
+    
+    .price-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .current-price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    
+    .original-price {
+      color: #666;
+      text-decoration: line-through;
+      font-size: 0.875rem;
+    }
+    
+    .discount-badge {
+      background-color: var(--primary-color);
+      color: #fff;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .content-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    
+    .section {
+      margin-bottom: 3rem;
+    }
+    
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+      color: var(--text-color);
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+    
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.3s;
+      position: relative;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .card-image {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+    }
+    
+    .card-content {
+      padding: 1rem;
+    }
+    
+    .card-title {
+      text-decoration: none;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-color);
+    }
+    
+    .card-price {
+      text-decoration: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .card-price .price {
+      color: var(--primary-color);
+    }
+    
+    .details-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
+    
+    .banner-container {
+      position: relative;
+      width: 100%;
+      height: 700px;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      cursor: pointer;
+    }
+    
+    .banner-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+    
+    .banner-slide.active {
+      opacity: 1;
+    }
+    
+    .banner-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .banner-slide:hover img {
+      transform: scale(1.05);
+    }
+    
+    .banner-controls {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1rem;
+      z-index: 2;
+    }
+    
+    .banner-btn {
+      background-color: rgba(0,0,0,0.5);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .banner-btn:hover {
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .banner-indicators {
+      position: absolute;
+      bottom: 1rem;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      z-index: 2;
+    }
+    
+    .banner-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: rgba(255,255,255,0.5);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .banner-indicator.active {
+      background-color: #fff;
+    }
+
+    /* Modal Styles */
+    .image-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .image-modal.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-content {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-main-image {
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s ease;
+    }
+
+    .modal-main-image.zoomed {
+      transform: scale(1.5);
+      cursor: zoom-out;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: #fff;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1001;
+      transition: color 0.3s ease;
+    }
+
+    .modal-close:hover {
+      color: var(--primary-color);
+    }
+
+    .modal-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+      z-index: 1001;
+    }
+
+    .modal-nav:hover {
+      background-color: var(--primary-color);
+    }
+
+    .modal-prev {
+      left: 30px;
+    }
+
+    .modal-next {
+      right: 30px;
+    }
+
+    .modal-thumbnails {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      z-index: 1001;
+      max-width: 90%;
+      overflow-x: auto;
+      padding: 10px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+    }
+
+    .modal-thumbnail {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 4px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .modal-thumbnail:hover {
+      opacity: 0.8;
+      transform: scale(1.1);
+    }
+
+    .modal-thumbnail.active {
+      opacity: 1;
+      border-color: var(--primary-color);
+      transform: scale(1.1);
+    }
+
+    .zoom-indicator {
+      position: absolute;
+      top: 20px;
+      left: 30px;
+      color: #fff;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      z-index: 1001;
+    }
+
+    /* Hover effect for banner images */
+    .banner-slide::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.1) 0%, transparent 20%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .banner-slide:hover::after {
+      opacity: 1;
+    }
+    
+    .info-box {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .system-requirements-content {
+      max-height: 200px;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    .system-requirements-content.expanded {
+      max-height: none;
+    }
+    
+    .read-more-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+      display: inline-block;
+    }
+    
+    .read-more-btn:hover {
+      color: var(--hover-color);
+    }
+    
+    .review {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    
+    .reviewer {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    
+    .reviewer-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .reviewer-name {
+      font-weight: 600;
+    }
+    
+    .review-date {
+      font-size: 0.75rem;
+      color: #666;
+    }
+    
+    .review-badge {
+      background-color: rgba(139, 69, 19, 0.2);
+      color: var(--primary-color);
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    
+    .review-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .review-tag {
+      background-color: #eee;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: var(--text-color);
+    }
+    
+    .review-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .review-action {
+      color: #666;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .review-action:hover {
+      color: var(--text-color);
+    }
+    
+    .review-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+    
+    .wishlist-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+    
+    .wishlist-btn:hover {
+      background-color: rgba(255, 255, 255, 1);
+      transform: scale(1.1);
+    }
+    
+    .wishlist-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: transparent;
+      stroke: var(--primary-color);
+      stroke-width: 2;
+      transition: all 0.3s ease;
+    }
+    
+    .wishlist-btn.active svg {
+      fill: rgb(214, 41, 41);
+    }
+    
+    .game-info-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    .game-details-section {
+      margin-bottom: 2rem;
+    }
+    
+    .game-details-container {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .game-details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .game-details-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+    
+    .rating-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    
+    .game-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    .meta-item {
+      flex: 1;
+      min-width: 150px;
+    }
+    
+    .meta-label {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 0.25rem;
+    }
+    
+    .meta-value {
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    
+    .features-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      color: var(--primary-color);
+      flex-shrink: 0;
+    }
+    
+    .feature-content h4 {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: var(--text-color);
+    }
+    
+    .feature-content p {
+      font-size: 0.875rem;
+      color: #666;
+    }
+    
+    .awards-section {
+      margin-top: 2rem;
+    }
+    
+    .awards-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .award-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background-color: rgba(139, 69, 19, 0.1);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+    }
+    
+    .award-icon {
+      color: var(--primary-color);
+    }
+    
+    .award-content h4 {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .award-content p {
+      font-size: 0.75rem;
+      color: #666;
+    }
+    
+    .dlc-section {
+      margin-top: 2rem;
+    }
+    
+    .dlc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .dlc-card {
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+    
+    .dlc-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .dlc-image {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+    }
+    
+    .dlc-content {
+      padding: 1rem;
+    }
+    
+    .dlc-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+    
+    .dlc-price {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+    
+    .dlc-description {
+      font-size: 0.875rem;
+      color: #666;
+      margin-top: 0.5rem;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .community-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    
+    .stat-card {
+      flex: 1;
+      min-width: 150px;
+      background-color: white;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: #666;
+    }
+    
+    .tab-container {
+      margin-top: 2rem;
+    }
+    
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+    }
+    
+    .tab-btn {
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .tab-btn.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+
+    .publisher-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .publisher-logo {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    .publisher-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    
+    @media (max-width: 1200px) {
+      .hero-title {
+        font-size: clamp(1.8rem, 4vw, 3rem);
+      }
+      
+      .game-info-container {
+        width: clamp(200px, 20%, 250px);
+      }
+    }
+    
+    @media (max-width: 992px) {
+      .hero-container {
+        height: 80vh;
+      }
+      
+      .game-info-container {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        margin-top: -100px;
+        z-index: 3;
+      }
+      
+      .hero-content {
+        bottom: auto;
+        top: 15%;
+        max-width: 90%;
+      }
+
+      .breadcrumbs {
+        top: 15px;
+        left: 15px;
+      }
+      
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .game-meta {
+        gap: 1rem;
+      }
+      
+      .meta-item {
+        min-width: 120px;
+      }
+
+      .modal-main-image {
+        max-width: 95%;
+        max-height: 70%;
+      }
+
+      .modal-thumbnails {
+        max-width: 95%;
+      }
+
+      .modal-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+      }
+
+      .modal-prev {
+        left: 15px;
+      }
+
+      .modal-next {
+        right: 15px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .hero-container {
+        height: auto;
+        min-height: 100vh;
+        padding-bottom: 2rem;
+      }
+      
+      .hero-title {
+        font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+      }
+      
+      .hero-content {
+        top: 10%;
+      }
+      
+      .banner-container {
+        height: 300px;
+      }
+      
+      .grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+      
+      .features-list {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-thumbnails {
+        bottom: 10px;
+        padding: 5px;
+      }
+
+      .modal-thumbnail {
+        width: 60px;
+        height: 45px;
+      }
+
+      .zoom-indicator {
+        left: 15px;
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .hero-title {
+        font-size: clamp(1.2rem, 3vw, 2rem);
+      }
+      
+      .hero-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .game-info-container {
+        padding: 1rem;
+      }
+      
+      .tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 0.5rem;
+      }
+      
+      .tab-btn {
+        padding: 0.75rem 1rem;
+      }
+
+      .breadcrumbs {
+        font-size: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .publisher-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .publisher-logo {
+        width: 40px;
+        height: 40px;
+      }
+
+      .publisher-name {
+        font-size: 1rem;
+      }
+
+      .modal-close {
+        top: 10px;
+        right: 15px;
+        font-size: 30px;
+      }
+
+      .modal-main-image {
+        max-width: 90%;
+        max-height: 60%;
+      }
+    }
+  </style>
+</head>
+<body class="<%= user ? 'logged-in' : '' %>">
+  <section class="hero-container">
+    <% if (product.trailer) { 
+      let videoId = null;
+      try {
+        if (product.trailer.includes('youtube.com') || product.trailer.includes('youtu.be')) {
+          const url = new URL(product.trailer);
+          if (url.hostname === 'youtu.be') {
+            videoId = url.pathname.slice(1);
+          } else {
+            videoId = url.searchParams.get('v');
+          }
+        } else if (/^[a-zA-Z0-9_-]{11}$/.test(product.trailer)) {
+          videoId = product.trailer;
+        }
+      } catch (e) {
+        console.error('Invalid trailer URL:', e);
+      }
+      
+      if (videoId) { %>
+        <div class="hero-video-container">
+          <iframe 
+            class="hero-video"
+            src="https://www.youtube.com/embed/<%= videoId %>?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=<%= videoId %>&disablekb=1"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+      <% } else { %>
+        <div class="hero-video-container">
+          <img src="<%= product.banners && product.banners.length > 0 ? product.banners[0] : product.poster %>" alt="<%= product.name %>" class="hero-video">
+        </div>
+      <% } %>
+    <% } else { %>
+      <div class="hero-video-container">
+        <img src="<%= product.banners && product.banners.length > 0 ? product.banners[0] : product.poster %>" alt="<%= product.name %>" class="hero-video">
+      </div>
+    <% } %>
+    
+    <div class="hero-overlay"></div>
+    
+    <nav class="breadcrumbs">
+      <a href="/home">Home</a>
+      <span class="separator">></span>
+      <a href="/games">Games</a>
+      <span class="separator">></span>
+      <span><%= product.name %></span>
+    </nav>
+    <div class="hero-content">
+      <h1 class="hero-title"><%= product.name %></h1>      
+      <div class="hero-actions">        
+        <% if (canInstall) { %>
+          <a href="/download/<%= product._id %>" style="text-decoration: none;"><button class="btn btn-primary">Download</button></a>
+        <% } else if (product.salesPrice == 0) { %>
+         <a href="/download/<%= product._id %>"  style="text-decoration: none;"><button class="btn btn-primary">Download</button></a> 
+        <% } else { %>
+          <button class="btn btn-primary" onclick="buyNow('<%= product._id %>')">Buy Now</button>
+          <button class="btn btn-secondary cart-btn" data-product-id="<%= product._id %>">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <span>Add to Cart</span>
+          </button>
+        <% } %>
+    <!-- <a href="/system-compare" style="text-decoration: none;">
+     <button class="btn btn-primary">Can My PC Run This?</button>
+    </a> -->
+
+      </div>
+    </div>
+    
+    
+    <div class="game-info-container">
+      <div class="position-relative">
+        <img src="<%= product.poster %>" alt="<%= product.name %>" class="game-poster">
+        <button class="wishlist-btn" id="wishlistBtn" aria-label="Add to wishlist" data-product-id="<%= product._id %>">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="price-container">
+        <span class="current-price">₹<%= product.salesPrice %></span>
+        <% if (product.salesPrice < product.regularPrice) { %>
+          <span class="original-price">₹<%= product.regularPrice %></span>
+          <span class="discount-badge">
+            -<%= Math.round(((product.regularPrice - product.salesPrice) / product.regularPrice) * 100) %>%
+          </span>
+        <% } %>
+      </div>
+     
+      <div class="info-section">
+        <div class="info-label">Publisher</div>
+        <div class="info-value"><%= product.company ? product.company.companyName : 'Not specified' %></div>
+      </div>
+      
+      <div class="info-section">
+        <div class="info-label">Categories</div>
+        <div class="category-tags">
+          <% if (product.categoryId && product.categoryId.length > 0) { %>
+            <% product.categoryId.forEach(category => { %>
+              <a href="/games?category=<%= category._id %>" class="category-tag"><%= category.name %></a>
+            <% }); %>
+          <% } else { %>
+            <span>No categories specified</span>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Image Modal -->
+  <div class="image-modal" id="imageModal">
+    <div class="modal-content">
+      <span class="modal-close" id="modalClose">×</span>
+      <div class="zoom-indicator">Click image to zoom</div>
+      
+      <button class="modal-nav modal-prev" id="modalPrev">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+      
+      <img class="modal-main-image" id="modalMainImage" src="/placeholder.svg" alt="Gameplay Screenshot">
+      
+      <button class="modal-nav modal-next" id="modalNext">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+      
+      <div class="modal-thumbnails" id="modalThumbnails">
+        <!-- Thumbnails will be populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+  
+  <div class="content-container">    
+    <% if (product.banners && product.banners.length > 0) { %>
+      <div class="section">
+        <h2 class="section-title">Gameplays</h2>
+        <div class="banner-container" id="bannerSlider">
+          <% product.banners.forEach((banner, index) => { %>
+            <div class="banner-slide <%= index === 0 ? 'active' : '' %>" data-index="<%= index %>">
+               <img src="<%= banner %>" alt="<%= product.name %> screenshot <%= index + 1 %>">
+            </div>
+          <% }); %>
+          
+          <div class="banner-controls">
+            <button class="banner-btn" id="prevBannerBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button class="banner-btn" id="nextBannerBtn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="banner-indicators">
+            <% product.banners.forEach((_, index) => { %>
+              <button class="banner-indicator <%= index === 0 ? 'active' : '' %>" data-index="<%= index %>"></button>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    <% } %>
+    
+    <div class="details-grid">
+      <div class="section">
+        <h2 class="section-title">About This Game</h2>
+        <div class="info-box">
+          <p><%= product.description %></p>
+        </div>
+      </div>
+      
+      <div class="section">
+        <h2 class="section-title">System Requirements</h2>
+        <div class="info-box">
+          <div class="system-requirements-content" id="systemRequirements">
+            <p class="whitespace-pre-line"><%= product.systemRequirements %></p>
+          </div>
+          <button class="read-more-btn" id="readMoreBtn">Read More</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2 class="section-title">Customer Reviews</h2>
+      
+      <div class="review">
+        <div class="review-header">
+          <div class="reviewer">
+            <div class="avatar">J</div>
+            <div class="reviewer-info">
+              <div class="reviewer-name">JAMESC0630</div>
+              <div class="review-date">POSTED: 4 APRIL</div>
+            </div>
+          </div>
+          <div class="review-badge">Recommended</div>
+        </div>
+        
+        <div class="review-tags">
+          <span class="review-tag">Graphics +</span>
+          <span class="review-tag">You forget what reality is</span>
+          <span class="review-tag">Beautiful</span>
+          <span class="review-tag">Good</span>
+        </div>
+        
+        <div class="review-tags">
+          <span class="review-tag">Gameplay +</span>
+          <span class="review-tag">Very good</span>
+          <span class="review-tag">Good</span>
+        </div>
+        
+        <div class="review-actions">
+          <button class="review-action">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 10v12"></path><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+            </svg>
+            Yes
+          </button>
+          <button class="review-action">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 14V2"></path><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l-2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+            </svg>
+            No
+          </button>
+          <button class="review-action">Funny</button>
+          <button class="review-action">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+            </svg>
+            Award
+          </button>
+        </div>
+        
+        <div class="review-stats">
+          <div>200 people found this review helpful</div>
+          <div>23 people found this review funny</div>
+        </div>
+      </div>
+      
+      <div class="review">
+        <div class="review-header">
+          <div class="reviewer">
+            <div class="avatar">Y</div>
+            <div class="reviewer-info">
+              <div class="reviewer-name">yayayaya</div>
+              <div class="review-date">POSTED: 20 APRIL</div>
+            </div>
+          </div>
+        </div>
+        
+        <p style="margin-bottom: 1rem;">Great atmosphere!</p>
+        
+        <div class="review-actions">
+          <button class="review-action">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 10v12"></path><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"></path>
+            </svg>
+            Yes
+          </button>
+          <button class="review-action">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 14V2"></path><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l-2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"></path>
+            </svg>
+            No
+          </button>
+          <button class="review-action">Funny</button>
+          <button class="review-action">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="6"></circle><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"></path>
+            </svg>
+            Award
+          </button>
+        </div>
+      </div>
+      
+      <div class="text-center" style="margin-top: 1.5rem; text-align: center;">
+        <a href="#" style="color: var(--primary-color); text-decoration: none; font-weight: 500;">See more reviews</a>
+      </div>
+    </div>
+    
+    <% if (publisherProducts && publisherProducts.length > 0) { %>
+      <div class="section">
+        <h2 class="section-title">More from This Publisher</h2>
+        <div class="publisher-header">
+          <img src="<%= product.company.companyLogo %>" alt="<%= product.company.companyName %> logo" class="publisher-logo">
+          <div class="publisher-name"><%= product.company.companyName %></div>
+        </div>
+        <div class="grid">
+          <% publisherProducts.forEach(publisherProduct => { %>
+            <a href="/product-details/<%= publisherProduct._id %>" class="card">
+              <img src="<%= publisherProduct.poster %>" alt="<%= publisherProduct.name %>" class="card-image">
+              <button class="wishlist-btn" aria-label="Add to wishlist" data-product-id="<%= publisherProduct._id %>">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </button>
+              <div class="card-content">
+                <h3 class="card-title" style="text-decoration: none;"><%= publisherProduct.name %></h3>
+                <div class="card-price" style="text-decoration: none;">
+                  <% if (publisherProduct.salesPrice < publisherProduct.regularPrice) { %>
+                    <span class="discount-badge" style="text-decoration: none;">
+                      -<%= Math.round(((publisherProduct.regularPrice - publisherProduct.salesPrice) / publisherProduct.regularPrice) * 100) %>%
+                    </span>
+                  <% } %>
+                  <span class="price" style="text-decoration: none;">₹<%= publisherProduct.salesPrice %></span>
+                </div>
+              </div>
+            </a>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+    
+    <div class="section">
+      <h2 class="section-title">More Like This</h2>
+      
+      <div class="grid">
+        <% if (relatedProducts && relatedProducts.length > 0) { %>
+          <% relatedProducts.forEach(relatedProduct => { %>
+            <a href="/product-details/<%= relatedProduct._id %>" class="card">
+              <img src="<%= relatedProduct.poster %>" alt="<%= relatedProduct.name %>" class="card-image">
+              <button class="wishlist-btn" aria-label="Add to wishlist" data-product-id="<%= relatedProduct._id %>">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </button>
+              <div class="card-content">
+                <h3 class="card-title" style="text-decoration: none;"><%= relatedProduct.name %></h3>
+                <div class="card-price" style="text-decoration: none;">
+                  <% if (relatedProduct.salesPrice < relatedProduct.regularPrice) { %>
+                    <span class="discount-badge" style="text-decoration: none;">
+                      -<%= Math.round(((relatedProduct.regularPrice - relatedProduct.salesPrice) / relatedProduct.regularPrice) * 100) %>%
+                    </span>
+                  <% } %>
+                  <span class="price" style="text-decoration: none;">₹<%= relatedProduct.salesPrice %></span>
+                </div>
+              </div>
+            </a>
+          <% }); %>
+        <% } else { %>
+          <p>No related products found</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get all banner images for modal functionality
+      const bannerImages = [];
+      const bannerSlides = document.querySelectorAll('.banner-slide img');
+      bannerSlides.forEach(img => {
+        bannerImages.push(img.src);
+      });
+
+      // Modal elements
+      const modal = document.getElementById('imageModal');
+      const modalMainImage = document.getElementById('modalMainImage');
+      const modalClose = document.getElementById('modalClose');
+      const modalPrev = document.getElementById('modalPrev');
+      const modalNext = document.getElementById('modalNext');
+      const modalThumbnails = document.getElementById('modalThumbnails');
+      const zoomIndicator = document.querySelector('.zoom-indicator');
+
+      let currentModalIndex = 0;
+      let isZoomed = false;
+
+      // Create modal thumbnails
+      function createModalThumbnails() {
+        modalThumbnails.innerHTML = '';
+        bannerImages.forEach((src, index) => {
+          const thumbnail = document.createElement('img');
+          thumbnail.src = src;
+          thumbnail.className = 'modal-thumbnail';
+          thumbnail.dataset.index = index;
+          if (index === currentModalIndex) {
+            thumbnail.classList.add('active');
+          }
+          thumbnail.addEventListener('click', () => showModalImage(index));
+          modalThumbnails.appendChild(thumbnail);
+        });
+      }
+
+      // Show specific image in modal
+      function showModalImage(index) {
+        currentModalIndex = index;
+        modalMainImage.src = bannerImages[index];
+        isZoomed = false;
+        modalMainImage.classList.remove('zoomed');
+        zoomIndicator.textContent = 'Click image to zoom';
+        
+        // Update thumbnail active state
+        document.querySelectorAll('.modal-thumbnail').forEach((thumb, i) => {
+          thumb.classList.toggle('active', i === index);
+        });
+      }
+
+      // Open modal when clicking on banner
+      const bannerContainer = document.getElementById('bannerSlider');
+      if (bannerContainer && bannerImages.length > 0) {
+        bannerContainer.addEventListener('click', (e) => {
+          // Don't open modal if clicking on controls
+          if (e.target.closest('.banner-btn') || e.target.closest('.banner-indicator')) {
+            return;
+          }
+          
+          const activeSlide = document.querySelector('.banner-slide.active');
+          const activeIndex = parseInt(activeSlide.dataset.index);
+          currentModalIndex = activeIndex;
+          
+          createModalThumbnails();
+          showModalImage(currentModalIndex);
+          modal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
+      }
+
+      // Close modal
+      function closeModal() {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        isZoomed = false;
+        modalMainImage.classList.remove('zoomed');
+      }
+
+      modalClose.addEventListener('click', closeModal);
+
+      // Close modal when clicking outside image
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModal();
+        }
+      });
+
+      // Zoom functionality
+      modalMainImage.addEventListener('click', () => {
+        isZoomed = !isZoomed;
+        modalMainImage.classList.toggle('zoomed', isZoomed);
+        zoomIndicator.textContent = isZoomed ? 'Click image to zoom out' : 'Click image to zoom';
+      });
+
+      // Modal navigation
+      modalPrev.addEventListener('click', () => {
+        currentModalIndex = (currentModalIndex - 1 + bannerImages.length) % bannerImages.length;
+        showModalImage(currentModalIndex);
+      });
+
+      modalNext.addEventListener('click', () => {
+        currentModalIndex = (currentModalIndex + 1) % bannerImages.length;
+        showModalImage(currentModalIndex);
+      });
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (!modal.classList.contains('active')) return;
+        
+        switch(e.key) {
+          case 'Escape':
+            closeModal();
+            break;
+          case 'ArrowLeft':
+            modalPrev.click();
+            break;
+          case 'ArrowRight':
+            modalNext.click();
+            break;
+          case ' ':
+            e.preventDefault();
+            modalMainImage.click();
+            break;
+        }
+      });
+
+      // Banner hover effect
+      const bannerSlidesElements = document.querySelectorAll('.banner-slide');
+      bannerSlidesElements.forEach(slide => {
+        slide.addEventListener('mousemove', (e) => {
+          const rect = slide.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          
+          slide.style.setProperty('--mouse-x', x + '%');
+          slide.style.setProperty('--mouse-y', y + '%');
+        });
+      });
+
+      // Banner Slider (existing functionality)
+      const indicators = document.querySelectorAll('.banner-indicator');
+      const prevBtn = document.getElementById('prevBannerBtn');
+      const nextBtn = document.getElementById('nextBannerBtn');
+      const totalSlides = bannerSlidesElements.length;
+      let currentSlide = 0;
+      let slideInterval;
+
+      function showSlide(index) {
+        bannerSlidesElements.forEach(slide => slide.classList.remove('active'));
+        bannerSlidesElements[index].classList.add('active');
+        indicators.forEach(indicator => indicator.classList.remove('active'));
+        indicators[index].classList.add('active');
+        currentSlide = index;
+      }
+
+      function nextSlide() {
+        showSlide((currentSlide + 1) % totalSlides);
+      }
+
+      function prevSlide() {
+        showSlide((currentSlide - 1 + totalSlides) % totalSlides);
+      }
+
+      function startSlideshow() {
+        stopSlideshow();
+        slideInterval = setInterval(nextSlide, 5000);
+      }
+
+      function stopSlideshow() {
+        if (slideInterval) clearInterval(slideInterval);
+      }
+
+      if (totalSlides > 0) {
+        if (prevBtn) {
+          prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            prevSlide();
+            stopSlideshow();
+            startSlideshow();
+          });
+        }
+
+        if (nextBtn) {
+          nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            nextSlide();
+            stopSlideshow();
+            startSlideshow();
+          });
+        }
+
+        indicators.forEach((indicator, index) => {
+          indicator.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showSlide(index);
+            stopSlideshow();
+            startSlideshow();
+          });
+        });
+
+        startSlideshow();
+      }
+
+      // System Requirements Read More
+      const systemRequirements = document.getElementById('systemRequirements');
+      const readMoreBtn = document.getElementById('readMoreBtn');
+
+      if (systemRequirements && readMoreBtn) {
+        const contentHeight = systemRequirements.scrollHeight;
+        if (contentHeight <= 200) {
+          readMoreBtn.style.display = 'none';
+        } else {
+          readMoreBtn.addEventListener('click', () => {
+            if (systemRequirements.classList.contains('expanded')) {
+              systemRequirements.classList.remove('expanded');
+              readMoreBtn.textContent = 'Read More';
+            } else {
+              systemRequirements.classList.add('expanded');
+              readMoreBtn.textContent = 'Read Less';
+            }
+          });
+        }
+      }
+
+      // Notification Function
+      let isShowingNotification = false;
+
+      function showNotification(message, type = 'success') {
+        if (isShowingNotification) return;
+        isShowingNotification = true;
+
+        const notification = document.createElement('div');
+        notification.className = 'wishlist-notification';
+        notification.textContent = message;
+
+        Object.assign(notification.style, {
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: type === 'error' ? '#ff3b30' : 'var(--primary-color, #8B4513)',
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '4px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          zIndex: '1000',
+          opacity: '0',
+          transition: 'opacity 0.3s ease'
+        });
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.style.opacity = '1';
+        }, 10);
+
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          setTimeout(() => {
+            document.body.removeChild(notification);
+            isShowingNotification = false;
+          }, 300);
+        }, 3000);
+      }
+
+      // Wishlist Functionality
+      const wishlistBtns = document.querySelectorAll('.wishlist-btn');
+
+      async function checkWishlistStatus(productId, button) {
+        try {
+          console.log('Checking wishlist status for product:', productId);
+          const response = await fetch(`/wishlist/status/${productId}`, {
+            credentials: 'same-origin'
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to check wishlist status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Wishlist status response:', data);
+
+          if (typeof data.isInWishlist !== 'boolean') {
+            throw new Error('Invalid wishlist status response');
+          }
+
+          if (data.isInWishlist) {
+            button.classList.add('active');
+          } else {
+            button.classList.remove('active');
+          }
+        } catch (err) {
+          console.error('Error checking wishlist status:', err);
+        }
+      }
+
+      wishlistBtns.forEach(btn => {
+        const productId = btn.dataset.productId;
+
+        if (!productId) {
+          console.error('Missing product ID on wishlist button');
+          return;
+        }
+
+        console.log('Initializing wishlist button for product:', productId);
+        checkWishlistStatus(productId, btn);
+
+        btn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Wishlist button clicked for product:', productId);
+
+          const isLoggedIn = document.body.classList.contains('logged-in');
+          console.log('Is logged in:', isLoggedIn);
+
+          if (!isLoggedIn) {
+            showNotification('Please log in to use wishlist', 'error');
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 1000);
+            return;
+          }
+
+          const isActive = this.classList.contains('active');
+          const url = isActive
+            ? `/removefromwishlist/${productId}`
+            : `/addwishlist/${productId}`;
+          const method = isActive ? 'DELETE' : 'POST';
+          console.log('Sending request:', method, url);
+
+          try {
+            const response = await fetch(url, {
+              method: method,
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'same-origin'
+            });
+
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+              if (response.status === 400) {
+                const result = await response.json();
+                showNotification(result.message || 'Product is already in the cart', 'error');
+                return;
+              }
+              if (response.status === 401) {
+                showNotification('Please log in to use wishlist', 'error');
+                setTimeout(() => {
+                  window.location.href = '/login';
+                }, 1000);
+                return;
+              }
+              throw new Error(`Request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Response data:', result);
+
+            this.classList.toggle('active');
+            showNotification(result.message);
+
+            // Animation
+            this.animate([
+              { transform: 'scale(1)' },
+              { transform: 'scale(1.3)' },
+              { transform: 'scale(1)' }
+            ], {
+              duration: 300,
+              easing: 'ease-in-out'
+            });
+          } catch (err) {
+            console.error('Error updating wishlist:', err);
+            showNotification('Failed to update wishlist', 'error');
+          }
+        });
+      });
+
+      // Cart Functionality
+      const cartBtn = document.querySelector('.cart-btn');
+
+      async function checkCartStatus(productId, button) {
+        try {
+          console.log('Checking cart status for product:', productId);
+          const response = await fetch(`/cart/status/${productId}`, {
+            credentials: 'same-origin'
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to check cart status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Cart status response:', data);
+
+          if (typeof data.isInCart !== 'boolean') {
+            throw new Error('Invalid cart status response');
+          }
+
+          if (data.isInCart) {
+            button.classList.add('active');
+            button.querySelector('span').textContent = 'Remove from Cart';
+          } else {
+            button.classList.remove('active');
+            button.querySelector('span').textContent = 'Add to Cart';
+          }
+        } catch (err) {
+          console.error('Error checking cart status:', err);
+        }
+      }
+
+      if (cartBtn) {
+        const productId = cartBtn.dataset.productId;
+
+        if (!productId) {
+          console.error('Missing product ID on cart button');
+          return;
+        }
+
+        console.log('Initializing cart button for product:', productId);
+        checkCartStatus(productId, cartBtn);
+
+        cartBtn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Cart button clicked for product:', productId);
+
+          const isLoggedIn = document.body.classList.contains('logged-in');
+          console.log('Is logged in:', isLoggedIn);
+
+          if (!isLoggedIn) {
+            showNotification('Please log in to use cart', 'error');
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 1000);
+            return;
+          }
+
+          const isActive = this.classList.contains('active');
+          const url = isActive
+            ? `/cart/remove/${productId}`
+            : `/cart/add/${productId}`;
+          const method = isActive ? 'DELETE' : 'POST';
+          console.log('Sending cart request:', method, url);
+
+          try {
+            const response = await fetch(url, {
+              method: method,
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'same-origin'
+            });
+
+            console.log('Cart response status:', response.status);
+
+            if (!response.ok) {
+              if (response.status === 400) {
+                const result = await response.json();
+                showNotification(result.message || 'Error updating cart', 'error');
+                return;
+              }
+              if (response.status === 401) {
+                showNotification('Please log in to use cart', 'error');
+                setTimeout(() => {
+                  window.location.href = '/login';
+                }, 1000);
+                return;
+              }
+              throw new Error(`Cart request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Cart response data:', result);
+
+            this.classList.toggle('active');
+            this.querySelector('span').textContent = this.classList.contains('active') ? 'Remove from Cart' : 'Add to Cart';
+            showNotification(result.message || (isActive ? 'Removed from cart' : 'Added to cart'));
+
+            // Animation
+            this.animate([
+              { transform: 'scale(1)' },
+              { transform: 'scale(1.1)' },
+              { transform: 'scale(1)' }
+            ], {
+              duration: 300,
+              easing: 'ease-in-out'
+            });
+          } catch (err) {
+            console.error('Error updating cart:', err);
+            showNotification('Failed to update cart', 'error');
+          }
+        });
+      }
+    });
+
+  function buyNow(productId) {
+    window.location.href = `/checkout?buyNow=${productId}`;
+  }
+
+  </script>
+</body>
+</html>

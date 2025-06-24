@@ -1,0 +1,57 @@
+{
+  "name": "fitboy",
+  "version": "1.0.0",
+  "description": "FitBoy Game Selling Platform with System Detection",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Abhishek Anil",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^2.2.0",
+    "chart.js": "^4.4.9",
+    "cheerio": "^1.1.0",
+    "cloudinary": "^1.41.3",
+    "connect-flash": "^0.1.1",
+    "cors": "^2.8.5",
+    "csvtojson": "^2.0.10",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "method-override": "^3.0.0",
+    "mongodb": "^6.15.0",
+    "mongoose": "^8.15.1",
+    "multer": "^1.4.5-lts.1",
+    "multer-storage-cloudinary": "^4.0.0",
+    "node-cache": "^5.1.2",
+    "node-latex": "^3.1.0",
+    "nodemailer": "^6.10.1",
+    "os": "^0.1.2",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "razorpay": "^2.9.6",
+    "sharp": "^0.34.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abhishekanil551/FitBoy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/abhishekanil551/FitBoy/issues"
+  },
+  "homepage": "https://github.com/abhishekanil551/FitBoy#readme",
+  "keywords": [
+    "game",
+    "system-requirements",
+    "checker",
+    "hardware",
+    "compatibility"
+  ]
+}

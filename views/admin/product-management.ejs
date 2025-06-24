@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FITBOY Admin - Product Management</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<style>
+  .product-poster-container {
+    position: relative;
+    display: inline-block;
+  }
+  .product-poster {
+    display: block;
+    max-width: 100px;
+    height: auto;
+  }
+  .upload-btn {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 123, 255, 0.8);
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .product-poster-container:hover .upload-btn {
+    display: block;
+  }
+  .upload-btn:hover {
+    background-color: rgba(0, 123, 255, 1);
+  }
+</style>
+<body>
+  <div class="admin-container">
+    <%- include('partials/sidebar', {page: 'product-management'}) %>
+
+    <div class="main-content">
+      <%- include('partials/header') %>
+
+      <div class="dashboard-content">
+        <div class="page-header">
+          <h1 class="page-title">Product Management</h1>
+          <a href="/admin/addproduct" class="add-button">Add New Product</a>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-box">
+            <form id="search-form" action="/admin/product-management" method="GET">
+              <input type="text" name="search" placeholder="Search products..." value="<%= search || '' %>" />
+              <button type="submit" class="search-button" style="width: 100px; height: 45px;">Search</button>
+            </form>
+          </div>
+          <div class="filter-options">
+            <form id="filter-form" action="/admin/product-management" method="GET">
+              <select name="category" onchange="this.form.submit()">
+                <option value="">Select Category</option>
+                <% category.forEach(cat => { %>
+                  <option value="<%= cat._id %>" <%= selectedCategory && selectedCategory.toString() === cat._id.toString() ? 'selected' : '' %>>
+                    <%= cat.name %>
+                  </option>
+                <% }); %>
+              </select>
+              <select name="company" onchange="this.form.submit()">
+                <option value="">Select Company</option>
+                <% for(let i=0; i<company.length; i++) { %>
+                  <option value="<%= company[i]._id %>" <%= selectedCompany && selectedCompany.toString() === company[i]._id.toString() ? 'selected' : '' %>>
+                    <%= company[i].companyName %>
+                  </option>
+                <% } %>
+              </select>
+            </form>
+          </div>
+        </div>
+
+        <div class="data-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Poster</th>
+                <th>Game Name</th>
+                <th>Category</th>
+                <th>Company</th>
+                <th>Regular Price</th>
+                <th>Sales Price</th>
+                <th>Recommended</th>
+                <th>Free</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (products && products.length > 0) { %>
+                <% products.forEach(product => { %>
+                <tr>
+                  <td>
+                    <div class="product-poster-container">
+                      <img class="product-poster" src="<%= product.poster %>" alt="<%= product.name %>" />
+                    <button class="upload-btn" data-product-id="<%= product._id %>" data-bs-toggle="modal" data-bs-target="#uploadGameFileModal">
+                      <%= product.gameFile ? 'Update' : 'Upload' %>
+                    </button>                    </div>
+                  </td>                  <td><%= product.name %></td>
+                  <td>
+                    <% if (product.categoryId && product.categoryId.length > 0) { %>
+                      <% product.categoryId.forEach((cat, index) => { %>
+                        <%= cat.name %><%= index < product.categoryId.length - 1 ? ', ' : '' %>
+                      <% }); %>
+                    <% } else { %> N/A <% } %>
+                  </td>
+                  <td><%= product.company ? product.company.companyName : 'N/A' %></td>
+                  <td>₹<%= product.regularPrice %></td>
+                  <td>₹<%= product.salesPrice %></td>
+                  <td>
+                    <a href="/admin/toggle-recommended?id=<%= product._id %>" class="action-btn"><%= product.isRecommended ? 'Unmark' : 'Mark' %></a>
+                  </td>
+                  <td>
+                    <% if (!product.isFree) { %>
+                      <a href="/admin/free-product?id=<%= product._id %>" class="action-btnn">Free</a>
+                    <% } else { %>
+                      <a href="/admin/free-product?id=<%= product._id %>" class="action-btn">Paid</a>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="status-badge <%= product.isListed ? 'status-active' : 'status-inactive' %>">
+                      <%= product.isListed ? 'Active' : 'Inactive' %>
+                    </span>
+                  </td>
+                  <td>
+                    <a href="/admin/editproductpage?id=<%= product._id %>" class="action-btn">Edit</a>
+                    <a href="/admin/list-products?id=<%= product._id %>" class="action-btn <%= product.isListed ? 'unlist' : 'list' %>">
+                      <%= product.isListed ? 'Unlist' : 'List' %>
+                    </a>
+                    <% if (product.hasRequirement) { %>
+                      <button
+                        class="action-btn btn-edit-req"
+                        data-product-id="<%= product._id %>"
+                        data-requirement-id="<%= product.requirementId || '' %>"
+                        data-requirement='<%= product.requirementId ? JSON.stringify(product.requirement || {}) : "{}" %>'
+                        data-bs-toggle="modal"
+                        data-bs-target="#editRequirementModal"
+                      >
+                        Edit Requirement
+                      </button>
+                    <% } else { %>
+                      <button
+                        class="action-btn btn-add-req"
+                        data-product-id="<%= product._id %>"
+                        data-bs-toggle="modal"
+                        data-bs-target="#requirementModal"
+                      >
+                        Add Requirement
+                      </button>
+                    <% } %>
+                  </td>
+                </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="10" style="text-align: center;">No products found.</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+          <%- include('partials/pagination', {currentPage: currentPage, totalPages: totalPages}) %>
+        </div>
+
+
+
+        <div class="modal fade" id="uploadGameFileModal" tabindex="-1" aria-labelledby="uploadGameFileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" method="POST" action="/admin/gameFile" id="uploadGameFileForm">
+      <input type="hidden" name="productId" id="uploadGameFileProductId" />
+      <div class="modal-header">
+        <h5 class="modal-title" id="uploadGameFileModalLabel">Upload Game File Link</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+          style="background: #dc3545; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"
+          onmouseover="this.style.background='#b02a37'" onmouseout="this.style.background='#dc3545'">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="gameFileLink">Game File Link</label>
+          <input type="url" name="gameFileLink" id="gameFileLink" class="form-control" placeholder="Enter game file URL" required />
+          <div class="error-message"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+        <!-- Add Requirement Modal -->
+<div class="modal fade" id="requirementModal" tabindex="-1" aria-labelledby="requirementModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <form class="modal-content" method="POST" action="/admin/add-requirement" id="requirementForm">
+      <input type="hidden" name="productId" id="productId" />
+      <div class="modal-header">
+        <h5 class="modal-title">Add Game Requirements</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+          style="background: #dc3545; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"
+          onmouseover="this.style.background='#b02a37'" onmouseout="this.style.background='#dc3545'">×</button>
+      </div>
+
+      <div class="modal-body" style="padding: 2rem;">
+        <h6>Minimum Requirements</h6>
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div><input type="text" name="minimum[os]" placeholder="OS" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="text" name="minimum[processor]" placeholder="Processor" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="number" name="minimum[processorScore]" placeholder="Processor Score" min="1" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="number" name="minimum[memoryGB]" placeholder="Memory (GB)" min="1" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="text" name="minimum[graphics]" placeholder="Graphics" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="number" name="minimum[graphicsScore]" placeholder="Graphics Score" min="1" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="number" name="minimum[storageGB]" placeholder="Storage (GB)" min="1" class="form-control" required /><div class="error-message"></div></div>
+        </div>
+
+        <h6 class="mt-4">Recommended Requirements</h6>
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div><input type="text" name="recommended[os]" placeholder="OS" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="text" name="recommended[processor]" placeholder="Processor" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="number" name="recommended[processorScore]" placeholder="Processor Score" min="1" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="number" name="recommended[memoryGB]" placeholder="Memory (GB)" min="1" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="text" name="recommended[graphics]" placeholder="Graphics" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="number" name="recommended[graphicsScore]" placeholder="Graphics Score" min="1" class="form-control" required /><div class="error-message"></div></div>
+          <div><input type="number" name="recommended[storageGB]" placeholder="Storage (GB)" min="1" class="form-control" required /><div class="error-message"></div></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Save Requirement</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Requirement Modal -->
+<div class="modal fade" id="editRequirementModal" tabindex="-1" aria-labelledby="editRequirementModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <form class="modal-content" method="POST" action="/admin/edit-requirement" id="editRequirementForm">
+      <input type="hidden" name="requirementId" id="editRequirementId" />
+      <input type="hidden" name="productId" id="editProductId" />
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Game Requirements</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+          style="background: #dc3545; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"
+          onmouseover="this.style.background='#b02a37'" onmouseout="this.style.background='#dc3545'">×</button>
+      </div>
+      <div class="modal-body" style="padding: 2rem;">
+        <h6>Minimum Requirements</h6>
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <input type="text" name="minimum[os]" placeholder="OS" class="form-control" required />
+          <input type="text" name="minimum[processor]" placeholder="Processor" class="form-control" required />
+          <input type="number" name="minimum[processorScore]" placeholder="Processor Score" min="1" class="form-control" required />
+          <input type="number" name="minimum[memoryGB]" placeholder="Memory (GB)" min="1" class="form-control" required />
+          <input type="text" name="minimum[graphics]" placeholder="Graphics" class="form-control" required />
+          <input type="number" name="minimum[graphicsScore]" placeholder="Graphics Score" min="1" class="form-control" required />
+          <input type="number" name="minimum[storageGB]" placeholder="Storage (GB)" min="1" class="form-control" required />
+        </div>
+
+        <h6 class="mt-4">Recommended Requirements</h6>
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <input type="text" name="recommended[os]" placeholder="OS" class="form-control" required />
+          <input type="text" name="recommended[processor]" placeholder="Processor" class="form-control" required />
+          <input type="number" name="recommended[processorScore]" placeholder="Processor Score" min="1" class="form-control" required />
+          <input type="number" name="recommended[memoryGB]" placeholder="Memory (GB)" min="1" class="form-control" required />
+          <input type="text" name="recommended[graphics]" placeholder="Graphics" class="form-control" required />
+          <input type="number" name="recommended[graphicsScore]" placeholder="Graphics Score" min="1" class="form-control" required />
+          <input type="number" name="recommended[storageGB]" placeholder="Storage (GB)" min="1" class="form-control" required />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Update Requirement</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    console.log('Script loaded: Initializing modal handlers');
+
+    // Handle Add Requirement buttons
+    document.querySelectorAll('.btn-add-req').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const productId = this.dataset.productId;
+        console.log('Setting productId for add:', productId);
+        document.getElementById('productId').value = productId;
+
+        // Reset form
+        const form = document.getElementById('requirementForm');
+        form.reset();
+        form.querySelectorAll('.error-message').forEach(error => error.textContent = '');
+      });
+    });
+
+    // Handle Edit Requirement buttons
+    document.querySelectorAll('.btn-edit-req').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const productId = this.dataset.productId;
+        const requirementId = this.dataset.requirementId;
+        let requirement;
+        try {
+          requirement = JSON.parse(this.dataset.requirement || '{}');
+        } catch (e) {
+          console.error('Failed to parse requirement data:', e);
+          requirement = { minimum: {}, recommended: {} };
+        }
+
+        console.log('Loading requirement for edit:', { productId, requirementId, requirement });
+
+        // Validate IDs
+        if (!productId || !requirementId) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Product ID or Requirement ID is missing',
+            confirmButtonColor: '#dc3545'
+          });
+          return;
+        }
+
+        const form = document.getElementById('editRequirementForm');
+        document.getElementById('editRequirementId').value = requirementId;
+        document.getElementById('editProductId').value = productId;
+
+        // Fill minimum requirement fields
+        form.querySelector('[name="minimum[os]"]').value = requirement.minimum?.os || '';
+        form.querySelector('[name="minimum[processor]"]').value = requirement.minimum?.processor || '';
+        form.querySelector('[name="minimum[processorScore]"]').value = requirement.minimum?.processorScore || '';
+        form.querySelector('[name="minimum[memoryGB]"]').value = requirement.minimum?.memoryGB || '';
+        form.querySelector('[name="minimum[graphics]"]').value = requirement.minimum?.graphics || '';
+        form.querySelector('[name="minimum[graphicsScore]"]').value = requirement.minimum?.graphicsScore || '';
+        form.querySelector('[name="minimum[storageGB]"]').value = requirement.minimum?.storageGB || '';
+
+        // Fill recommended requirement fields
+        form.querySelector('[name="recommended[os]"]').value = requirement.recommended?.os || '';
+        form.querySelector('[name="recommended[processor]"]').value = requirement.recommended?.processor || '';
+        form.querySelector('[name="recommended[processorScore]"]').value = requirement.recommended?.processorScore || '';
+        form.querySelector('[name="recommended[memoryGB]"]').value = requirement.recommended?.memoryGB || '';
+        form.querySelector('[name="recommended[graphics]"]').value = requirement.recommended?.graphics || '';
+        form.querySelector('[name="recommended[graphicsScore]"]').value = requirement.recommended?.graphicsScore || '';
+        form.querySelector('[name="recommended[storageGB]"]').value = requirement.recommended?.storageGB || '';
+
+        form.querySelectorAll('.error-message').forEach(error => error.textContent = '');
+      });
+    });
+
+    // Form validation for both modals
+    ['requirementForm', 'editRequirementForm'].forEach(formId => {
+      const form = document.getElementById(formId);
+      if (form) {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          console.log(`Submitting form: ${formId}`);
+          let isValid = true;
+          let invalidFields = [];
+
+          // Clear previous error messages
+          form.querySelectorAll('.error-message').forEach(error => error.textContent = '');
+
+          // Validate inputs
+          form.querySelectorAll('input:not([type="hidden"])').forEach(input => {
+            const errorDiv = input.nextElementSibling;
+            const fieldName = input.placeholder;
+
+            if (!input.value.trim()) {
+              errorDiv.textContent = `${fieldName} is required`;
+              invalidFields.push(fieldName);
+              isValid = false;
+              console.log(`Invalid field: ${fieldName} is empty`);
+            } else if (input.type === 'number') {
+              const value = parseFloat(input.value);
+              if (isNaN(value) || value < 1) {
+                errorDiv.textContent = `${fieldName} must be a positive number`;
+                invalidFields.push(fieldName);
+                isValid = false;
+                console.log(`Invalid field: ${fieldName} = ${input.value}`);
+              }
+            }
+          });
+
+          if (!isValid) {
+            console.log('Form invalid, showing Swal with fields:', invalidFields);
+            Swal.fire({
+              icon: 'error',
+              title: 'Missing or Invalid Fields',
+              text: `Please fill in all required fields correctly: ${invalidFields.join(', ')}`,
+              confirmButtonColor: '#dc3545'
+            });
+          } else {
+            console.log('Form valid, submitting');
+            form.submit();
+          }
+        });
+
+        // Clear error on input
+        form.querySelectorAll('input:not([type="hidden"])').forEach(input => {
+          input.addEventListener('input', function () {
+            const errorDiv = input.nextElementSibling;
+            if (input.value.trim() && (input.type !== 'number' || parseFloat(input.value) >= 1)) {
+              errorDiv.textContent = '';
+              console.log(`Cleared error for: ${input.placeholder}`);
+            }
+          });
+        });
+      }
+    });
+  });
+
+
+
+
+
+
+
+
+
+// Handle success/error query parameters for Swal alerts
+  const urlParams = new URLSearchParams(window.location.search);
+  const success = urlParams.get('success');
+  const error = urlParams.get('error');
+  if (success) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: success,
+      confirmButtonColor: '#007bff'
+    }).then(() => {
+      // Remove query parameter from URL without reloading
+      window.history.replaceState({}, document.title, '/admin/product-management');
+    });
+  } else if (error) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: error,
+      confirmButtonColor: '#dc3545'
+    }).then(() => {
+      // Remove query parameter from URL without reloading
+      window.history.replaceState({}, document.title, '/admin/product-management');
+    });
+  }
+
+  // Handle Upload Game File buttons
+  document.querySelectorAll('.upload-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const productId = this.dataset.productId;
+      console.log('Setting productId for upload:', productId);
+      document.getElementById('uploadGameFileProductId').value = productId;
+
+      // Reset form
+      const form = document.getElementById('uploadGameFileForm');
+      form.reset();
+      form.querySelector('.error-message').textContent = '';
+    });
+  });
+
+  // Updated form validation to include uploadGameFileForm
+  ['requirementForm', 'editRequirementForm', 'uploadGameFileForm'].forEach(formId => {
+    const form = document.getElementById(formId);
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        console.log(`Submitting form: ${formId}`);
+        let isValid = true;
+        let invalidFields = [];
+
+        // Clear previous error messages
+        form.querySelectorAll('.error-message').forEach(error => error.textContent = '');
+
+        // Validate inputs
+        form.querySelectorAll('input:not([type="hidden"])').forEach(input => {
+          const errorDiv = input.nextElementSibling;
+          const fieldName = input.placeholder || input.labels[0]?.textContent;
+
+          if (!input.value.trim()) {
+            errorDiv.textContent = `${fieldName} is required`;
+            invalidFields.push(fieldName);
+            isValid = false;
+            console.log(`Invalid field: ${fieldName} is empty`);
+          } else if (input.type === 'number') {
+            const value = parseFloat(input.value);
+            if (isNaN(value) || value < 1) {
+              errorDiv.textContent = `${fieldName} must be a positive number`;
+              invalidFields.push(fieldName);
+              isValid = false;
+              console.log(`Invalid field: ${fieldName} = ${input.value}`);
+            }
+          } else if (input.type === 'url') {
+            try {
+              new URL(input.value);
+            } catch {
+              errorDiv.textContent = 'Please enter a valid URL';
+              invalidFields.push(fieldName);
+              isValid = false;
+              console.log(`Invalid field: ${fieldName} = ${input.value}`);
+            }
+          }
+        });
+
+        if (!isValid) {
+          console.log('Form invalid, showing Swal with fields:', invalidFields);
+          Swal.fire({
+            icon: 'error',
+            title: 'Missing or Invalid Fields',
+            text: `Please fill in all required fields correctly: ${invalidFields.join(', ')}`,
+            confirmButtonColor: '#dc3545'
+          });
+        } else {
+          console.log('Form valid, submitting');
+          form.submit();
+        }
+      });
+
+      // Clear error on input
+      form.querySelectorAll('input:not([type="hidden"])').forEach(input => {
+        input.addEventListener('input', function () {
+          const errorDiv = input.nextElementSibling;
+          if (input.value.trim() && (input.type !== 'number' || parseFloat(input.value) >= 1)) {
+            errorDiv.textContent = '';
+            console.log(`Cleared error for: ${input.placeholder || input.labels[0]?.textContent}`);
+          } else if (input.type === 'url') {
+            try {
+              new URL(input.value);
+              errorDiv.textContent = '';
+              console.log(`Cleared error for: ${input.placeholder}`);
+            } catch {
+              // Do nothing
+            }
+          }
+        });
+      });
+    }
+  });
+</script>
+
+
+        <%- include('partials/footer') %>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

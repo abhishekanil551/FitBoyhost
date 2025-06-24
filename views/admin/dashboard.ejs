@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITBOY Admin - Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        .chart-card {
+            margin-bottom: 20px;
+        }
+        .chart-filter {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+        .chart-filter select, .chart-filter input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+        .custom-date {
+            display: none;
+        }
+        .category-item, .company-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .company-logo {
+            width: 40px;
+            height: 40px;
+            margin-right: 15px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .category-info, .company-info {
+            flex: 1;
+        }
+        .category-name, .company-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .category-sales, .company-sales {
+            font-size: 14px;
+            color: #666;
+        }
+        .category-revenue, .company-revenue {
+            font-size: 16px;
+            font-weight: 600;
+            color: #8B4513;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <%- include('partials/sidebar', { page: 'dashboard' }) %>
+        
+        <div class="main-content">
+            <%- include('partials/header') %>
+            
+            <div class="dashboard-content">
+                <h1 class="page-title">Dashboard</h1>
+                
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon sales-icon"></div>
+                        <div class="stat-info">
+                            <div class="stat-value">₹<%= totalSales || '0.00' %></div>
+                            <div class="stat-label">Total Sales</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orders-icon"></div>
+                        <div class="stat-info">
+                            <div class="stat-value"><%= totalOrders || 0 %></div>
+                            <div class="stat-label">New Orders</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon customers-icon"></div>
+                        <div class="stat-info">
+                            <div class="stat-value"><%= userCount || 0 %></div>
+                            <div class="stat-label">Customers</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon products-icon"></div>
+                        <div class="stat-info">
+                            <div class="stat-value"><%= productsCount || 0 %></div>
+                            <div class="stat-label">Total Products</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chart Section -->
+                <div class="dashboard-row">
+                    <div class="dashboard-col">
+                        <div class="dashboard-card chart-card">
+                            <div class="card-header">
+                                <h2>Sales Overview</h2>
+                            </div>
+                            <div class="card-content">
+                                <div class="chart-filter">
+                                    <select id="chartFilter">
+                                        <option value="yearly" <%= chartData.filter === 'yearly' ? 'selected' : '' %>>Yearly</option>
+                                        <option value="monthly" <%= chartData.filter === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                                        <option value="custom" <%= chartData.filter === 'custom' ? 'selected' : '' %>>Custom</option>
+                                    </select>
+                                    <input type="date" id="startDate" class="custom-date" value="<%= chartData.filter === 'custom' ? startDate : '' %>">
+                                    <input type="date" id="endDate" class="custom-date" value="<%= chartData.filter === 'custom' ? endDate : '' %>">
+                                </div>
+                                <canvas id="salesChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-row">
+                    <div class="dashboard-col">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>Recent Orders</h2>
+                                <a href="/admin/order-management" class="view-all">View All</a>
+                            </div>
+                            <div class="card-content">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% recentOrders.forEach(order => { %>
+                                            <tr>
+                                                <td><%= order.orderId %></td>
+                                                <td><%= order.customer %></td>
+                                                <td><%= order.date %></td>
+                                                <td>₹<%= order.amount %></td>
+                                                <td><span class="status-badge status-<%= (order.status || 'unknown').toLowerCase() %>"><%= order.status %></span></td>
+                                            </tr>
+                                        <% }) %>
+                                        <% if (recentOrders.length === 0) { %>
+                                            <tr>
+                                                <td colspan="5">No recent orders found</td>
+                                            </tr>
+                                        <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Top Selling Categories -->
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>Top Selling Categories</h2>
+                                <a href="/admin/sales-report" class="view-all">View All</a>
+                            </div>
+                            <div class="card-content">
+                                <div class="category-list">
+                                    <% topCategories.forEach(category => { %>
+                                        <div class="category-item">
+                                            <div class="category-info">
+                                                <div class="category-name"><%= category.name %></div>
+                                                <div class="category-sales"><%= category.units %> sales</div>
+                                            </div>
+                                            <div class="category-revenue">₹<%= category.revenue %></div>
+                                        </div>
+                                    <% }) %>
+                                    <% if (topCategories.length === 0) { %>
+                                        <div class="category-item">
+                                            <div class="category-info">
+                                                No top selling categories found
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-col">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>Top Selling Products</h2>
+                                <a href="/admin/sales-report" class="view-all">View All</a>
+                            </div>
+                            <div class="card-content">
+                                <div class="product-list">
+                                    <% topProducts.forEach(product => { %>
+                                        <div class="product-item">
+                                         <img src="<%= product.poster %>" alt="<%= product.name %>" class="product-logo"  onerror="this.src='/images/product-placeholder.png'">
+                                            <div class="product-info">
+                                                <div class="product-name"><%= product.name %></div>
+                                                <div class="product-sales"><%= product.units %> sales</div>
+                                            </div>
+                                            <div class="product-price">₹<%= product.price %></div>
+                                        </div>
+                                    <% }) %>
+                                    <% if (topProducts.length === 0) { %>
+                                        <div class="product-item">
+                                            <div class="product-info">
+                                                No top selling products found
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+<!-- Top Selling Companies -->
+<div class="dashboard-card">
+    <div class="card-header">
+        <h2>Top Selling Companies</h2>
+        <a href="/admin/sales-report" class="view-all">View All</a>
+    </div>
+    <div class="card-content">
+        <div class="company-list">
+            <% topCompanies.forEach(company => { %>
+                <div class="company-item">
+                    <img src="<%= company.logo %>" alt="<%= company.companyName %>" class="company-logo" onerror="this.src='/images/company-placeholder.png'">
+                    <div class="company-info">
+                        <div class="company-name"><%= company.companyName %></div>
+                        <div class="company-sales"><%= company.units %> units sold</div>
+                    </div>
+                    <div class="company-revenue">₹<%= company.revenue %></div>
+                </div>
+            <% }) %>
+            <% if (topCompanies.length === 0) { %>
+                <div class="company-item">
+                    <div class="company-info">
+                        No top selling companies found
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Chart initialization
+            const chartData = <%- JSON.stringify(chartData) %>;
+            const ctx = document.getElementById('salesChart').getContext('2d');
+            const salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'Sales (₹)',
+                        data: chartData.values,
+                        borderColor: '#8B4513',
+                        backgroundColor: 'rgba(139, 69, 19, 0.2)',
+                        fill: true,
+                        tension: 0.4,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Sales (₹)' },
+                        },
+                        x: {
+                            title: { display: true, text: chartData.filter.charAt(0).toUpperCase() + chartData.filter.slice(1) },
+                        },
+                    },
+                },
+            });
+
+            // Chart filter handling
+            const chartFilter = document.getElementById('chartFilter');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const customDateInputs = document.querySelectorAll('.custom-date');
+
+            // Show/hide custom date inputs
+            const toggleCustomInputs = () => {
+                const isCustom = chartFilter.value === 'custom';
+                customDateInputs.forEach(input => {
+                    input.style.display = isCustom ? 'inline-block' : 'none';
+                });
+            };
+            toggleCustomInputs();
+
+            chartFilter.addEventListener('change', () => {
+                toggleCustomInputs();
+                if (chartFilter.value !== 'custom') {
+                    window.location.href = `/admin/dashboard?chartFilter=${chartFilter.value}`;
+                }
+            });
+
+            // Handle custom date submission
+            const applyCustomFilter = () => {
+                if (chartFilter.value === 'custom' && startDateInput.value && endDateInput.value) {
+                    window.location.href = `/admin/dashboard?chartFilter=custom&startDate=${startDateInput.value}&endDate=${endDateInput.value}`;
+                }
+            };
+            startDateInput.addEventListener('change', applyCustomFilter);
+            endDateInput.addEventListener('change', applyCustomFilter);
+        });
+    </script>
+    <%- include('partials/footer') %>
+</body>
+</html>

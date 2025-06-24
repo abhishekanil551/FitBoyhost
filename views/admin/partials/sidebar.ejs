@@ -1,0 +1,127 @@
+<div class="sidebar" style="position: fixed;">
+    <div class="sidebar-header">
+        <div>
+            <div class="logo">FITBOY</div>
+            <div class="subtitle">ADMIN</div>
+        </div>
+    </div>
+    <nav class="sidebar-nav">
+        <ul>
+            <li class="<%= page === 'dashboard' ? 'active' : '' %>" data-page="dashboard">
+                <a href="/admin/dashboard">
+                    <i class="icon-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="<%= page === 'sales-report' ? 'active' : '' %>" data-page="sales-report">
+                <a href="/admin/sales-report">
+                    <i class="icon-chart"></i>
+                    <span>Sales Report</span>
+                </a>
+            </li>
+            <li class="<%= page === 'product-management' ? 'active' : '' %>" data-page="product-management">
+                <a href="/admin/product-management">
+                    <i class="icon-product"></i>
+                    <span>Product Management</span>
+                </a>
+            </li>
+            <li class="<%= page === 'order-management' ? 'active' : '' %>" data-page="order-management">
+                <a href="/admin/order-management">
+                    <i class="icon-order"></i>
+                    <span>Order Management</span>
+                </a>
+            </li>
+            <li class="<%= page === 'offer-management' ? 'active' : '' %>" data-page="offer-management">
+                <a href="/admin/offer-management">
+                    <i class="icon-offer"></i>
+                    <span>Offer Management</span>
+                </a>
+            </li>
+            <li class="<%= page === 'customer-management' ? 'active' : '' %>" data-page="customer-management">
+                <a href="/admin/customer-management">
+                    <i class="icon-customer"></i>
+                    <span>Customer Management</span>
+                </a>
+            </li>
+            <li class="<%= page === 'coupon-management' ? 'active' : '' %>" data-page="coupon-management">
+                <a href="/admin/coupon-management">
+                    <i class="icon-coupon"></i>
+                    <span>Coupon Management</span>
+                </a>
+            </li>
+            <li class="<%= page === 'category-management' ? 'active' : '' %>" data-page="category-management">
+                <a href="/admin/category-management">
+                    <i class="icon-category"></i>
+                    <span>Category Management</span>
+                </a>
+            </li>
+            <li class="<%= page === 'company-management' ? 'active' : '' %>" data-page="company-management">
+                <a href="/admin/company-management">
+                    <i class="icon-company"></i>
+                    <span>Company Management</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    // Sidebar navigation
+    const sidebarLinks = document.querySelectorAll('.sidebar-nav ul li');
+    const currentPath = window.location.pathname;
+
+    sidebarLinks.forEach(link => {
+        const linkPath = link.querySelector('a').getAttribute('href');
+        // Highlight active link based on URL
+        if (currentPath === linkPath) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+
+        // Handle click to prevent issues
+        link.addEventListener('click', (e) => {
+            // Allow default navigation, but ensure active state updates
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+        });
+    });
+
+    // Sales report download button (for /admin/sales-report page)
+    const downloadReportBtn = document.getElementById('download-report-btn');
+    if (downloadReportBtn) {
+        downloadReportBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/orders/download-report', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to download report');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `sales-report-${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+
+                alert('Sales report downloaded successfully!');
+            } catch (error) {
+                console.error('Error downloading report:', error);
+                alert('Failed to download sales report: ' + error.message);
+            }
+        });
+    }
+});
+</script>

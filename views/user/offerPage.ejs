@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Offers - Game Store</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f8f8;
+            color: #333;
+        }
+        .header-space {
+            background: #ffffff;
+            padding: 20px 0;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .hero-banner {
+            height: 700px;
+            position: relative;
+            margin-bottom: 40px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .banner-container {
+            display: flex;
+            width: 100%;
+            height: 700px;
+            transition: transform 0.5s ease;
+        }
+        .banner-slide {
+            flex: 0 0 100%;
+            height: 700px;
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .banner-slide.active {
+            opacity: 1;
+            visibility: visible;
+            position: relative;
+        }
+        .banner-content {
+            height: 700px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: transparent;
+            border: 1px solid black;
+            border-radius: 10px;
+            padding: 40px;
+            color: white;
+        }
+        .banner-text {
+            max-width: 50%;
+        }
+        .offer-title {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .offer-description {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        .offer-meta {
+            display: flex;
+            gap: 10px;
+        }
+        .discount-badge, .time-left {
+            background: #fff;
+            color: #8B4513;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        .banner-image img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .banner-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        .nav-dot.active {
+            opacity: 1;
+        }
+        .banner-control {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        .banner-control.prev {
+            left: 10px;
+        }
+        .banner-control.next {
+            right: 10px;
+        }
+        .categories-section {
+            margin-bottom: 40px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #000000;
+            text-align: center;
+        }
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .category-box {
+            color: #46473e;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        .category-box:hover {
+            transform: scale(1.05);
+        }
+        .category-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .category-box h3 {
+            margin: 10px 0;
+            font-size: 1.2rem;
+        }
+        .products-section {
+            margin-bottom: 40px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+        }
+        .filter-tab {
+            background: #fff;
+            border: 2px solid #8B4513;
+            color: #8B4513;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s, color 0.3s;
+        }
+        .filter-tab.active, .filter-tab:hover {
+            background: #8B4513;
+            color: white;
+        }
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .product-card {
+            background: #fff;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+            height: 500px;
+            width: 250px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        .product-image {
+            position: relative;
+        }
+        .product-image img {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+        }
+        .sale-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #8B4513;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .product-info {
+            padding: 15px;
+        }
+        .product-name {
+            font-size: 1.2rem;
+            margin: 0 0 10px;
+            color: #333;
+        }
+        .product-price {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .current-price {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #8B4513;
+        }
+        .original-price {
+            font-size: 1rem;
+            color: #999;
+            text-decoration: line-through;
+        }
+        .discount-percent {
+            font-size: 0.9rem;
+            color: #8B4513;
+            font-weight: 600;
+        }
+        .load-more-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .load-more-btn {
+            background: #8B4513;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 auto;
+            transition: background 0.3s;
+        }
+        .load-more-btn:hover {
+            background: #D2B48C;
+            color: #8B4513;
+        }
+        .minimized-offers {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #8B4513;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            display: none;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        .mini-offer-content {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mini-offer-text {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .mini-offer-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-space">
+        <%- include('partials/header') %>
+        <div class="header-placeholder"></div>
+    </div>
+
+    <main class="main-content">
+        <section class="hero-banner">
+            <div class="banner-container">
+                <% if (offers && offers.length > 0) { %>
+                    <% offers.forEach((offer, index) => { %>
+                        <div class="banner-slide <%= index === 0 ? 'active' : '' %>" data-banner="<%= index + 1 %>">
+                            <div class="banner-content" style="background-image: url('<%= offer.banner %>'); background-size: cover; background-position: center;">
+                                <div class="banner-text">
+                                    <h1 class="offer-title">🎮 <%= offer.title %></h1>
+                                    <p class="offer-description">
+                                        <%= offer.type === 'category' ? 
+                                            `Save up to ${offer.discountPercentage}% on ${offer.categoryId.length > 0 ? offer.categoryId.map(cat => cat.name).join(', ') : 'selected categories'}!` : 
+                                            `Get ${offer.discountPercentage}% off on selected games!`
+                                        %>
+                                    </p>
+                                    <div class="offer-meta">
+                                        <span class="discount-badge"><%= offer.discountPercentage %>% OFF</span>
+                                        <span class="time-left">⏰ Ends <%= new Date(offer.duration.end).toLocaleDateString() %></span>
+                                    </div>
+                                </div>
+                                <div class="banner-image">
+                                    <% if (offer.banner) { %>
+                                        <img src="<%= offer.banner %>" alt="<%= offer.title %>" style="width: 100%; height: 300px; object-fit: cover; border-radius: 10px;">
+                                    <% } else { %>
+                                        <div style="width: 100%; height: 300px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                                            🎮 Game Offer
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="banner-slide active" data-banner="1">
+                        <div class="banner-content" style="background: linear-gradient(135deg, #ccc 0%, #999 100%); background-size: cover;">
+                            <div class="banner-text">
+                                <h1 class="offer-title">🎮 No Offers Available</h1>
+                                <p class="offer-description">Check back soon for exciting deals!</p>
+                            </div>
+                            <div class="banner-image">
+                                <div style="width: 100%; height: 300px; background: linear-gradient(135deg, #ccc 0%, #999 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">
+                                    No Offers
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="banner-nav">
+                <% if (offers && offers.length > 0) { %>
+                    <% offers.forEach((_, index) => { %>
+                        <button class="nav-dot <%= index === 0 ? 'active' : '' %>" data-slide="<%= index + 1 %>"></button>
+                    <% }) %>
+                <% } else { %>
+                    <button class="nav-dot active" data-slide="1"></button>
+                <% } %>
+            </div>
+
+            <button class="banner-control prev" id="prevBanner">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="banner-control next" id="nextBanner">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </section>
+
+        <% if (categories && categories.length > 0) { %>
+            <section class="categories-section">
+                <div class="container">
+                    <h2 class="section-title">Categories with Offers</h2>
+                    <div class="categories-grid">
+                        <% categories.forEach(category => { %>
+                            <a href="/games?category=<%= category._id %>">
+                                <div class="category-box">
+                                    <div class="category-icon">
+                                        <i class="fas fa-gamepad"></i>
+                                    </div>
+                                    <h3><%= category.name %></h3>
+                                </div>
+                            </a>
+                        <% }) %>
+                    </div>
+                </div>
+            </section>
+        <% } %>
+
+        <% if (products && products.length > 0) { %>
+            <section class="products-section">
+                <div class="container">
+                    <div class="section-header">
+                        <h2 class="section-title">Games on Offer</h2>
+                    </div>
+
+                    <div class="products-grid" id="productsGrid">
+                        <% products.forEach(product => { %>
+                            <a href="/product-details/<%= product._id %>">
+                                <div class="product-card" data-product-id="<%= product._id %>">
+                                    <div class="product-image">
+                                        <img src="<%= product.image %>" alt="<%= product.name %>">
+                                        <% if (product.isOnSale) { %>
+                                            <div class="sale-badge"><%= product.discount %>% OFF</div>
+                                        <% } %>
+                                    </div>
+                                    <div class="product-info">
+                                        <h3 class="product-name"><%= product.name %></h3>
+                                        <div class="product-price">
+                                            <span class="current-price">₹<%= product.currentPrice %></span>
+                                            <% if (product.isOnSale) { %>
+                                                <span class="original-price">₹<%= product.originalPrice %></span>
+                                                <span class="discount-percent"><%= product.discount %>% OFF</span>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        <% }) %>
+                    </div>
+
+                    <div class="load-more-container">
+                        <button class="load-more-btn" id="loadMoreBtn">
+                            <i class="fas fa-plus"></i>
+                            Load More Offers
+                        </button>
+                    </div>
+                </div>
+            </section>
+        <% } else { %>
+            <section class="no-products-section">
+                <div class="container">
+                    <div class="no-products-message">
+                        <i class="fas fa-shopping-bag" style="font-size: 4rem; color: #ccc; margin-bottom: 1rem;"></i>
+                        <h2>No Products on Offer</h2>
+                        <p>There are currently no products available with special offers. Check back soon for amazing deals!</p>
+                    </div>
+                </div>
+            </section>
+        <% } %>
+
+        <% if (offers && offers.length > 0) { %>
+            <div class="minimized-offers" id="minimizedOffers">
+                <div class="mini-offer-content">
+                    <span class="mini-offer-text">🔥 <%= offers[0].title %>: <%= offers[0].discountPercentage %>% off!</span>
+                    <button class="mini-offer-close" id="closeMiniOffer">×</button>
+                </div>
+            </div>
+        <% } %>
+    </main>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        const backendData = {
+            offers: <%- JSON.stringify(offers) %>,
+            products: <%- JSON.stringify(products) %>,
+            categories: <%- JSON.stringify(categories) %>,
+            userId: '<%= userData ? userData._id : '' %>'
+        };
+
+        class GameOfferPage {
+            constructor() {
+                this.currentBanner = 1;
+                this.totalBanners = backendData.offers.length || 1;
+                this.bannerInterval = null;
+                this.currentFilter = 'all';
+                this.productsPerPage = 8;
+                this.currentPage = 1;
+                this.products = this.prepareProducts();
+                this.init();
+            }
+
+            init() {
+                this.setupBannerSlider();
+                this.setupProductFilters();
+                this.renderProducts();
+                this.setupMinimizedOffer();
+                this.setupLoadMore();
+                this.setupWishlist();
+            }
+
+            prepareProducts() {
+                return backendData.products.map(product => {
+                    const offer = backendData.offers.find(offer => 
+                        (offer.type === 'product' && offer.products.some(p => p._id === product._id)) ||
+                        (offer.type === 'category' && product.category && product.category.some(cat => 
+                            offer.categoryId.some(oc => oc._id === cat._id)))
+                    );
+                    const discount = offer ? offer.discountPercentage : product.discount || 0;
+                    const regularPrice = product.regularPrice || 0;
+                    const salesPrice = product.currentPrice || (offer ? (regularPrice * (100 - discount) / 100).toFixed(2) : regularPrice);
+
+                    return {
+                        id: product._id,
+                        name: product.name,
+                        image: product.image || 'https://via.placeholder.com/300x200',
+                        originalPrice: regularPrice,
+                        currentPrice: salesPrice,
+                        discount,
+                        isOnSale: !!offer || product.isOnSale,
+                        isWishlisted: product.isInWishlist
+                    };
+                });
+            }
+
+            setupBannerSlider() {
+                const prevBtn = document.getElementById('prevBanner');
+                const nextBtn = document.getElementById('nextBanner');
+                const navDots = document.querySelectorAll('.nav-dot');
+
+                if (!prevBtn || !nextBtn || !navDots.length) {
+                    console.error('Banner navigation elements not found');
+                    return;
+                }
+
+                if (this.totalBanners > 1) {
+                    this.startBannerAutoSlide();
+                }
+
+                prevBtn.addEventListener('click', () => this.previousBanner());
+                nextBtn.addEventListener('click', () => this.nextBanner());
+
+                navDots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => this.goToBanner(index + 1));
+                });
+
+                const bannerContainer = document.querySelector('.hero-banner');
+                bannerContainer.addEventListener('mouseenter', () => this.stopBannerAutoSlide());
+                bannerContainer.addEventListener('mouseleave', () => {
+                    if (this.totalBanners > 1) this.startBannerAutoSlide();
+                });
+
+                this.updateBanner();
+            }
+
+            startBannerAutoSlide() {
+                this.bannerInterval = setInterval(() => this.nextBanner(), 5000);
+            }
+
+            stopBannerAutoSlide() {
+                if (this.bannerInterval) clearInterval(this.bannerInterval);
+            }
+
+            nextBanner() {
+                this.currentBanner = this.currentBanner >= this.totalBanners ? 1 : this.currentBanner + 1;
+                this.updateBanner();
+            }
+
+            previousBanner() {
+                this.currentBanner = this.currentBanner <= 1 ? this.totalBanners : this.currentBanner - 1;
+                this.updateBanner();
+            }
+
+            goToBanner(bannerNumber) {
+                this.currentBanner = bannerNumber;
+                this.updateBanner();
+            }
+
+            updateBanner() {
+                const slides = document.querySelectorAll('.banner-slide');
+                const dots = document.querySelectorAll('.nav-dot');
+
+                slides.forEach((slide, index) => {
+                    slide.classList.toggle('active', index + 1 === this.currentBanner);
+                });
+
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index + 1 === this.currentBanner);
+                });
+            }
+
+            setupProductFilters() {
+                const filterTabs = document.querySelectorAll('.filter-tab');
+                filterTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const filter = tab.dataset.filter;
+                        filterTabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        this.currentFilter = filter;
+                        this.currentPage = 1;
+                        this.renderProducts();
+                    });
+                });
+            }
+
+            renderProducts() {
+                const grid = document.getElementById('productsGrid');
+                const filteredProducts = this.getFilteredProducts();
+                const productsToShow = filteredProducts.slice(0, this.currentPage * this.productsPerPage);
+
+                grid.innerHTML = '';
+
+                productsToShow.forEach(product => {
+                    const productCard = this.createProductCard(product);
+                    grid.appendChild(productCard);
+                });
+
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                loadMoreBtn.style.display = productsToShow.length >= filteredProducts.length ? 'none' : 'flex';
+
+                grid.classList.add('fade-in');
+                setTimeout(() => grid.classList.remove('fade-in'), 500);
+            }
+
+            getFilteredProducts() {
+                if (this.currentFilter === 'all') {
+                    return this.products;
+                } else if (this.currentFilter === 'sale') {
+                    return this.products.filter(product => product.isOnSale);
+                }
+                return this.products;
+            }
+
+            createProductCard(product) {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <a href="/product-details/${product.id}">
+                        <div class="product-image">
+                            <img src="${product.image}" alt="${product.name}">
+                            ${product.isOnSale ? `<div class="sale-badge">${product.discount}% OFF</div>` : ''}
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name">${product.name}</h3>
+                            <div class="product-price">
+                                <span class="current-price">₹${product.currentPrice}</span>
+                                ${product.isOnSale ? `
+                                    <span class="original-price">₹${product.originalPrice}</span>
+                                    <span class="discount-percent">${product.discount}% OFF</span>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </a>
+                `;
+                return card;
+            }
+
+            setupLoadMore() {
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                loadMoreBtn.addEventListener('click', () => {
+                    this.currentPage++;
+                    this.renderProducts();
+                });
+            }
+
+            setupMinimizedOffer() {
+                const closeBtn = document.getElementById('closeMiniOffer');
+                const miniOffer = document.getElementById('minimizedOffers');
+
+                if (closeBtn && miniOffer) {
+                    closeBtn.addEventListener('click', () => {
+                        miniOffer.style.transform = 'translateY(100px)';
+                        miniOffer.style.opacity = '0';
+                        setTimeout(() => miniOffer.style.display = 'none', 300);
+                    });
+
+                    setTimeout(() => miniOffer.style.display = 'block', 3000);
+                }
+            }
+
+            showNotification(message) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #8B4513;
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    z-index: 10000;
+                    animation: slideInRight 0.3s ease;
+                    border: 2px solid white;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+
+                setTimeout(() => notification.remove(), 3000);
+            }
+
+            setupWishlist() {
+                // Placeholder for wishlist functionality
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => new GameOfferPage());
+    </script>
+</body>
+</html>

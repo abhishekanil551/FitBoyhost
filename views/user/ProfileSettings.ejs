@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Settings</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --primary-color: #0070f3;
+      --primary-hover: #0060df;
+      --danger-color: #e11d48;
+      --danger-hover: #be123c;
+      --text-color: #111827;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --bg-color: #ffffff;
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+      --input-border: #d1d5db;
+      --input-focus: #0070f3;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+        "Helvetica Neue", sans-serif;
+      line-height: 1.5;
+      color: var(--text-color);
+      background-color: #f9fafb;
+      padding-top: 200px;
+    }
+
+    .navbar-space {
+      height: 180px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-description {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .avatar-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .avatar {
+      width: 6rem;
+      height: 6rem;
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .avatar-fallback {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    .profile-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .editable-field {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1.5rem;
+    }
+
+    .editable-field:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .field-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .field-header label {
+      font-weight: 600;
+    }
+
+    .edit-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .edit-btn:hover {
+      text-decoration: underline;
+    }
+
+    .field-value {
+      font-size: 0.875rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .field-edit {
+      margin-top: 0.5rem;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .form-description {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      padding: 0.625rem;
+      border: 1px solid var(--input-border);
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      background-color: var(--input-bg);
+      width: 100%;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--input-focus);
+      box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.2);
+    }
+
+    .error-message {
+      color: var(--danger-color);
+      font-size: 0.75rem;
+      min-height: 1rem;
+    }
+
+    .btn {
+      padding: 0.625rem 1.25rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      border: none;
+      text-decoration: none;
+    }
+
+    .btn-sm {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.75rem;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+    }
+
+    .btn-outline:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .logout-section {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+
+    .modal {
+      display: flex;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: var(--bg-color);
+      border-radius: 0.5rem;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .modal-header {
+      margin-bottom: 1rem;
+    }
+
+    .modal-body {
+      margin-bottom: 1rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
+    .otp-timer {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    .resend-otp-btn {
+      margin-top: 1rem;
+      color: var(--primary-color);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .resend-otp-btn:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <!-- Include navbar -->
+  <div class="navbar-space">
+    <%- include('partials/settingsNavbar') %>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <h2>Profile</h2>
+        <p class="card-description">Manage your personal information and account settings.</p>
+      </div>
+      <div class="card-content">
+        <div class="avatar-section">
+          <div class="avatar">
+            <img src="<%='https://via.placeholder.com/96' %>" alt="Profile" id="avatar-image">
+            <div class="avatar-fallback" id="avatar-fallback"><%= user.name.charAt(0).toUpperCase() %></div>
+          </div>
+        </div>
+        
+        <div class="profile-fields">
+          <div class="editable-field">
+            <div class="field-header">
+              <label>Name</label>
+              <button class="edit-btn" data-field="name">
+                <i class="fas fa-pencil"></i> Edit
+              </button>
+            </div>
+            <div class="field-content">
+              <p class="field-value" id="name-value"><%= user.name %></p>
+              <div class="field-edit" id="name-edit" style="display: none;">
+                <input type="text" id="name-input">
+                <div class="error-message" id="name-error"></div>
+                <div class="edit-actions">
+                  <button class="btn btn-primary btn-sm save-field-btn" data-field="name">Save</button>
+                  <button class="btn btn-outline btn-sm cancel-edit-btn" data-field="name">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="editable-field">
+            <div class="field-header">
+              <label>Email</label>
+              <% if (!user.googleId) { %>
+                <button class="edit-btn" data-field="email">
+                  <i class="fas fa-pencil"></i> Edit
+                </button>
+              <% } %>
+            </div>
+            <div class="field-content">
+              <p class="field-value" id="email-value"><%= user.email %></p>
+              <p class="form-description">
+                <% if (user.googleId) { %>
+                  This is your Google account email and cannot be changed.
+                <% } else { %>
+                  This is the email address you use to sign in.
+                <% } %>
+              </p>
+              <div class="field-edit" id="email-edit" style="display: none;">
+                <input type="email" id="email-input">
+                <div class="error-message" id="email-error"></div>
+                <div class="edit-actions">
+                  <button class="btn btn-primary btn-sm save-field-btn" data-field="email">Save</button>
+                  <button class="btn btn-outline btn-sm cancel-edit-btn" data-field="email">Cancel</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OTP Modal -->
+        <div id="otp-modal" class="modal" style="display: none;">
+          <div class="modal-content">
+            <a href="#" class="close-modal" id="otp-close-btn">×</a>
+            <div class="modal-header">
+              <h3>Verify Email</h3>
+            </div>
+            <div class="modal-body">
+              <p>An OTP has been sent to your new email address.</p>
+              <div class="form-group">
+                <label for="otp-input">Enter OTP</label>
+                <input type="text" id="otp-input" placeholder="Enter 6-digit OTP" maxlength="6">
+                <div class="error-message" id="otp-error"></div>
+              </div>
+              <div class="otp-timer" id="otp-timer">Time remaining: 2:00</div>
+              <button id="resend-otp-btn" class="resend-otp-btn" style="display: none;">Resend OTP</button>
+            </div>
+            <div class="modal-footer">
+              <button id="confirm-otp-btn" class="btn btn-primary">Verify</button>
+              <button id="cancel-otp-btn" class="btn btn-outline">Cancel</button>
+            </div>
+          </div>
+        </div>
+        
+        <input type="hidden" name="_csrf" value="<%= csrfToken || '' %>">
+        
+        <div class="logout-section">
+          <a href="/logout" class="btn btn-outline" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let otpTimeout = false;
+    let otpTimerInterval;
+    const OTP_TIMEOUT_SECONDS = 120;
+
+    // User data from backend
+    const userData = {
+      name: '<%= user.name %>',
+      email: '<%= user.email %>',
+      googleId: '<%= user.googleId || '' %>',
+      isBlocked: <%= user.isBlocked ? 'true' : 'false' %>
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+      try {
+        if (userData.isBlocked) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Account Blocked',
+            text: 'Your account is blocked. Please contact support.',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            window.location.href = '/logout';
+          });
+          return;
+        }
+        initApp();
+        populateProfileFields();
+      } catch (error) {
+        console.error('Error initializing app:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to load profile. Please try again.',
+          confirmButtonText: 'OK'
+        });
+      }
+    });
+
+    function initApp() {
+      setupEventListeners();
+    }
+
+    function sanitizeInput(input) {
+      return input.replace(/[<>&'"]/g, '');
+    }
+
+    function startOtpTimer() {
+      let timeLeft = OTP_TIMEOUT_SECONDS;
+      const timerElement = document.getElementById('otp-timer');
+      const resendButton = document.getElementById('resend-otp-btn');
+      const confirmButton = document.getElementById('confirm-otp-btn');
+
+      clearInterval(otpTimerInterval);
+
+      otpTimerInterval = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `Time remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 0) {
+          clearInterval(otpTimerInterval);
+          timerElement.textContent = 'OTP has expired';
+          confirmButton.disabled = true;
+          resendButton.style.display = 'block';
+          otpTimeout = true;
+        }
+        timeLeft--;
+      }, 1000);
+    }
+
+    function setupEventListeners() {
+      const editButtons = document.querySelectorAll(".edit-btn");
+      const saveFieldButtons = document.querySelectorAll(".save-field-btn");
+      const cancelEditButtons = document.querySelectorAll(".cancel-edit-btn");
+
+      const originalValues = {
+        name: document.getElementById("name-value").textContent,
+        email: document.getElementById("email-value").textContent
+      };
+
+      editButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const fieldName = button.getAttribute("data-field");
+          const valueElement = document.getElementById(`${fieldName}-value`);
+          const editElement = document.getElementById(`${fieldName}-edit`);
+          const inputElement = document.getElementById(`${fieldName}-input`);
+          inputElement.value = originalValues[fieldName];
+          valueElement.style.display = "none";
+          editElement.style.display = "block";
+          inputElement.focus();
+        });
+      });
+
+      cancelEditButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const fieldName = button.getAttribute("data-field");
+          const valueElement = document.getElementById(`${fieldName}-value`);
+          const editElement = document.getElementById(`${fieldName}-edit`);
+          const errorElement = document.getElementById(`${fieldName}-error`);
+          document.getElementById(`${fieldName}-input`).value = originalValues[fieldName];
+          errorElement.textContent = "";
+          editElement.style.display = "none";
+          valueElement.style.display = "block";
+        });
+      });
+
+      saveFieldButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          const fieldName = button.getAttribute("data-field");
+          const inputElement = document.getElementById(`${fieldName}-input`);
+          const valueElement = document.getElementById(`${fieldName}-value`);
+          const editElement = document.getElementById(`${fieldName}-edit`);
+          const errorElement = document.getElementById(`${fieldName}-error`);
+
+          let newValue = sanitizeInput(inputElement.value.trim());
+          let isValid = true;
+
+          if (fieldName === "name") {
+            if (!newValue) {
+              errorElement.textContent = "Name is required.";
+              isValid = false;
+            } else if (newValue.length < 2) {
+              errorElement.textContent = "Name must be at least 2 characters long.";
+              isValid = false;
+            } else if (newValue.length > 50) {
+              errorElement.textContent = "Name must be less than 50 characters.";
+              isValid = false;
+            } else if (!/^[a-zA-Z\s]+$/.test(newValue)) {
+              errorElement.textContent = "Name must contain only letters and spaces.";
+              isValid = false;
+            } else if (newValue === originalValues.name) {
+              errorElement.textContent = "Please enter a different name.";
+              isValid = false;
+            } else {
+              errorElement.textContent = "";
+            }
+          } else if (fieldName === "email") {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!newValue) {
+              errorElement.textContent = "Email is required.";
+              isValid = false;
+            } else if (!emailRegex.test(newValue)) {
+              errorElement.textContent = "Please enter a valid email address.";
+              isValid = false;
+            } else if (newValue.toLowerCase() === originalValues.email.toLowerCase()) {
+              errorElement.textContent = "Please enter a different email address.";
+              isValid = false;
+            } else {
+              errorElement.textContent = "";
+            }
+          }
+
+          if (!isValid) {
+            Swal.fire({
+              icon: "error",
+              title: "Invalid Input",
+              text: `Please correct the errors in the ${fieldName} field.`,
+              confirmButtonText: "OK"
+            });
+            return;
+          }
+
+          button.textContent = "Saving...";
+          button.disabled = true;
+
+          const csrfToken = document.querySelector('input[name="_csrf"]')?.value || "";
+
+          try {
+            if (fieldName === "name") {
+              const response = await fetch("/updateName", {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  "CSRF-Token": csrfToken
+                },
+                body: JSON.stringify({ name: newValue })
+              });
+
+              if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to update name.");
+              }
+
+              valueElement.textContent = newValue;
+              editElement.style.display = "none";
+              valueElement.style.display = "block";
+              originalValues.name = newValue;
+
+              Swal.fire({
+                icon: "success",
+                title: "Name Updated",
+                text: "Your name has been updated successfully.",
+                confirmButtonText: "OK"
+              });
+
+            } else if (fieldName === "email") {
+              otpTimeout = false;
+              const res = await fetch("/request-email-change", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "CSRF-Token": csrfToken
+                },
+                body: JSON.stringify({ newEmail: newValue })
+              });
+
+              const data = await res.json();
+              if (!res.ok) {
+                throw new Error(data.message || "Failed to request email change.");
+              }
+
+              const otpModal = document.getElementById('otp-modal');
+              otpModal.style.display = 'flex';
+              document.getElementById('otp-input').value = '';
+              document.getElementById('otp-error').textContent = '';
+              document.getElementById('confirm-otp-btn').disabled = false;
+              document.getElementById('resend-otp-btn').style.display = 'none';
+              startOtpTimer();
+
+              otpModal.dataset.newEmail = newValue;
+            }
+
+          } catch (error) {
+            console.error(`Error updating ${fieldName}:`, error);
+            errorElement.textContent = error.message || `Failed to update ${fieldName}.`;
+
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: error.message || `Failed to update ${fieldName}.`,
+              confirmButtonText: "OK"
+            });
+
+          } finally {
+            button.textContent = "Save";
+            button.disabled = false;
+          }
+        });
+      });
+
+      // OTP Modal Event Listeners
+      document.getElementById('resend-otp-btn').addEventListener('click', async () => {
+        const otpModal = document.getElementById('otp-modal');
+        const newEmail = otpModal.dataset.newEmail;
+        const csrfToken = document.querySelector('input[name="_csrf"]')?.value || "";
+
+        try {
+          const res = await fetch("/request-email-change", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "CSRF-Token": csrfToken
+            },
+            body: JSON.stringify({ newEmail })
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.message || "Failed to resend OTP.");
+          }
+
+          document.getElementById('otp-input').value = '';
+          document.getElementById('otp-error').textContent = '';
+          document.getElementById('confirm-otp-btn').disabled = false;
+          document.getElementById('resend-otp-btn').style.display = 'none';
+          otpTimeout = false;
+          startOtpTimer();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'OTP Resent',
+            text: `A new OTP has been sent to ${newEmail}.`,
+            confirmButtonText: 'OK'
+          });
+
+        } catch (error) {
+          console.error('Error resending OTP:', error);
+          document.getElementById('otp-error').textContent = error.message || 'Failed to resend OTP.';
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Failed to resend OTP.',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
+
+      document.getElementById('otp-close-btn').addEventListener('click', () => {
+        document.getElementById('otp-modal').style.display = 'none';
+        clearInterval(otpTimerInterval);
+        document.getElementById('email-edit').style.display = 'none';
+        document.getElementById('email-value').style.display = 'block';
+      });
+
+      document.getElementById('cancel-otp-btn').addEventListener('click', () => {
+        document.getElementById('otp-modal').style.display = 'none';
+        clearInterval(otpTimerInterval);
+        document.getElementById('email-edit').style.display = 'none';
+        document.getElementById('email-value').style.display = 'block';
+      });
+
+      document.getElementById('confirm-otp-btn').addEventListener('click', async () => {
+        const otpInput = document.getElementById('otp-input');
+        const otp = sanitizeInput(otpInput.value.trim());
+        const otpModal = document.getElementById('otp-modal');
+        const newEmail = otpModal.dataset.newEmail;
+        const csrfToken = document.querySelector('input[name="_csrf"]')?.value || "";
+        const errorElement = document.getElementById('otp-error');
+        const confirmButton = document.getElementById('confirm-otp-btn');
+
+        if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+          errorElement.textContent = "Please enter a valid 6-digit OTP.";
+          Swal.fire({
+            icon: 'error',
+            title: 'Invalid OTP',
+            text: 'Please enter a valid 6-digit OTP.',
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+
+        if (otpTimeout) {
+          errorElement.textContent = "OTP has expired. Please resend OTP.";
+          Swal.fire({
+            icon: 'error',
+            title: 'OTP Expired',
+            text: 'The OTP has expired. Please request a new one.',
+            confirmButtonText: 'OK'
+          });
+          return;
+        }
+
+        confirmButton.textContent = "Verifying...";
+        confirmButton.disabled = true;
+
+        try {
+          const confirmRes = await fetch("/confirm-email-change", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "CSRF-Token": csrfToken
+            },
+            body: JSON.stringify({ otp })
+          });
+
+          const confirmData = await confirmRes.json();
+
+          if (!confirmRes.ok) {
+            throw new Error(confirmData.message || "Invalid OTP.");
+          }
+
+          const valueElement = document.getElementById('email-value');
+          const editElement = document.getElementById('email-edit');
+          valueElement.textContent = newEmail;
+          editElement.style.display = 'none';
+          valueElement.style.display = 'block';
+          originalValues.email = newEmail;
+          otpModal.style.display = 'none';
+          clearInterval(otpTimerInterval);
+
+          Swal.fire({
+            icon: "success",
+            title: "Email Updated",
+            text: "Your email has been updated successfully.",
+            confirmButtonText: "OK"
+          }).then(() => {
+            window.location.reload();
+          });
+
+        } catch (error) {
+          console.error('Error verifying OTP:', error);
+          errorElement.textContent = error.message || "Invalid OTP.";
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'Invalid OTP.',
+            confirmButtonText: 'OK'
+          });
+        } finally {
+          confirmButton.textContent = "Verify";
+          confirmButton.disabled = false;
+        }
+      });
+    }
+
+    function populateProfileFields() {
+      document.getElementById("name-value").textContent = userData.name || 'Guest';
+      document.getElementById("email-value").textContent = userData.email || 'No email';
+      if (userData.avatar) {
+        document.getElementById("avatar-image").style.display = "block";
+        document.getElementById("avatar-fallback").style.display = "none";
+      }
+    }
+  </script>
+</body>
+</html>

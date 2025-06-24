@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FITBOY</title>
+  <link rel="stylesheet" href="css/userStyle.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    /* Wishlist Button Styles (consistent with other pages) */
+    .wishlist-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(255, 255, 255, 0.8);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+      transition: all 0.3s ease;
+      border: none;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .wishlist-btn:hover {
+      background-color: white;
+      transform: scale(1.1);
+    }
+
+    .wishlist-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: transparent;
+      stroke: #4d4752; /* Matches --primary-color from games page */
+      stroke-width: 2;
+      transition: all 0.3s ease;
+    }
+
+    .wishlist-btn.active svg {
+      fill: rgb(214, 41, 41);
+    }
+
+    /* Touch-friendly Improvements */
+    @media (hover: none) {
+      .wishlist-btn {
+        width: 44px;
+        height: 44px;
+      }
+    }
+  </style>
+</head>
+<body class="<%= userData ? 'logged-in' : '' %>">
+  <%- include('partials/header') %>
+
+  <!-- Main Content -->
+  <main>
+    <h3 style="color: black;">Recommended</h3>
+
+    <!-- Featured Game Slider -->
+    <section class="featured-slider">
+      <div class="slider-container">
+        <button class="slider-arrow prev"><i class="fas fa-chevron-left"></i></button>
+        <div class="slider-wrapper">
+          <div class="slider-content">
+            <% if (recommendedGames && recommendedGames.length > 0) { %>
+              <% recommendedGames.forEach((game, index) => { %>
+                <div class="slider-item <%= index === 0 ? 'active' : '' %>">
+                  <div class="game-image-container">
+                    <a href="/product-details/<%= game._id %>">
+                      <img src="<%= game.banners[0] || 'https://placehold.co/1200x600/333/white?text=' + encodeURIComponent(game.name) %>" alt="<%= game.name %>">
+                    </a>
+                  </div>
+                  <div class="slider-caption">
+                    <h2><%= game.name %></h2>
+                    <% if (!game.isFree && game.salesPrice) { %>
+                      <div class="game-info"><span>₹<%= game.salesPrice.toLocaleString() %></span></div>
+                    <% } else if (game.isFree) { %>
+                      <div class="game-info"><span>FREE TO PLAY</span></div>
+                    <% } %>
+                    <div class="game-info"><span><%= game.availability || 'Now Available' %></span></div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="slider-item active">
+                <div class="game-image-container">
+                  <img src="https://placehold.co/1200x600/333/white?text=No+Recommended+Games" alt="No Recommended Games">
+                </div>
+                <div class="slider-caption">
+                  <h2>No Recommended Games</h2>
+                  <div class="game-info"><span>Check Back Later</span></div>
+                </div>
+              </div>
+            <% } %>
+          </div>
+        </div>
+        <button class="slider-arrow next"><i class="fas fa-chevron-right"></i></button>
+      </div>
+
+      <!-- Slider Dots -->
+      <div class="slider-dots">
+        <% if (recommendedGames && recommendedGames.length > 0) { %>
+          <% recommendedGames.forEach((_, index) => { %>
+            <span class="dot <%= index === 0 ? 'active' : '' %>" data-slide="<%= index %>"></span>
+          <% }) %>
+        <% } else { %>
+          <span class="dot active" data-slide="0"></span>
+        <% } %>
+      </div>
+    </section>
+
+    <!-- Free Games Section -->
+    <section class="game-section">
+      <h3 class="section-title">FREE GAMES</h3>
+      <div class="game-grid equal">
+        <% if (freeGames && freeGames.length > 0) { %>
+          <% freeGames.forEach(game => { %>
+            <div class="game-card medium">
+              <div class="game-image-container">
+                <button class="wishlist-btn" data-product-id="<%= game._id %>" aria-label="Add to wishlist">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                </button>
+                <a href="/product-details/<%= game._id %>">
+                  <img src="<%= game.poster || 'https://placehold.co/400x600/333/white?text=' + encodeURIComponent(game.name) %>" alt="<%= game.name %>">
+                </a>
+              </div>
+              <div class="game-title"><%= game.name %></div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="game-card medium">
+            <img src="https://placehold.co/400x600/333/white?text=No+Free+Games" alt="No Free Games">
+            <div class="game-title">No Free Games</div>
+          </div>
+        <% } %>
+      </div>
+      <div class="see-more">
+        <a href="/games?isFree=true">SEE MORE</a>
+      </div>
+    </section>
+
+<section class="game-section">
+  <h3 class="section-title">MOST POPULAR</h3>
+  <div class="popular-slider">
+    <!-- <button class="slider-arrow prev"><i class="fas fa-chevron-left"></i></button> -->
+    <div class="game-grid equal">
+      <% if (topProducts && topProducts.length > 0) { %>
+        <% topProducts.forEach(product => { %>
+          <div class="game-card medium">
+            <div class="game-image-container">
+              <button class="wishlist-btn" data-product-id="<%= product._id %>" aria-label="Add to wishlist">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </button>
+              <a href="/product-details/<%= product._id %>">
+                <img src="<%= product.poster || 'https://placehold.co/400x600/333/white?text=' + encodeURIComponent(product.name) %>" alt="<%= product.name %>">
+              </a>
+            </div>
+            <div class="game-title"><%= product.name %></div>
+          </div>
+        <% }) %>
+      <% } else { %>
+        <div class="game-card medium">
+          <img src="https://placehold.co/400x600/333/white?text=No+Popular+Products" alt="No Popular Products">
+          <div class="game-title">No Popular Products</div>
+        </div>
+      <% } %>
+    </div>
+    <!-- <button class="slider-arrow next"><i class="fas fa-chevron-right"></i></button>
+  </div>
+  <div class="slider-dots">
+    <span class="dot active" data-slide="0"></span>
+  </div>
+  <div class="see-more">
+    <a href="/games">SEE MORE</a>
+  </div> -->
+</section>
+
+
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <!-- Combined Slider and Wishlist Script -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Featured Slider
+      const slides = document.querySelectorAll(".featured-slider .slider-item");
+      const prevBtn = document.querySelector(".featured-slider .slider-arrow.prev");
+      const nextBtn = document.querySelector(".featured-slider .slider-arrow.next");
+      const dots = document.querySelectorAll(".featured-slider .slider-dots .dot");
+      let currentIndex = 0;
+      let slideInterval;
+
+      const showSlide = (index) => {
+        slides.forEach((slide, i) => {
+          slide.classList.toggle("active", i === index);
+        });
+        dots.forEach((dot, i) => {
+          dot.classList.toggle("active", i === index);
+        });
+        currentIndex = index;
+      };
+
+      const goToNextSlide = () => {
+        currentIndex = (currentIndex + 1) % slides.length;
+        showSlide(currentIndex);
+      };
+
+      const goToPrevSlide = () => {
+        currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+        showSlide(currentIndex);
+      };
+
+      const resetInterval = () => {
+        clearInterval(slideInterval);
+        slideInterval = setInterval(goToNextSlide, 4000);
+      };
+
+      if (slides.length > 1) {
+        slideInterval = setInterval(goToNextSlide, 4000);
+
+        if (nextBtn) {
+          nextBtn.addEventListener("click", () => {
+            goToNextSlide();
+            resetInterval();
+          });
+        }
+
+        if (prevBtn) {
+          prevBtn.addEventListener("click", () => {
+            goToPrevSlide();
+            resetInterval();
+          });
+        }
+
+        dots.forEach((dot, index) => {
+          dot.addEventListener("click", () => {
+            showSlide(index);
+            resetInterval();
+          });
+        });
+      }
+
+      // Popular Slider
+      const popularSlides = document.querySelectorAll(".popular-slider .game-card");
+      const popularPrevBtn = document.querySelector(".popular-slider .slider-arrow.prev");
+      const popularNextBtn = document.querySelector(".popular-slider .slider-arrow.next");
+      const popularDots = document.querySelectorAll(".popular-slider .slider-dots .dot");
+      let popularIndex = 0;
+
+      const showPopularSlide = (index) => {
+        popularSlides.forEach((slide, i) => {
+          slide.classList.toggle("active", i === index);
+        });
+        popularDots.forEach((dot, i) => {
+          dot.classList.toggle("active", i === index);
+        });
+        popularIndex = index;
+      };
+
+      const goToNextPopularSlide = () => {
+        popularIndex = (popularIndex + 1) % popularSlides.length;
+        showPopularSlide(popularIndex);
+      };
+
+      const goToPrevPopularSlide = () => {
+        popularIndex = (popularIndex - 1 + popularSlides.length) % popularSlides.length;
+        showPopularSlide(popularIndex);
+      };
+
+      if (popularSlides.length > 1) {
+        if (popularNextBtn) {
+          popularNextBtn.addEventListener("click", goToNextPopularSlide);
+        }
+
+        if (popularPrevBtn) {
+          popularPrevBtn.addEventListener("click", goToPrevPopularSlide);
+        }
+
+        popularDots.forEach((dot, index) => {
+          dot.addEventListener("click", () => {
+            showPopularSlide(index);
+          });
+        });
+      }
+
+      // Wishlist Functionality
+      const wishlistBtns = document.querySelectorAll('.wishlist-btn');
+      let isShowingNotification = false;
+
+      async function checkWishlistStatus(productId, button) {
+        try {
+          console.log('Checking wishlist status for product:', productId);
+          const response = await fetch(`/wishlist/status/${productId}`, {
+            credentials: 'same-origin'
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to check wishlist status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log('Wishlist status response:', data);
+
+          if (typeof data.isInWishlist !== 'boolean') {
+            throw new Error('Invalid wishlist status response');
+          }
+
+          if (data.isInWishlist) {
+            button.classList.add('active');
+          } else {
+            button.classList.remove('active');
+          }
+        } catch (err) {
+          console.error('Error checking wishlist status:', err);
+        }
+      }
+
+      wishlistBtns.forEach(btn => {
+        const productId = btn.dataset.productId;
+
+        if (!productId) {
+          console.error('Missing product ID on wishlist button');
+          return;
+        }
+
+        console.log('Initializing wishlist button for product:', productId);
+        checkWishlistStatus(productId, btn);
+
+        btn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Wishlist button clicked for product:', productId);
+
+          const isLoggedIn = document.body.classList.contains('logged-in');
+          console.log('Is logged in:', isLoggedIn);
+
+          if (!isLoggedIn) {
+            showNotification('Please log in to use wishlist');
+            window.location.href = '/login';
+            return;
+          }
+
+          const isActive = this.classList.contains('active');
+          const url = isActive
+            ? `/removefromwishlist/${productId}`
+            : `/addwishlist/${productId}`;
+          const method = isActive ? 'DELETE' : 'POST';
+          console.log('Sending request:', method, url);
+
+          try {
+            const response = await fetch(url, {
+              method: method,
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'same-origin'
+            });
+
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+              if (response.status === 400) {
+                const result = await response.json();
+                showNotification(result.message || 'Product is already in the cart');
+                return;
+              }
+              if (response.status === 401) {
+                showNotification('Please log in to use wishlist');
+                window.location.href = '/login';
+                return;
+              }
+              throw new Error(`Request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('Response data:', result);
+
+            this.classList.toggle('active');
+            showNotification(result.message);
+
+            // Animation
+            this.animate([
+              { transform: 'scale(1)' },
+              { transform: 'scale(1.3)' },
+              { transform: 'scale(1)' }
+            ], {
+              duration: 300,
+              easing: 'ease-in-out'
+            });
+
+          } catch (err) {
+            console.error('Error updating wishlist:', err);
+            showNotification('Failed to update wishlist');
+          }
+        });
+      });
+
+      function showNotification(message) {
+        if (isShowingNotification) return;
+        isShowingNotification = true;
+
+        const notification = document.createElement('div');
+        notification.className = 'wishlist-notification';
+        notification.textContent = message;
+
+        Object.assign(notification.style, {
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          backgroundColor: '#4d4752', /* Matches --primary-color */
+          color: 'white',
+          padding: '10px 20px',
+          borderRadius: '4px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          zIndex: '1000',
+          opacity: '0',
+          transition: 'opacity 0.3s ease'
+        });
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.style.opacity = '1';
+        }, 10);
+
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          setTimeout(() => {
+            document.body.removeChild(notification);
+            isShowingNotification = false;
+          }, 300);
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>

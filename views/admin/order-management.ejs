@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITBOY Admin - Order Controller</title>
+    <link rel="stylesheet" href="/css/style.css">
+      <link rel="stylesheet" href="/css/style.css"/>
+
+    <style>
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            color: #fff;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+        .status-pending { background-color: orange; }
+        .status-paid { background-color: green; }
+        .status-failed { background-color: red; }
+        .filter-bar select,
+        .filter-bar input[type="date"] {
+            padding: 0.4rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .filter-bar .btn-secondary {
+            padding: 0.4rem 1rem;
+            background-color: #888;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <%- include('partials/sidebar', {page: 'order-controller'}) %>
+        
+        <div class="main-content">
+            <%- include('partials/header') %>
+            
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <h1 class="page-title">Order Management</h1>
+                </div>
+                
+                <div class="filter-bar">
+                    <form action="/admin/order-Management" method="GET" class="w-100">
+                        <div class="d-flex flex-wrap align-items-center gap-3">
+                            <div class="search-box flex-grow-1">
+                                <input type="text" name="search" placeholder="Search orders..." value="<%= search %>">
+                                <button type="submit" class="search-button">Search</button>
+                            </div>
+                            <div class="filter-options d-flex gap-2">
+                                <select name="status">
+                                    <% statusOptions.forEach(option => { %>
+                                        <option value="<%= option.value %>" <%= status === option.value ? 'selected' : '' %>>
+                                            <%= option.label %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                                <select name="sort">
+                                    <% sortOptions.forEach(option => { %>
+                                        <option value="<%= option.value %>" <%= sort === option.value ? 'selected' : '' %>>
+                                            <%= option.label %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                                <div class="date-filter d-flex gap-2">
+                                    <input type="date" name="startDate" placeholder="From Date" value="<%= startDate %>">
+                                    <input type="date" name="endDate" placeholder="To Date" value="<%= endDate %>">
+                                </div>
+                                <a href="/admin/order-Management" class="btn btn-secondary">Clear Filters</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="data-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th>Products</th>
+                                <th>Total</th>
+                                <th>Payment</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (orders && orders.length > 0) { %>
+                                <% orders.forEach(order => { %>
+                                    <tr>
+                                        <td>#<%= order.orderNumber || order._id.toString().slice(-6).toUpperCase() %></td>
+                                        <td><%= order.userId?.name || 'N/A' %></td>
+                                        <td><%= order.orderDate ? order.orderDate.toDateString() : 'N/A' %></td>
+                                        <td>
+                                            <%= order.order_items?.length || 0 %> item(s)
+                                            <ul>
+                                                <% order.order_items?.forEach(item => { %>
+                                                    <li>
+                                                        <%= item.productId?.name || 'Unnamed Product' %> - 
+                                                        Qty: <%= item.quantity || 1 %>, 
+                                                        ₹<%= item.price ? item.price.toFixed(2) : '0.00' %>
+                                                    </li>
+                                                <% }) %>
+                                            </ul>
+                                        </td>
+                                        <td>₹<%= order.total ? order.total.toFixed(2) : '0.00' %></td>
+                                        <td><%= order.paymentMethod || 'N/A' %></td>
+                                        <td>
+                                            <span class="status-badge status-<%= order.status %>">
+                                                <%= order.statusDisplay || order.status %>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="8">No orders found.</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+
+                <%- include('partials/pagination', {currentPage: currentPage || 1, totalPages: totalPages || 1, baseUrl: `/admin/orders?search=${encodeURIComponent(search)}&status=${status}&sort=${sort}&startDate=${startDate}&endDate=${endDate}`}) %>
+            </div>
+            
+            <%- include('partials/footer') %>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.action-button.edit').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const orderId = btn.dataset.orderId;
+                const currentStatus = btn.dataset.currentStatus;
+                
+                const newStatus = prompt('Enter new status (pending, paid, failed):', currentStatus);
+                if (newStatus && ['pending', 'paid', 'failed'].includes(newStatus)) {
+                    try {
+                        const response = await fetch(`/admin/order-Management${orderId}/status`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ status: newStatus })
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            alert('Status updated successfully!');
+                            window.location.reload();
+                        } else {
+                            alert('Failed to update status: ' + result.message);
+                        }
+                    } catch (error) {
+                        alert('Error updating status: ' + error.message);
+                    }
+                } else if (newStatus) {
+                    alert('Invalid status. Please use pending, paid, or failed.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

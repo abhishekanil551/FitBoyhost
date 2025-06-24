@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitBoy</title>
+  <link rel="icon" type="image/svg+xml" href="image/logo.svg" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* Reset and Base Styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #333333;
+      line-height: 1.6;
+    }
+    
+    a {
+      text-decoration: none;
+      color: #000000;
+    }
+    
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    /* Navbar Styles */
+    .navbar {
+      background-color: white;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      height: 65px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .navbar-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 0 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .navbar-brand img {
+      height: 40px;
+    }
+    
+    .navbar-links {
+      display: flex;
+      gap: 30px;
+    }
+    
+    .nav-link {
+      color: #000000;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      transition: color 0.3s;
+      padding: 8px 0;
+      position: relative;
+    }
+    
+    .nav-link:hover {
+      color: #00a8ff;
+    }
+    
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      background-color: #00a8ff;
+      transition: width 0.3s;
+    }
+    
+    .nav-link:hover::after {
+      width: 100%;
+    }
+    
+    .navbar-actions {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    
+    .nav-icon {
+      color: #000000;
+      font-size: 18px;
+      transition: color 0.3s;
+      padding: 8px;
+      border-radius: 50%;
+    }
+    
+    .nav-icon:hover {
+      color: #00a8ff;
+      background-color: rgba(0, 168, 255, 0.1);
+    }
+    
+    .menu-toggle {
+      display: none;
+      font-size: 22px;
+      color: rgb(0, 0, 0);
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+    
+    .menu-toggle:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+
+      .navbar-links {
+        position: absolute;
+        top: 65px;
+        left: 0;
+        width: 100%;
+        background-color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+      }
+
+      .navbar-links.active {
+        max-height: 300px;
+        border-bottom: 1px solid #eaeaea;
+      }
+      
+      .nav-link {
+        padding: 15px 20px;
+        width: 100%;
+        border-top: 1px solid #eaeaea;
+      }
+      
+      .nav-link::after {
+        display: none;
+      }
+
+      .navbar-actions {
+        gap: 15px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar-brand img {
+        height: 32px;
+      }
+      
+      .navbar-container {
+        padding: 0 15px;
+      }
+      
+      .nav-icon {
+        font-size: 16px;
+      }
+    }
+
+    /* User Profile Modal */
+    .profile-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .profile-modal.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .profile-content {
+      position: relative;
+      background-color: black;
+      color: white;
+      width: 100%;
+      max-width: 350px;
+      padding: 30px 20px;
+      border-radius: 8px;
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+
+    .profile-modal.active .profile-content {
+      transform: translateY(0);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 50%;
+      transition: background-color 0.3s;
+    }
+
+    .close-btn:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .profile-header {
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 2px solid white;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar-inner {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .profile-name {
+      text-align: center;
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .profile-divider {
+      border-top: 1px solid #444;
+      margin: 15px 0;
+    }
+
+    .wallet-balance {
+      text-align: center;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .profile-button {
+      display: block;
+      width: 100%;
+      padding: 12px 0;
+      margin-bottom: 10px;
+      background: none;
+      border: 1px solid white;
+      color: white;
+      text-transform: uppercase;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-radius: 4px;
+    }
+
+    .profile-button:hover {
+      background-color: white;
+      color: black;
+    }
+    
+    /* Main Content Styles - Just for spacing */
+    main {
+      margin-top: 80px;
+      padding: 20px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="navbar-container">
+    <a class="navbar-brand" href="/home">
+      <img src="https://imgur.com/NtbyY7h.jpg" alt="FitBoy" height="40">
+    </a>
+    <!-- NAV LINKS -->
+    <div class="navbar-links" id="navbarLinks">
+      <a href="/home" class="nav-link">HOME</a>
+      <a href="/games" class="nav-link">GAMES</a>
+      <a href="/library" class="nav-link">LIBRARY</a>
+      <a href="/offer" class="nav-link">OFFERS</a>
+      <a href='/wishlistPage' class="nav-link">WISHLIST</a>
+      <a href="/cart" class="nav-link">CART</a>
+      
+      
+
+    </div>
+    <!-- ACTIONS SECTION -->
+    <div class="navbar-actions">
+      <a href="#" class="nav-icon" id="userIcon"><i class="fas fa-user"></i></a>
+      <!-- Hamburger Menu Icon -->
+      <div class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- User Profile Modal -->
+<div class="profile-modal" id="profileModal">
+  <div class="profile-content">
+    <button class="close-btn" id="closeModal"><i class="fas fa-times"></i></button>
+      
+    <div class="profile-avatar">
+      <div class="avatar-fallback" id="avatar-fallback"><%= userData.name.charAt(0).toUpperCase() %></div>
+    </div>
+    
+    <div class="profile-name"><%=userData.name%></div>
+          
+    <div class="profile-divider"></div>
+    
+    <a href="/settings"><button class="profile-button">SETTINGS</button></a>
+    <a href="/refer"><button class="profile-button">Refer and earn</button></a>
+    <a href="/support"><button class="profile-button">SUPPORT</button></a>
+    <a href="/aboutas"><button class="profile-button">ABOUT US</button></a>
+    <a href="/logout"><button class="profile-button">LOGOUT</button></a>
+    
+  </div>
+</div>
+<script>
+  // Menu toggle functionality
+  const menuToggle = document.getElementById('menuToggle');
+  const navbarLinks = document.getElementById('navbarLinks');
+  
+  menuToggle.addEventListener('click', function() {
+    navbarLinks.classList.toggle('active');
+    // Change icon between bars and times
+    const icon = this.querySelector('i');
+    if (icon.classList.contains('fa-bars')) {
+      icon.classList.remove('fa-bars');
+      icon.classList.add('fa-times');
+    } else {
+      icon.classList.remove('fa-times');
+      icon.classList.add('fa-bars');
+    }
+  });
+  
+  // Close menu when clicking outside
+  document.addEventListener('click', function(event) {
+    const isClickInsideNavbar = navbarLinks.contains(event.target) || 
+                               menuToggle.contains(event.target);
+    
+    if (!isClickInsideNavbar && navbarLinks.classList.contains('active')) {
+      navbarLinks.classList.remove('active');
+      const icon = menuToggle.querySelector('i');
+      icon.classList.remove('fa-times');
+      icon.classList.add('fa-bars');
+    }
+  });
+  
+  // User profile modal functionality
+  const userIcon = document.getElementById('userIcon');
+  const profileModal = document.getElementById('profileModal');
+  const closeModal = document.getElementById('closeModal');
+  
+  userIcon.addEventListener('click', function(e) {
+    e.preventDefault();
+    profileModal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+  });
+  
+  closeModal.addEventListener('click', function() {
+    profileModal.classList.remove('active');
+    document.body.style.overflow = ''; // Restore scrolling
+  });
+  
+  // Close modal when clicking outside
+  profileModal.addEventListener('click', function(e) {
+    if (e.target === profileModal) {
+      profileModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+  
+  // Close modal with Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && profileModal.classList.contains('active')) {
+      profileModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+  
+  // Handle window resize
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 768 && navbarLinks.classList.contains('active')) {
+      navbarLinks.classList.remove('active');
+      const icon = menuToggle.querySelector('i');
+      icon.classList.remove('fa-times');
+      icon.classList.add('fa-bars');
+    }
+  });
+</script>
+
+</body>
+</html>

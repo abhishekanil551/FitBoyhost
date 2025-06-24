@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITBOY Admin - Admin Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Additional styles for admin settings */
+        .tab-container {
+            margin-bottom: 30px;
+        }
+        
+        .tab-header {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .tab-button {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: bold;
+            color: #666;
+            white-space: nowrap;
+        }
+        
+        .tab-button.active {
+            color: #cc0000;
+            border-bottom-color: #cc0000;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .setting-label {
+            font-weight: bold;
+        }
+        
+        .setting-description {
+            color: #777;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .setting-control {
+            display: flex;
+            align-items: center;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #cc0000;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .api-key-item {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .api-key-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .api-key-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin: 0;
+        }
+        
+        .api-key-field {
+            display: flex;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .api-key-field input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #666;
+        }
+        
+        .api-key-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .api-key-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #777;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .setting-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .setting-control {
+                margin-top: 10px;
+            }
+            
+            .api-key-field {
+                flex-direction: column;
+            }
+            
+            .api-key-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <%- include('partials/sidebar', {page: 'admin-settings'}) %>
+        
+        <div class="main-content">
+            <%- include('partials/header') %>
+            
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <h1 class="page-title">Admin Settings</h1>
+                </div>
+                
+                <div class="tab-container">
+                    <div class="tab-header">
+                        <button class="tab-button active" data-tab="admin-users">Admin Users</button>
+                        <button class="tab-button" data-tab="security">Security Settings</button>
+                        <button class="tab-button" data-tab="api-keys">API Keys</button>
+                        <button class="tab-button" data-tab="notifications">Notifications</button>
+                    </div>
+                    
+                    <!-- Admin Users Tab -->
+                    <div id="admin-users" class="tab-content active">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>Admin Users</h2>
+                                <button class="add-button" id="addAdminBtn">
+                                    <i class="fas fa-plus"></i> Add Admin
+                                </button>
+                            </div>
+                            <div class="card-content">
+                                <div class="data-table-wrapper">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Role</th>
+                                                <th>Last Login</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>#ADM-001</td>
+                                                <td>John Doe</td>
+                                                <td>john.doe@fitboy.com</td>
+                                                <td>Super Admin</td>
+                                                <td>Apr 18, 2025 09:45 AM</td>
+                                                <td><span class="status-badge status-active">Active</span></td>
+                                                <td class="actions">
+                                                    <button class="action-button edit"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-button delete"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>#ADM-002</td>
+                                                <td>Jane Smith</td>
+                                                <td>jane.smith@fitboy.com</td>
+                                                <td>Admin</td>
+                                                <td>Apr 17, 2025 03:22 PM</td>
+                                                <td><span class="status-badge status-active">Active</span></td>
+                                                <td class="actions">
+                                                    <button class="action-button edit"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-button delete"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>#ADM-003</td>
+                                                <td>Robert Johnson</td>
+                                                <td>robert.johnson@fitboy.com</td>
+                                                <td>Editor</td>
+                                                <td>Apr 15, 2025 11:30 AM</td>
+                                                <td><span class="status-badge status-active">Active</span></td>
+                                                <td class="actions">
+                                                    <button class="action-button edit"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-button delete"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>#ADM-004</td>
+                                                <td>Emily Davis</td>
+                                                <td>emily.davis@fitboy.com</td>
+                                                <td>Viewer</td>
+                                                <td>Apr 10, 2025 02:15 PM</td>
+                                                <td><span class="status-badge status-inactive">Inactive</span></td>
+                                                <td class="actions">
+                                                    <button class="action-button edit"><i class="fas fa-edit"></i></button>
+                                                    <button class="action-button delete"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Settings Tab -->
+                    <div id="security" class="tab-content">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>Password Policy</h2>
+                            </div>
+                            <div class="card-content">
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Minimum Password Length</div>
+                                        <div class="setting-description">Require at least 8 characters for all passwords</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Require Uppercase Letters</div>
+                                        <div class="setting-description">Passwords must contain at least one uppercase letter</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Require Numbers</div>
+                                        <div class="setting-description">Passwords must contain at least one number</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Require Special Characters</div>
+                                        <div class="setting-description">Passwords must contain at least one special character</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>Login Security</h2>
+                            </div>
+                            <div class="card-content">
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Two-Factor Authentication</div>
+                                        <div class="setting-description">Require two-factor authentication for all admin users</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Limit Failed Login Attempts</div>
+                                        <div class="setting-description">Lock account after 5 failed login attempts</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Session Timeout</div>
+                                        <div class="setting-description">Automatically log out inactive users</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <select>
+                                            <option value="15">15 minutes</option>
+                                            <option value="30" selected>30 minutes</option>
+                                            <option value="60">60 minutes</option>
+                                            <option value="120">2 hours</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button class="add-button">Save Security Settings</button>
+                        </div>
+                    </div>
+                    
+                    <!-- API Keys Tab -->
+                    <div id="api-keys" class="tab-content">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>API Keys</h2>
+                            </div>
+                            <div class="card-content">
+                                <div class="api-key-item">
+                                    <div class="api-key-header">
+                                        <h3 class="api-key-title">Production API Key</h3>
+                                    </div>
+                                    <p>Use this key for your live environment</p>
+                                    <div class="api-key-field">
+                                        <input type="text" value="••••••••••••••••••••••••••••••" readonly>
+                                        <div class="api-key-actions">
+                                            <button class="action-button edit">Regenerate</button>
+                                            <button class="action-button view">Copy</button>
+                                        </div>
+                                    </div>
+                                    <div class="api-key-meta">
+                                        <span>Created: April 10, 2025</span>
+                                        <span>Last used: April 18, 2025</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="api-key-item">
+                                    <div class="api-key-header">
+                                        <h3 class="api-key-title">Development API Key</h3>
+                                    </div>
+                                    <p>Use this key for testing and development</p>
+                                    <div class="api-key-field">
+                                        <input type="text" value="••••••••••••••••••••••••••••••" readonly>
+                                        <div class="api-key-actions">
+                                            <button class="action-button edit">Regenerate</button>
+                                            <button class="action-button view">Copy</button>
+                                        </div>
+                                    </div>
+                                    <div class="api-key-meta">
+                                        <span>Created: April 15, 2025</span>
+                                        <span>Last used: April 17, 2025</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button class="add-button">Generate New API Key</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications Tab -->
+                    <div id="notifications" class="tab-content">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>Email Notifications</h2>
+                            </div>
+                            <div class="card-content">
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">New Order Notifications</div>
+                                        <div class="setting-description">Receive email when a new order is placed</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Low Stock Alerts</div>
+                                        <div class="setting-description">Receive email when product stock is low</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Customer Support Requests</div>
+                                        <div class="setting-description">Receive email for new customer support tickets</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Security Alerts</div>
+                                        <div class="setting-description">Receive email for suspicious login attempts</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <h2>System Notifications</h2>
+                            </div>
+                            <div class="card-content">
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Dashboard Notifications</div>
+                                        <div class="setting-description">Show notifications in the admin dashboard</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div>
+                                        <div class="setting-label">Browser Notifications</div>
+                                        <div class="setting-description">Show browser push notifications</div>
+                                    </div>
+                                    <div class="setting-control">
+                                        <label class="switch">
+                                            <input type="checkbox">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button class="add-button">Save Notification Settings</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="admin-footer">
+                <p>&copy; 2025 FITBOY Admin Panel. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Admin Modal -->
+    <div id="addAdminModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add New Admin</h2>
+            <form id="adminForm">
+                <div class="form-group">
+                    <label for="adminName">Full Name</label>
+                    <input type="text" id="adminName" name="adminName" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminEmail">Email</label>
+                    <input type="email" id="adminEmail" name="adminEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminRole">Role</label>
+                    <select id="adminRole" name="adminRole" required>
+                        <option value="">Select Role</option>
+                        <option value="super_admin">Super Admin</option>
+                        <option value="admin">Admin</option>
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" name="adminPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminConfirmPassword">Confirm Password</label>
+                    <input type="password" id="adminConfirmPassword" name="adminConfirmPassword" required>
+                </div>
+                <button type="submit" class="submit-button">Add Admin</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/js/script.js"></script>
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all buttons and contents
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to current button and content
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Modal functionality
+            const modal = document.getElementById("addAdminModal");
+            const btn = document.getElementById("addAdminBtn");
+            const span = document.getElementsByClassName("close")[0];
+            
+            if (btn) {
+                btn.onclick = function() {
+                    modal.style.display = "block";
+                }
+            }
+            
+            if (span) {
+                span.onclick = function() {
+                    modal.style.display = "none";
+                }
+            }
+            
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+            
+            // Form submission
+            const adminForm = document.getElementById("adminForm");
+            if (adminForm) {
+                adminForm.addEventListener("submit", function(e) {
+                    e.preventDefault();
+                    alert("Admin added successfully!");
+                    modal.style.display = "none";
+                });
+            }
+        });
+    </script>
+</body>
+</html>

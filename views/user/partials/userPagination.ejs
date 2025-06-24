@@ -1,0 +1,91 @@
+<!-- views/partials/pagination.ejs -->
+<style>
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+  
+    .pagination-link {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 4px;
+      background-color: white;
+      color: #333;
+      text-decoration: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      border: 1px solid #e0e0e0;
+      min-width: 40px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+  
+    .pagination-link:hover {
+      background-color: #f5f5f5;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+  
+    .pagination-link.active {
+      background-color: #cc0000;
+      color: white;
+      border-color: #cc0000;
+    }
+  
+    .pagination-dots {
+      display: inline-block;
+      padding: 8px 5px;
+      color: #666;
+    }
+  
+    @media (max-width: 600px) {
+      .pagination-link {
+        padding: 6px 8px;
+        min-width: 30px;
+      }
+    }
+  </style>
+  
+  <div class="pagination">
+    <% if (totalPages > 1) { %>
+      <!-- First & Previous -->
+      <% if (currentPage > 1) { %>
+        <a href="?page=1<%= queryString ? '&' + queryString : '' %>" class="pagination-link" title="First Page">First</a>
+        <a href="?page=<%= currentPage - 1 %><%= queryString ? '&' + queryString : '' %>" class="pagination-link" title="Previous Page">Prev</a>
+      <% } %>
+  
+      <!-- Dynamic Page Numbers -->
+      <% const maxVisible = 2; // Number of pages to show on each side of current %>
+      <% let startPage = Math.max(1, currentPage - maxVisible); %>
+      <% let endPage = Math.min(totalPages, currentPage + maxVisible); %>
+  
+      <!-- Show first page + ellipsis if needed -->
+      <% if (startPage > 1) { %>
+        <a href="?page=1<%= queryString ? '&' + queryString : '' %>" class="pagination-link <%= 1 === currentPage ? 'active' : '' %>">1</a>
+        <% if (startPage > 2) { %>
+          <span class="pagination-dots">...</span>
+        <% } %>
+      <% } %>
+  
+      <!-- Page Numbers -->
+      <% for (let i = startPage; i <= endPage; i++) { %>
+        <a href="?page=<%= i %><%= queryString ? '&' + queryString : '' %>" class="pagination-link <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+      <% } %>
+  
+      <!-- Show last page + ellipsis if needed -->
+      <% if (endPage < totalPages) { %>
+        <% if (endPage < totalPages - 1) { %>
+          <span class="pagination-dots">...</span>
+        <% } %>
+        <a href="?page=<%= totalPages %><%= queryString ? '&' + queryString : '' %>" class="pagination-link <%= totalPages === currentPage ? 'active' : '' %>"><%= totalPages %></a>
+      <% } %>
+  
+      <!-- Next & Last -->
+      <% if (currentPage < totalPages) { %>
+        <a href="?page=<%= currentPage + 1 %><%= queryString ? '&' + queryString : '' %>" class="pagination-link" title="Next Page">Next</a>
+        <a href="?page=<%= totalPages %><%= queryString ? '&' + queryString : '' %>" class="pagination-link" title="Last Page">Last</a>
+      <% } %>
+    <% } %>
+  </div>

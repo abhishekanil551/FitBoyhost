@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - FitBoy Games</title>
+    <link rel="stylesheet" href="/css/orders.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <main class="order-detail-container">
+        <div id="order-detail">
+            <!-- Order details will be loaded here via JavaScript -->
+            <div class="loading">Loading order details...</div>
+        </div>
+    </main>
+
+    <%- include('partials/footer') %>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get order ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('id');
+            
+            if (!orderId) {
+                window.location.href = '/orders';
+                return;
+            }
+            
+            // Load order details
+            let orders = JSON.parse(localStorage.getItem('orders')) || [];
+            const order = orders.find(order => order.orderId === orderId);
+            
+            if (!order) {
+                document.getElementById('order-detail').innerHTML = `
+                    <div class="no-orders">
+                        <div class="no-orders-icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <h2>Order Not Found</h2>
+                        <p>The order you are looking for does not exist.</p>
+                        <a href="/orders" class="order-btn view-btn">Back to Orders</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Format date
+            const orderDate = new Date(order.orderDate);
+            const formattedDate = orderDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Render order details
+            document.getElementById('order-detail').innerHTML = `
+                <div class="order-detail-card">
+                    <div class="order-detail-header">
+                        <h1 class="order-detail-title">
+                            Order #${order.orderId}
+                            <span class="order-status status-${order.status.toLowerCase()}">${order.status}</span>
+                        </h1>
+                        <div class="order-detail-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Order Date</span>
+                                <span class="meta-value">${formattedDate}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Payment Method</span>
+                                <span class="meta-value">${order.paymentMethod}</span>
+                            </div>
+                            ${order.status === 'Cancelled' ? `
+                                <div class="meta-item">
+                                    <span class="meta-label">Cancellation Reason</span>
+                                    <span class="meta-value">${order.cancelReason || 'Not provided'}</span>
+                                </div>
+                            ` : ''}
+                            ${order.status === 'Returned' ? `
+                                <div class="meta-item">
+                                    <span class="meta-label">Return Reason</span>
+                                    <span class="meta-value">${order.returnReason || 'Not provided'}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="order-detail-body">
+                        <h2>Order Items</h2>
+                        <div class="order-items">
+                            ${order.items.map(item => `
+                                <div class="order-item">
+                                    <img src="${item.image}" alt="${item.title}" class="item-image">
+                                    <div class="item-details">
+                                        <div class="item-title">${item.title}</div>
+                                        <div class="item-price">$${item.price.toFixed(2)}</div>
+                                        <div class="item-quantity">Quantity: ${item.quantity}</div>
+                                    </div>
+                                    <div class="item-total">$${(item.price * item.quantity).toFixed(2)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div class="order-totals">
+                            <div class="total-row">
+                                <span class="total-label">Subtotal</span>
+                                <span class="total-value">$${order.subtotal.toFixed(2)}</span>
+                            </div>
+                            <div class="total-row">
+                                <span class="total-label">Taxes</span>
+                                <span class="total-value">$${order.taxes.toFixed(2)}</span>
+                            </div>
+                            <div class="total-row">
+                                <span class="total-label">Shipping</span>
+                                <span class="total-value">${order.shipping === 0 ? 'FREE' : '$' + order.shipping.toFixed(2)}</span>
+                            </div>
+                            ${order.discountAmount > 0 ? `
+                                <div class="total-row">
+                                    <span class="total-label">Discount</span>
+                                    <span class="total-value">-$${order.discountAmount.toFixed(2)}</span>
+                                </div>
+                            ` : ''}
+                            <div class="total-row grand-total">
+                                <span class="total-label">Total</span>
+                                <span class="total-value">$${order.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="shipping-info">
+                            <h2>Shipping Information</h2>
+                            <div class="shipping-address">
+                                ${order.address}
+                            </div>
+                        </div>
+                        
+                        <div class="order-detail-actions">
+                            <a href="/orders" class="order-btn view-btn">
+                                <i class="fas fa-arrow-left"></i> Back to Orders
+                            </a>
+                            ${order.status === 'Delivered' ? `
+                                <button class="order-btn return-btn" data-id="${order.orderId}">
+                                    <i class="fas fa-undo"></i> Return Order
+                                </button>
+                            ` : ''}
+                            ${order.status !== 'Cancelled' && order.status !== 'Delivered' && order.status !== 'Returned' ? `
+                                <button class="order-btn cancel-btn" data-id="${order.orderId}">
+                                    <i class="fas fa-times"></i> Cancel Order
+                                </button>
+                            ` : ''}
+                            <button class="order-btn invoice-btn" data-id="${order.orderId}">
+                                <i class="fas fa-file-pdf"></i> Download Invoice
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Handle modal events
+            document.addEventListener('click', function(e) {
+                // Cancel order button
+                if (e.target.classList.contains('cancel-btn') || e.target.closest('.cancel-btn')) {
+                    const orderId = e.target.dataset.id || e.target.closest('.cancel-btn').dataset.id;
+                    showCancelModal(orderId);
+                }
+                
+                // Return order button
+                if (e.target.classList.contains('return-btn') || e.target.closest('.return-btn')) {
+                    const orderId = e.target.dataset.id || e.target.closest('.return-btn').dataset.id;
+                    showReturnModal(orderId);
+                }
+                
+                // Download invoice button
+                if (e.target.classList.contains('invoice-btn') || e.target.closest('.invoice-btn')) {
+                    const orderId = e.target.dataset.id || e.target.closest('.invoice-btn').dataset.id;
+                    generateInvoice(orderId);
+                }
+                
+                // Close modal button
+                if (e.target.classList.contains('modal-close') || e.target.closest('.modal-close')) {
+                    closeModal();
+                }
+                
+                // Cancel modal button
+                if (e.target.classList.contains('cancel-modal-btn') || e.target.closest('.cancel-modal-btn')) {
+                    closeModal();
+                }
+                
+                // Confirm cancel order button
+                if (e.target.id === 'confirm-cancel' || e.target.closest('#confirm-cancel')) {
+                    const orderId = document.querySelector('.modal').dataset.orderId;
+                    const reason = document.getElementById('cancel-reason').value;
+                    cancelOrder(orderId, reason);
+                }
+                
+                // Confirm return order button
+                if (e.target.id === 'confirm-return' || e.target.closest('#confirm-return')) {
+                    const orderId = document.querySelector('.modal').dataset.orderId;
+                    const reason = document.getElementById('return-reason').value;
+                    
+                    if (!reason.trim()) {
+                        alert('Please provide a reason for the return');
+                        return;
+                    }
+                    
+                    returnOrder(orderId, reason);
+                }
+            });
+            
+            // Show cancel order modal
+            function showCancelModal(orderId) {
+                const modalHTML = `
+                    <div class="modal-overlay">
+                        <div class="modal" data-order-id="${orderId}">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Cancel Order</h3>
+                                <button class="modal-close">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Are you sure you want to cancel this order?</p>
+                                <p>Order ID: ${orderId}</p>
+                                <div>
+                                    <label for="cancel-reason">Reason for cancellation (optional):</label>
+                                    <textarea id="cancel-reason" class="reason-textarea" placeholder="Enter reason for cancellation"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="confirm-cancel" class="modal-btn confirm-btn">Confirm Cancel</button>
+                                <button class="modal-btn cancel-modal-btn">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+            
+            // Show return order modal
+            function showReturnModal(orderId) {
+                const modalHTML = `
+                    <div class="modal-overlay">
+                        <div class="modal" data-order-id="${orderId}">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Return Order</h3>
+                                <button class="modal-close">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Please provide a reason for returning this order:</p>
+                                <p>Order ID: ${orderId}</p>
+                                <div>
+                                    <label for="return-reason">Reason for return (required):</label>
+                                    <textarea id="return-reason" class="reason-textarea" placeholder="Enter reason for return"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button id="confirm-return" class="modal-btn confirm-btn">Confirm Return</button>
+                                <button class="modal-btn cancel-modal-btn">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            }
+            
+            // Close modal
+            function closeModal() {
+                const modalOverlay = document.querySelector('.modal-overlay');
+                if (modalOverlay) {
+                    modalOverlay.remove();
+                }
+            }
+            
+            // Cancel order
+            function cancelOrder(orderId, reason) {
+                let orders = JSON.parse(localStorage.getItem('orders')) || [];
+                const orderIndex = orders.findIndex(order => order.orderId === orderId);
+                
+                if (orderIndex !== -1) {
+                    // Update order status
+                    orders[orderIndex].status = 'Cancelled';
+                    orders[orderIndex].cancelReason = reason;
+                    orders[orderIndex].cancelDate = new Date().toISOString();
+                    
+                    // In a real app, you would also update inventory here
+                    // For each item in the order, increment the stock
+                    
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                    
+                    // Close modal and refresh page
+                    closeModal();
+                    window.location.reload();
+                    
+                    // Show success message
+                    alert('Order cancelled successfully');
+                }
+            }
+            
+            // Return order
+            function returnOrder(orderId, reason) {
+                let orders = JSON.parse(localStorage.getItem('orders')) || [];
+                const orderIndex = orders.findIndex(order => order.orderId === orderId);
+                
+                if (orderIndex !== -1) {
+                    // Update order status
+                    orders[orderIndex].status = 'Returned';
+                    orders[orderIndex].returnReason = reason;
+                    orders[orderIndex].returnDate = new Date().toISOString();
+                    
+                    // In a real app, you would also update inventory here
+                    // For each item in the order, increment the stock
+                    
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                    
+                    // Close modal and refresh page
+                    closeModal();
+                    window.location.reload();
+                    
+                    // Show success message
+                    alert('Return request submitted successfully');
+                }
+            }
+            
+            // Generate and download invoice
+            function generateInvoice(orderId) {
+                let orders = JSON.parse(localStorage.getItem('orders')) || [];
+                const order = orders.find(order => order.orderId === orderId);
+                
+                if (!order) {
+                    alert('Order not found');
+                    return;
+                }
+                
+                // In a real app, you would generate a PDF here
+                // For this example, we'll just open a new window with the invoice
+                
+                const orderDate = new Date(order.orderDate);
+                const formattedDate = orderDate.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                const invoiceWindow = window.open('', '_blank');
+                invoiceWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Invoice - ${order.orderId}</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                margin: 0;
+                                padding: 20px;
+                                color: #333;
+                            }
+                            .invoice-header {
+                                text-align: center;
+                                margin-bottom: 30px;
+                            }
+                            .invoice-title {
+                                font-size: 24px;
+                                margin-bottom: 10px;
+                            }
+                            .company-name {
+                                font-size: 18px;
+                                font-weight: bold;
+                            }
+                            .invoice-details {
+                                display: flex;
+                                justify-content: space-between;
+                                margin-bottom: 30px;
+                            }
+                            .invoice-id {
+                                font-weight: bold;
+                            }
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-bottom: 30px;
+                            }
+                            th, td {
+                                padding: 10px;
+                                text-align: left;
+                                border-bottom: 1px solid #ddd;
+                            }
+                            th {
+                                background-color: #f2f2f2;
+                            }
+                            .totals {
+                                width: 300px;
+                                margin-left: auto;
+                            }
+                            .total-row {
+                                display: flex;
+                                justify-content: space-between;
+                                padding: 5px 0;
+                            }
+                            .grand-total {
+                                font-weight: bold;
+                                font-size: 18px;
+                                border-top: 2px solid #333;
+                                padding-top: 10px;
+                                margin-top: 10px;
+                            }
+                            .footer {
+                                margin-top: 50px;
+                                text-align: center;
+                                font-size: 14px;
+                                color: #666;
+                            }
+                            @media print {
+                                .no-print {
+                                    display: none;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="invoice-header">
+                            <div class="invoice-title">INVOICE</div>
+                            <div class="company-name">FitBoy Games</div>
+                            <div>123 Gaming Street, Game City, GC 12345</div>
+                            <div>Phone: (123) 456-7890 | Email: fitboy55551@gmail.com</div>
+                        </div>
+                        
+                        <div class="invoice-details">
+                            <div>
+                                <div><strong>Bill To:</strong></div>
+                                <div>Customer</div>
+                                <div>${order.address}</div>
+                            </div>
+                            <div>
+                                <div><span class="invoice-id">Invoice #:</span> INV-${order.orderId}</div>
+                                <div><strong>Order ID:</strong> ${order.orderId}</div>
+                                <div><strong>Date:</strong> ${formattedDate}</div>
+                                <div><strong>Payment Method:</strong> ${order.paymentMethod}</div>
+                            </div>
+                        </div>
+                        
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${order.items.map(item => `
+                                    <tr>
+                                        <td>${item.title}</td>
+                                        <td>$${item.price.toFixed(2)}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>$${(item.price * item.quantity).toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        
+                        <div class="totals">
+                            <div class="total-row">
+                                <span>Subtotal:</span>
+                                <span>$${order.subtotal.toFixed(2)}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Taxes:</span>
+                                <span>$${order.taxes.toFixed(2)}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Shipping:</span>
+                                <span>${order.shipping === 0 ? 'FREE' : '$' + order.shipping.toFixed(2)}</span>
+                            </div>
+                            ${order.discountAmount > 0 ? `
+                                <div class="total-row">
+                                    <span>Discount:</span>
+                                    <span>-$${order.discountAmount.toFixed(2)}</span>
+                                </div>
+                            ` : ''}
+                            <div class="total-row grand-total">
+                                <span>Total:</span>
+                                <span>$${order.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="footer">
+                            <p>Thank you for your business!</p>
+                        </div>
+                        
+                        <div class="no-print" style="text-align: center; margin-top: 30px;">
+                            <button onclick="window.print()">Print Invoice</button>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                invoiceWindow.document.close();
+            }
+        });
+    </script>
+</body>
+</html>

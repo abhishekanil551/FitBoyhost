@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FITBOY Admin - Add New Product</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  </head>
+  <style>
+    /* Cropper Modal Styles */
+    .cropper-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 1); /* Changed to fully opaque */
+      opacity: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .cropper-container {
+      background: white;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 900px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .cropper-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .cropper-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    
+    .close-cropper-button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .cropper-image-container {
+      flex: 1;
+      min-height: 300px;
+      max-height: calc(90vh - 150px);
+      overflow: hidden;
+    }
+    
+    .cropper-image-container img {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+    
+    .cropper-actions {
+      padding: 15px 20px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .cropper-controls {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .cropper-btn {
+      padding: 8px 15px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .cropper-btn.primary {
+      background: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+    
+    .cropper-btn:hover {
+      background: #f5f5f5;
+    }
+    
+    .cropper-btn.primary:hover {
+      background: #45a049;
+    }
+  </style>
+  <body>
+    <div class="admin-container">
+      <%- include('partials/sidebar', {page: 'product-management'}) %>
+
+      <div class="main-content">
+        <%- include('partials/header') %>
+
+        <div class="dashboard-content">
+          <div class="page-header">
+            <h1 class="page-title">Add New Product</h1>
+            <a href="/admin/product-management" class="back-button">Back to Products</a>
+          </div>
+
+          <div class="form-container">
+            <form id="add-product-form" method="post">
+              <!-- Basic Information Section -->
+              <div class="form-section">
+                <h3>Basic Information</h3>
+                <div class="form-group">
+                  <label for="name">Product Name*</label>
+                  <input type="text" id="name" name="name" required />
+                  <div id="name-error" class="error-message"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="description">Description*</label>
+                  <textarea id="description" name="description" rows="4" required></textarea>
+                  <div id="description-error" class="error-message"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="systemRequirements">System Requirements*</label>
+                  <textarea id="systemRequirements" name="systemRequirements" rows="4" required></textarea>
+                  <div id="systemRequirements-error" class="error-message"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="trailer">Trailer URL</label>
+                  <input type="text" id="trailer" name="trailer" placeholder="https://youtube.com/watch?v=example" />
+                  <div id="trailer-error" class="error-message"></div>
+                </div>
+              </div>
+
+              <!-- Media Section -->
+              <div class="form-section">
+                <h3>Media</h3>
+                <div class="form-group">
+                  <label for="product-poster">Product Poster*</label>
+                  <div class="file-upload-container">
+                    <input type="file" id="product-poster" name="poster" accept="image/*" required />
+                    <label for="product-poster" class="file-upload-label">Choose File</label>
+                  </div>
+                  <div id="product-poster-error" class="error-message"></div>
+                  <div id="poster-preview-container" class="preview-container"></div>
+                  <input type="hidden" id="poster-url" />
+                  <small class="help-text">Recommended aspect ratio: 2:3</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="product-banners">Product Banners</label>
+                  <div class="file-upload-container">
+                    <input type="file" id="product-banners" name="banners" accept="image/*" multiple />
+                    <label for="product-banners" class="file-upload-label">Choose Files</label>
+                  </div>
+                  <div id="product-banners-error" class="error-message"></div>
+                  <div id="banner-preview-container" class="preview-container"></div>
+                  <input type="hidden" id="banner-urls" />
+                  <small class="help-text">Recommended aspect ratio: 16:9</small>
+                </div>
+              </div>
+
+              <!-- Classification Section -->
+              <div class="form-section">
+                <h3>Classification</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="company">Company*</label>
+                    <select id="company" name="company" required>
+                      <option value="">Select Company</option>
+                      <% company.forEach(comp => { %>
+                      <option value="<%= comp._id %>"><%= comp.companyName %></option>
+                      <% }); %>
+                    </select>
+                    <div id="company-error" class="error-message"></div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="categoryId">Categories*</label>
+                    <div class="action-multiselect">
+                      <div class="selected-categories-container" id="selected-categories-display"></div>
+                      <button type="button" class="add-category-btn" id="toggle-category-dropdown" aria-expanded="false" aria-controls="category-dropdown">
+                        <span class="plus-icon">+</span> Add Category
+                      </button>
+                      <div class="category-dropdown" id="category-dropdown" style="display: none">
+                        <div class="dropdown-header">
+                          <input type="text" id="category-search" placeholder="Search categories..." class="category-search" aria-label="Search categories" />
+                        </div>
+                        <div class="dropdown-body" id="category-options">
+                          <% category.forEach(cat => { %>
+                          <div class="category-option" data-value="<%= cat._id %>">
+                            <label for="cat-<%= cat._id %>"><%= cat.name %></label>
+                            <input type="checkbox" id="cat-<%= cat._id %>" value="<%= cat._id %>" class="category-checkbox" />
+                          </div>
+                          <% }); %>
+                        </div>
+                      </div>
+                      <select id="categoryId" name="categoryId" multiple required style="display: none">
+                        <% category.forEach(cat => { %>
+                        <option value="<%= cat._id %>"><%= cat.name %></option>
+                        <% }); %>
+                      </select>
+                    </div>
+                    <div id="categoryId-error" class="error-message"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pricing Section -->
+              <div class="form-section">
+                <h3>Pricing</h3>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="regularPrice">Regular Price*</label>
+                    <div class="price-input-container">
+                      <span class="currency-symbol">₹</span>
+                      <input type="number" id="regularPrice" name="regularPrice" step="0.01" min="0" required />
+                    </div>
+                    <div id="regularPrice-error" class="error-message"></div>
+                  </div>
+                  <div class="form-group">
+                    <label for="salesPrice">Sales Price*</label>
+                    <div class="price-input-container">
+                      <span class="currency-symbol">₹</span>
+                      <input type="number" id="salesPrice" name="salesPrice" step="0.01" min="0" required />
+                    </div>
+                    <div id="salesPrice-error" class="error-message"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Form Actions -->
+              <div class="form-actions">
+                <a href="/admin/product-management" class="cancel-button">Cancel</a>
+                <button type="submit" class="submit-button">Add Product</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cropper Modal -->
+    <div id="cropper-modal" class="cropper-modal" style="display: none">
+      <div class="cropper-container">
+        <div class="cropper-header">
+          <h3>Crop Image</h3>
+          <button type="button" class="close-cropper-button" aria-label="Close crop modal">×</button>
+        </div>
+        <div class="cropper-image-container">
+          <img id="image-to-crop" src="#" alt="Image to crop" />
+        </div>
+        <div class="cropper-actions">
+          <div class="cropper-controls">
+            <button type="button" id="rotate-left" class="cropper-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+              Rotate Left
+            </button>
+            <button type="button" id="rotate-right" class="cropper-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+                <path d="M21 3v5h-5"></path>
+              </svg>
+              Rotate Right
+            </button>
+          </div>
+          <button type="button" id="confirm-crop" class="cropper-btn primary">Confirm Crop</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Global variables for cropper and image URLs
+        let currentCropper = null;
+        let currentFileInput = null;
+        let currentFileIndex = 0;
+        let currentFiles = [];
+        let imageUrls = { poster: '', banners: [] };
+        const cropperModal = document.getElementById('cropper-modal');
+        const imageToEdit = document.getElementById('image-to-crop');
+
+        // Cloudinary configuration
+        const CLOUD_NAME = 'duxe6ofu7'; // Replace with your Cloudinary cloud name
+        const UPLOAD_PRESET = 'fitboy_products'; // Replace with your upload preset name
+        const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+        // Initialize category dropdown functionality
+        const toggleDropdown = document.getElementById('toggle-category-dropdown');
+        const dropdown = document.getElementById('category-dropdown');
+
+        toggleDropdown.addEventListener('click', function () {
+          const isExpanded = this.getAttribute('aria-expanded') === 'true';
+          this.setAttribute('aria-expanded', !isExpanded);
+          dropdown.style.display = isExpanded ? 'none' : 'block';
+        });
+
+        document.addEventListener('click', function (event) {
+          if (
+            !event.target.closest('#toggle-category-dropdown') &&
+            !event.target.closest('#category-dropdown') &&
+            dropdown.style.display === 'block'
+          ) {
+            toggleDropdown.setAttribute('aria-expanded', 'false');
+            dropdown.style.display = 'none';
+          }
+        });
+
+        // Handle category selection
+        const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
+        const selectedCategoriesDisplay = document.getElementById('selected-categories-display');
+        const hiddenCategorySelect = document.getElementById('categoryId');
+
+        categoryCheckboxes.forEach((checkbox) => {
+          checkbox.addEventListener('change', function () {
+            const categoryId = this.value;
+            const categoryName = this.closest('.category-option').querySelector('label').textContent;
+
+            if (this.checked) {
+              const tag = document.createElement('div');
+              tag.className = 'category-tag';
+              tag.innerHTML = `
+                ${categoryName}
+                <button type="button" class="remove-category" data-id="${categoryId}">×</button>
+              `;
+              selectedCategoriesDisplay.appendChild(tag);
+
+              const option = hiddenCategorySelect.querySelector(`option[value="${categoryId}"]`);
+              option.selected = true;
+            } else {
+              const tag = selectedCategoriesDisplay.querySelector(`.remove-category[data-id="${categoryId}"]`);
+              if (tag) {
+                tag.closest('.category-tag').remove();
+              }
+
+              const option = hiddenCategorySelect.querySelector(`option[value="${categoryId}"]`);
+              option.selected = false;
+            }
+          });
+        });
+
+        selectedCategoriesDisplay.addEventListener('click', function (e) {
+          if (e.target.classList.contains('remove-category')) {
+            const categoryId = e.target.getAttribute('data-id');
+            const checkbox = document.querySelector(`.category-checkbox[value="${categoryId}"]`);
+            if (checkbox) {
+              checkbox.checked = false;
+              checkbox.dispatchEvent(new Event('change'));
+            }
+          }
+        });
+
+        const categorySearch = document.getElementById('category-search');
+        categorySearch.addEventListener('input', function () {
+          const searchTerm = this.value.toLowerCase();
+          const options = document.querySelectorAll('.category-option');
+
+          options.forEach((option) => {
+            const label = option.querySelector('label').textContent.toLowerCase();
+            option.style.display = label.includes(searchTerm) ? 'block' : 'none';
+          });
+        });
+
+        // ---- IMAGE HANDLING WITH CROPPER ----
+
+        async function uploadToCloudinary(blob, folder) {
+          const formData = new FormData();
+          formData.append('file', blob, `${folder}.jpg`);
+          formData.append('upload_preset', UPLOAD_PRESET);
+          formData.append('folder', `products/${folder}`);
+
+          try {
+            const response = await fetch(UPLOAD_URL, {
+              method: 'POST',
+              body: formData,
+            });
+            const result = await response.json();
+            if (result.secure_url) {
+              return result.secure_url;
+            } else {
+              throw new Error(result.error?.message || 'Upload failed');
+            }
+          } catch (error) {
+            console.error('Cloudinary upload error:', error);
+            throw error;
+          }
+        }
+
+        function openCropperModal(file, fileInput, aspectRatio, fileIndex = 0) {
+          currentFileInput = fileInput;
+          currentFileIndex = fileIndex;
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            imageToEdit.src = e.target.result;
+
+            if (currentCropper) {
+              currentCropper.destroy();
+            }
+
+            currentCropper = new Cropper(imageToEdit, {
+              aspectRatio: aspectRatio,
+              viewMode: 1,
+              dragMode: 'move',
+              autoCropArea: 0.8,
+              restore: false,
+              guides: true,
+              center: true,
+              highlight: false,
+              cropBoxMovable: true,
+              cropBoxResizable: true,
+              toggleDragModeOnDblclick: false,
+            });
+
+            cropperModal.style.display = 'flex';
+          };
+
+          reader.readAsDataURL(file);
+        }
+
+        document.getElementById('product-poster').addEventListener('change', function (e) {
+          if (this.files && this.files.length > 0) {
+            if (this.files[0].size > 5 * 1024 * 1024) {
+              Swal.fire({
+                icon: 'error',
+                title: 'File Too Large',
+                text: 'Poster image must be less than 5MB',
+              });
+              this.value = '';
+              return;
+            }
+            openCropperModal(this.files[0], this, 2 / 3);
+          }
+        });
+
+        document.getElementById('product-banners').addEventListener('change', function (e) {
+          if (this.files && this.files.length > 0) {
+            currentFiles = Array.from(this.files);
+            for (const file of currentFiles) {
+              if (file.size > 5 * 1024 * 1024) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'File Too Large',
+                  text: 'Each banner image must be less than 5MB',
+                });
+                this.value = '';
+                return;
+              }
+            }
+
+            const totalBanners = imageUrls.banners.length + currentFiles.length;
+            if (totalBanners > 8) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Too Many Banners',
+                text: `You can only have a maximum of 8 banners. You currently have ${imageUrls.banners.length} banner(s). Please remove some banners to add new ones.`,
+              });
+              this.value = '';
+              return;
+            }
+
+            currentFileIndex = 0;
+            openCropperModal(currentFiles[0], this, 16 / 9, 0);
+          }
+        });
+
+        document.getElementById('rotate-left').addEventListener('click', function () {
+          if (currentCropper) {
+            currentCropper.rotate(-90);
+          }
+        });
+
+        document.getElementById('rotate-right').addEventListener('click', function () {
+          if (currentCropper) {
+            currentCropper.rotate(90);
+          }
+        });
+
+        document.querySelector('.close-cropper-button').addEventListener('click', function () {
+          closeCropperModal();
+        });
+
+        function closeCropperModal() {
+          cropperModal.style.display = 'none';
+          if (currentCropper) {
+            currentCropper.destroy();
+            currentCropper = null;
+          }
+          document.getElementById('product-banners').value = ''; // Clear file input
+        }
+
+        document.getElementById('confirm-crop').addEventListener('click', async function () {
+          if (!currentCropper) return;
+
+          const canvas = currentCropper.getCroppedCanvas({
+            maxWidth: 1024,
+            maxHeight: 1024,
+            fillColor: '#fff',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+          });
+
+          canvas.toBlob(
+            async (blob) => {
+              try {
+                if (currentFileInput.id === 'product-poster') {
+                  const url = await uploadToCloudinary(blob, 'posters');
+                  imageUrls.poster = url;
+                  document.getElementById('poster-url').value = url;
+                  const previewContainer = document.getElementById('poster-preview-container');
+                  previewContainer.innerHTML = `
+                    <div class="image-preview-item">
+                      <img src="${url}" alt="Poster preview" class="preview-image">
+                    </div>
+                  `;
+                  closeCropperModal();
+                } else if (currentFileInput.id === 'product-banners') {
+                  const url = await uploadToCloudinary(blob, 'banners');
+                  imageUrls.banners.push(url); // Append new banner
+                  currentFileIndex++;
+                  if (currentFileIndex < currentFiles.length) {
+                    closeCropperModal();
+                    openCropperModal(currentFiles[currentFileIndex], currentFileInput, 16 / 9, currentFileIndex);
+                    return;
+                  } else {
+                    document.getElementById('banner-urls').value = JSON.stringify(imageUrls.banners);
+                    const previewContainer = document.getElementById('banner-preview-container');
+                    previewContainer.innerHTML = '';
+                    imageUrls.banners.forEach((url, index) => {
+                      const previewItem = document.createElement('div');
+                      previewItem.className = 'image-preview-item';
+                      previewItem.innerHTML = `
+                        <img src="${url}" alt="Banner preview ${index + 1}" class="preview-image">
+                        <button type="button" class="remove-preview" data-index="${index}">×</button>
+                      `;
+                      previewContainer.appendChild(previewItem);
+                    });
+                    closeCropperModal();
+                  }
+                }
+              } catch (error) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Upload Failed',
+                  text: 'Failed to upload image to Cloudinary: ' + error.message,
+                });
+                closeCropperModal();
+              }
+            },
+            'image/jpeg',
+            0.8 // Compress to reduce size
+          );
+        });
+
+        document.getElementById('banner-preview-container').addEventListener('click', function (e) {
+          if (e.target.classList.contains('remove-preview')) {
+            const index = parseInt(e.target.getAttribute('data-index'));
+            imageUrls.banners.splice(index, 1);
+            document.getElementById('banner-urls').value = JSON.stringify(imageUrls.banners);
+            const previewContainer = document.getElementById('banner-preview-container');
+            previewContainer.innerHTML = '';
+            imageUrls.banners.forEach((url, idx) => {
+              const previewItem = document.createElement('div');
+              previewItem.className = 'image-preview-item';
+              previewItem.innerHTML = `
+                <img src="${url}" alt="Banner preview ${idx + 1}" class="preview-image">
+                <button type="button" class="remove-preview" data-index="${idx}">×</button>
+              `;
+              previewContainer.appendChild(previewItem);
+            });
+          }
+        });
+
+        // ---- FORM VALIDATION ----
+
+        const touchedFields = new Set();
+
+        function validateName() {
+          const name = document.getElementById('name').value.trim();
+          if (!name) {
+            showError('name', 'Product name is required');
+            return false;
+          } else if (name.length < 3) {
+            showError('name', 'Product name must be at least 3 characters');
+            return false;
+          } else {
+            showSuccess('name');
+            return true;
+          }
+        }
+
+        function validateDescription() {
+          const desc = document.getElementById('description').value.trim();
+          if (!desc) {
+            showError('description', 'Description is required');
+            return false;
+          } else if (desc.length < 50) {
+            showError('description', 'Description should be at least 50 characters');
+            return false;
+          } else {
+            showSuccess('description');
+            return true;
+          }
+        }
+
+        function validateSystemRequirements() {
+          const req = document.getElementById('systemRequirements').value.trim();
+          if (!req) {
+            showError('systemRequirements', 'System requirements are required');
+            return false;
+          } else {
+            showSuccess('systemRequirements');
+            return true;
+          }
+        }
+
+        function validateTrailer() {
+          const trailer = document.getElementById('trailer').value.trim();
+          if (trailer) {
+            const ytRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+            const vimeoRegex = /^(https?:\/\/)?(www\.)?(vimeo\.com)\/.+$/;
+            if (!ytRegex.test(trailer) && !vimeoRegex.test(trailer)) {
+              showError('trailer', 'Please enter a valid YouTube or Vimeo URL');
+              return false;
+            }
+          }
+          showSuccess('trailer');
+          return true;
+        }
+
+        function validatePoster() {
+          const posterUrl = document.getElementById('poster-url').value;
+          if (!posterUrl) {
+            showError('product-poster', 'Product poster is required');
+            return false;
+          } else {
+            showSuccess('product-poster');
+            return true;
+          }
+        }
+
+        function validateCompany() {
+          const company = document.getElementById('company').value;
+          if (!company) {
+            showError('company', 'Please select a company');
+            return false;
+          } else {
+            showSuccess('company');
+            return true;
+          }
+        }
+
+        function validateCategories() {
+          const selected = Array.from(document.getElementById('categoryId').options).filter(
+            (option) => option.selected
+          ).length;
+          if (selected === 0) {
+            showError('categoryId', 'Please select at least one category');
+            return false;
+          } else {
+            showSuccess('categoryId');
+            return true;
+          }
+        }
+
+        function validateRegularPrice() {
+          const price = document.getElementById('regularPrice').value;
+          if (!price || isNaN(price) || parseFloat(price) < 0) {
+            showError('regularPrice', 'Please enter a valid regular price');
+            return false;
+          } else {
+            showSuccess('regularPrice');
+            return true;
+          }
+        }
+
+        function validateSalesPrice() {
+          const regularPrice = parseFloat(document.getElementById('regularPrice').value);
+          const salesPrice = parseFloat(document.getElementById('salesPrice').value);
+          if (!salesPrice || isNaN(salesPrice) || salesPrice < 0) {
+            showError('salesPrice', 'Please enter a valid sales price');
+            return false;
+          } else if (salesPrice > regularPrice) {
+            showError('salesPrice', 'Sales price cannot be higher than regular price');
+            return false;
+          } else {
+            showSuccess('salesPrice');
+            return true;
+          }
+        }
+
+        function showError(elementId, message) {
+          if (!touchedFields.has(elementId)) return;
+          const inputElement = document.getElementById(elementId);
+          const errorElement = document.getElementById(`${elementId}-error`);
+          if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+          }
+          if (inputElement) {
+            inputElement.classList.add('error-border');
+            inputElement.classList.remove('success-border');
+          }
+        }
+
+        function showSuccess(elementId) {
+          if (!touchedFields.has(elementId)) return;
+          const inputElement = document.getElementById(elementId);
+          const errorElement = document.getElementById(`${elementId}-error`);
+          if (errorElement) {
+            errorElement.style.display = 'none';
+          }
+          if (inputElement) {
+            inputElement.classList.remove('error-border');
+            inputElement.classList.add('success-border');
+          }
+        }
+
+        function markAsTouched(elementId) {
+          touchedFields.add(elementId);
+          const validationFn = {
+            name: validateName,
+            description: validateDescription,
+            systemRequirements: validateSystemRequirements,
+            trailer: validateTrailer,
+            'product-poster': validatePoster,
+            company: validateCompany,
+            categoryId: validateCategories,
+            regularPrice: validateRegularPrice,
+            salesPrice: validateSalesPrice,
+          }[elementId];
+          if (validationFn) validationFn();
+        }
+
+        const setupFieldValidation = (fieldId, validationFn) => {
+          const field = document.getElementById(fieldId);
+          if (!field) return;
+          field.addEventListener('blur', () => {
+            markAsTouched(fieldId);
+          });
+          if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA' || field.tagName === 'SELECT') {
+            field.addEventListener('input', () => {
+              if (touchedFields.has(fieldId)) {
+                validationFn();
+              }
+            });
+            if (field.tagName === 'SELECT') {
+              field.addEventListener('change', () => {
+                if (touchedFields.has(fieldId)) {
+                  validationFn();
+                }
+              });
+            }
+          }
+        };
+
+        setupFieldValidation('name', validateName);
+        setupFieldValidation('description', validateDescription);
+        setupFieldValidation('systemRequirements', validateSystemRequirements);
+        setupFieldValidation('trailer', validateTrailer);
+        setupFieldValidation('regularPrice', validateRegularPrice);
+        setupFieldValidation('salesPrice', validateSalesPrice);
+        setupFieldValidation('company', validateCompany);
+
+        document.getElementById('product-poster').addEventListener('change', () => {
+          markAsTouched('product-poster');
+        });
+
+        document.querySelectorAll('.category-checkbox').forEach((checkbox) => {
+          checkbox.addEventListener('change', () => {
+            markAsTouched('categoryId');
+          });
+        });
+
+        // Form submission
+        document.getElementById('add-product-form').addEventListener('submit', async function (e) {
+          e.preventDefault();
+
+          // Mark all fields as touched
+          const allFields = [
+            'name',
+            'description',
+            'systemRequirements',
+            'product-poster',
+            'company',
+            'categoryId',
+            'regularPrice',
+            'salesPrice',
+          ];
+          allFields.forEach((field) => markAsTouched(field));
+
+          // Validate all fields
+          const isValid =
+            validateName() &&
+            validateDescription() &&
+            validateSystemRequirements() &&
+            validatePoster() &&
+            validateCompany() &&
+            validateCategories() &&
+            validateRegularPrice() &&
+            validateSalesPrice() &&
+            validateTrailer();
+
+          if (!isValid) {
+            const firstError = document.querySelector('.error-message[style="display: block"]');
+            if (firstError) {
+              firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+          }
+
+          // Prepare form data
+          const formData = {
+            name: document.getElementById('name').value.trim(),
+            description: document.getElementById('description').value.trim(),
+            systemRequirements: document.getElementById('systemRequirements').value.trim(),
+            trailer: document.getElementById('trailer').value.trim(),
+            poster: document.getElementById('poster-url').value,
+            banners: JSON.parse(document.getElementById('banner-urls').value || '[]'),
+            company: document.getElementById('company').value,
+            categoryId: Array.from(document.getElementById('categoryId').options)
+              .filter((option) => option.selected)
+              .map((option) => option.value),
+            regularPrice: document.getElementById('regularPrice').value,
+            salesPrice: document.getElementById('salesPrice').value,
+          };
+
+          try {
+            const response = await fetch('/admin/addProduct/add', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(formData),
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Product added successfully!',
+              }).then(() => {
+                window.location.href = '/admin/product-management';
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || result.errors?.message || 'Unknown error',
+              });
+            }
+          } catch (error) {
+            console.error('Error submitting form:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred while adding the product.',
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

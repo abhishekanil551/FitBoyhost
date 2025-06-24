@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wallet - FitBoy Games</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c2e30;
+            --secondary-color: #ff006e;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .wallet-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-color);
+        }
+        .wallet-balance-card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .balance-label {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        .balance-amount {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .transactions-list {
+            display: grid;
+            gap: 1.5rem;
+        }
+        .transaction-card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: var(--background-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .transaction-id {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .transaction-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .transaction-type {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .type-credit {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .type-debit {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .transaction-body {
+            padding: 1.5rem;
+        }
+        .transaction-details {
+            display: flex;
+            justify-content: space-between;
+        }
+        .detail-item {
+            text-align: center;
+        }
+        .detail-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+        .detail-value {
+            font-weight: bold;
+        }
+        .no-transactions {
+            text-align: center;
+            padding: 3rem 1rem;
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        .no-transactions-icon {
+            font-size: 3rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+  <div class="navbar-space">
+    <%- include('partials/settingsNavbar') %>
+  </div>
+    <main class="wallet-container">
+        <h1 class="page-title">My Wallet</h1>
+        <div class="wallet-balance-card">
+            <div class="balance-label">Current Balance</div>
+            <div class="balance-amount" style="color: #424446;">₹<%= typeof walletBalance !== 'undefined' ? walletBalance.toFixed(2) : '0.00' %></div>
+        </div>
+        History
+        <div class="transactions-list">
+            <% if (!transactions || transactions.length === 0) { %>
+                <div class="no-transactions">
+                    <div class="no-transactions-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <h2>No Transactions Found</h2>
+                    <p>You haven't made any wallet transactions yet.</p>
+                </div>
+            <% } else { %>
+                <% transactions.forEach(transaction => { %>
+                    <div class="transaction-card">
+                        <div class="transaction-header">
+                            <div class="transaction-id"><%= transaction._id %></div>
+                            <div class="transaction-date"><%= new Date(transaction.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
+                            <div class="transaction-type type-<%= transaction.type.toLowerCase() %>"><%= transaction.type %></div>
+                        </div>
+                        <div class="transaction-body">
+                            <div class="transaction-details">
+                                <div class="detail-item">
+                                    <div class="detail-label">Amount</div>
+                                    <div class="detail-value">₹<%= transaction.amount.toFixed(2) %></div>
+                                </div>
+                                <div class="detail-item">
+                                    <div class="detail-label">Description</div>
+                                    <div class="detail-value"><%= transaction.description %></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Games Wishlist - FITBOY</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #4d4752;
+            --secondary-color: #444346;
+            --accent-color: #4CAF50;
+            --dark-color: #121212;
+            --light-color: #ffffff;
+            --gray-color: #333333;
+            --light-gray: #f5f5f5;
+            --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --hover-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            background-color: #f9f9f9;
+            color: var(--gray-color);
+            padding-top: 70px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Wishlist Header */
+        .wishlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .wishlist-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+
+        .wishlist-count {
+            background-color: var(--light-gray);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--gray-color);
+            font-weight: 500;
+        }
+
+        /* Empty Wishlist */
+        .empty-wishlist {
+            text-align: center;
+            padding: 80px 0;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .empty-wishlist h2 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+
+        .empty-wishlist p {
+            margin-bottom: 25px;
+            color: #666;
+        }
+
+        .empty-wishlist .star-icon {
+            font-size: 48px;
+            color: #ccc;
+        }
+
+        /* Wishlist Grid */
+        .wishlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px;
+        }
+
+        /* Game Card */
+        .game-card {
+            width: 250px;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: all var(--transition-speed) ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--hover-shadow);
+        }
+
+        .game-image-container {
+            position: relative;
+            overflow: hidden;
+            height: 320px;
+        }
+
+        .game-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .game-card:hover .game-image {
+            transform: scale(1.05);
+        }
+
+        .game-info {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .game-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 1px;
+            color: var(--dark-color);
+        }
+
+        /* Price Styles */
+        .game-price {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1px;
+        }
+
+        .free-tag {
+            color: var(--accent-color);
+            font-weight: 600;
+            background-color: rgba(76, 175, 80, 0.1);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .price-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+
+        .discount-badge {
+            background-color: #ff3b30;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        /* Action Buttons */
+        .game-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .add-to-cart {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all var(--transition-speed) ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-to-cart:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .add-to-cart .button-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        .add-to-cart .cart-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .add-to-cart.added {
+            background-color: #22c55e;
+        }
+
+        .remove-wishlist {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-color);
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            transition: color 0.2s ease;
+            padding: 8px;
+        }
+
+        .remove-wishlist:hover {
+            color: #ff3b30;
+        }
+
+        .star-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 5px;
+            fill: #ff3b30;
+            transition: transform 0.3s ease;
+        }
+
+        .remove-wishlist:hover .star-icon {
+            transform: scale(1.2);
+        }
+
+        /* Back to Shop Button */
+        .back-to-shop {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .back-to-shop:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Notification Toast */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--dark-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification-icon {
+            font-size: 18px;
+        }
+
+        /* Link Styling for Game Image and Title */
+        .game-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .game-link:hover {
+            text-decoration: none;
+        }
+
+        /* Error Message */
+        .error-message {
+            text-align: center;
+            color: #ff3b30;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .wishlist-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 20px;
+            }
+            
+            .game-image-container {
+                height: 300px;
+            }
+            
+            .game-info {
+                padding: 15px;
+            }
+            
+            .game-title {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .wishlist-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .game-card {
+                flex-direction: row;
+                height: auto;
+            }
+            
+            .game-image-container {
+                width: 120px;
+                height: 160px;
+                flex-shrink: 0;
+            }
+            
+            .game-info {
+                flex: 1;
+            }
+            
+            .game-actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .add-to-cart {
+                width: 100%;
+            }
+            
+            .remove-wishlist {
+                padding-left: 0;
+            }
+        }
+    </style>
+</head>
+<body class="<%= user ? 'logged-in' : '' %>">
+    <%- include('partials/header') %>
+    
+    <div class="container">
+        <div class="wishlist-header">
+            <h1 class="wishlist-title">My Games Wishlist</h1>
+            <% if (products && Array.isArray(products) && products.length > 0) { %>
+                <span class="wishlist-count"><%= products.length %> items</span>
+            <% } %>
+        </div>
+
+        <% if (error) { %>
+            <div class="error-message"><%= error %></div>
+        <% } %>
+
+        <% if (!products || !Array.isArray(products) || products.length === 0) { %>
+            <div class="empty-wishlist">
+                <svg class="star-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <h2>Your wishlist is empty</h2>
+                <p>Add games to your wishlist to save them for later</p>
+                <a href="/games" class="back-to-shop">Browse Games</a>
+            </div>
+        <% } else { %>
+            <div class="wishlist-grid">
+                <% products.forEach(item => { %>
+                    <div class="game-card" data-id="<%= item._id %>">
+                        <a href="/product-details/<%= item._id %>" class="game-link">
+                            <div class="game-image-container">
+                                <img src="<%= item.poster || 'https://placehold.co/400x600/333/white?text=' + encodeURIComponent(item.name) %>" alt="<%= item.name %>" class="game-image">
+                            </div>
+                        </a>
+                        <div class="game-info">
+                            <a href="/product-details/<%= item._id %>" class="game-link">
+                                <h3 class="game-title"><%= item.name %></h3>
+                            </a>
+                            <div class="game-price">
+                                <% if (item.isFree) { %>
+                                    <span class="free-tag">FREE TO PLAY</span>
+                                <% } else { %>
+                                    <% if (item.salesPrice < item.regularPrice) { %>
+                                        <div>
+                                            <span class="original-price">₹<%= item.regularPrice.toLocaleString() %></span>
+                                            <span class="price-amount">₹<%= item.salesPrice.toLocaleString() %></span>
+                                            <% const discount = Math.round((1 - item.salesPrice / item.regularPrice) * 100); %>
+                                            <span class="discount-badge">-<%= discount %>%</span>
+                                        </div>
+                                    <% } else { %>
+                                        <span class="price-amount">₹<%= item.salesPrice.toLocaleString() %></span>
+                                    <% } %>
+                                <% } %>
+                            </div>
+                            <div class="game-actions">
+                                <% if (!item.isFree) { %>
+                                    <button class="add-to-cart" data-id="<%= item._id %>">
+                                        <svg class="cart-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="9" cy="21" r="1"></circle>
+                                            <circle cx="20" cy="21" r="1"></circle>
+                                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                                        </svg>
+                                        <span class="button-text">Add to cart</span>
+                                    </button>
+                                <% } %>
+                                <button class="remove-wishlist" data-id="<%= item._id %>">
+                                    <svg class="star-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                    </svg>
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add to cart functionality
+            const addToCartButtons = document.querySelectorAll('.add-to-cart');
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', async function() {
+                    const productId = this.getAttribute('data-id');
+                    const btn = this;
+                    
+                    try {
+                        const response = await fetch(`/cart/add/${productId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            credentials: 'same-origin'
+                        });
+
+                        if (!response.ok) {
+                            if (response.status === 401) {
+                                showNotification('error', 'Please log in to add items to your cart');
+                                setTimeout(() => {
+                                    window.location.href = '/login';
+                                }, 2000);
+                                return;
+                            }
+                            throw new Error(`Failed to add to cart: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        btn.classList.add('added');
+                        showNotification('success', data.message || 'Game added to your cart');
+                        
+                        // Trigger page refresh after notification is shown
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000); // Delay to allow notification to be visible
+                    } catch (error) {
+                        console.error('Error adding to cart:', error);
+                        showNotification('error', 'Failed to add game to cart');
+                    }
+                });
+            });
+
+            // Remove from wishlist functionality
+            const removeButtons = document.querySelectorAll('.remove-wishlist');
+            removeButtons.forEach(button => {
+                button.addEventListener('click', async function() {
+                    const productId = this.getAttribute('data-id');
+                    const gameCard = this.closest('.game-card');
+                    
+                    try {
+                        const response = await fetch(`/removefromwishlist/${productId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            credentials: 'same-origin'
+                        });
+
+                        if (!response.ok) {
+                            if (response.status === 401) {
+                                showNotification('error', 'Please log in to modify your wishlist');
+                                setTimeout(() => {
+                                    window.location.href = '/login';
+                                }, 2000);
+                                return;
+                            }
+                            throw new Error(`Failed to remove from wishlist: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+                        
+                        // Animate card removal
+                        gameCard.style.opacity = '0';
+                        gameCard.style.transform = 'scale(0.9)';
+                        gameCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                        
+                        setTimeout(() => {
+                            gameCard.remove();
+                            
+                            // Update count
+                            const wishlistCount = document.querySelector('.wishlist-count');
+                            if (wishlistCount) {
+                                const currentCount = parseInt(wishlistCount.textContent);
+                                const newCount = currentCount - 1;
+                                
+                                if (newCount > 0) {
+                                    wishlistCount.textContent = `${newCount} items`;
+                                } else {
+                                    // If no items left, show empty state
+                                    const wishlistGrid = document.querySelector('.wishlist-grid');
+                                    const container = document.querySelector('.container');
+                                    
+                                    // Remove count
+                                    wishlistCount.remove();
+                                    
+                                    // Replace grid with empty state
+                                    wishlistGrid.outerHTML = `
+                                        <div class="empty-wishlist">
+                                            <svg class="star-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                            </svg>
+                                            <h2>Your wishlist is empty</h2>
+                                            <p>Add games to your wishlist to save them for later</p>
+                                            <a href="/games" class="back-to-shop">Browse Games</a>
+                                        </div>
+                                    `;
+                                }
+                            }
+                            
+                            showNotification('success', data.message || 'Game removed from wishlist');
+                        }, 300);
+                    } catch (error) {
+                        console.error('Error removing from wishlist:', error);
+                        showNotification('error', 'Failed to remove game from wishlist');
+                    }
+                });
+            });
+
+            // Notification function
+            function showNotification(type, message) {
+                // Remove any existing notifications
+                const existingNotification = document.querySelector('.notification');
+                if (existingNotification) {
+                    existingNotification.remove();
+                }
+                
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.className = 'notification';
+                
+                // Set icon based on type
+                let icon = '';
+                if (type === 'success') {
+                    icon = '<i class="fas fa-check-circle notification-icon"></i>';
+                } else if (type === 'error') {
+                    icon = '<i class="fas fa-exclamation-circle notification-icon"></i>';
+                }
+                
+                notification.innerHTML = `${icon}<span>${message}</span>`;
+                document.body.appendChild(notification);
+                
+                // Show notification
+                setTimeout(() => {
+                    notification.classList.add('show');
+                }, 10);
+                
+                // Hide and remove notification after 3 seconds
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 300);
+                }, 3000);
+            }
+        });
+    </script>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

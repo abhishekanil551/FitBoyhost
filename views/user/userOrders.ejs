@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order History</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root {
+      --primary-color: #0070f3;
+      --primary-hover: #0060df;
+      --success-color: #10b981;
+      --text-color: #111827;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --bg-color: #ffffff;
+      --card-bg: #ffffff;
+      --input-bg: #ffffff;
+      --input-border: #d1d5db;
+      --input-focus: #0070f3;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+        "Helvetica Neue", sans-serif;
+      line-height: 1.5;
+      color: var(--text-color);
+      background-color: #f9fafb;
+      padding-top: 200px; /* Space for navbar */
+    }
+
+    .navbar-space {
+      background-color: #f9fafb;
+      height: 180px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-description {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .card-content {
+      padding: 1.5rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+    }
+
+    .search-bar input {
+      padding: 0.625rem;
+      border: 1px solid var(--input-border);
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      background-color: var(--input-bg);
+      margin-right: 0.5rem;
+    }
+
+    .search-bar button {
+      padding: 0.625rem 1.25rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .search-bar button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .order-item:last-child {
+      border-bottom: none;
+    }
+
+    .order-info {
+      flex-grow: 1;
+    }
+
+    .order-number {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .order-details {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .order-actions .btn {
+      padding: 0.625rem 1.25rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .order-actions .btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .no-orders {
+      text-align: center;
+      font-size: 1rem;
+      color: var(--text-muted);
+      padding: 1.5rem 0;
+    }
+
+    .continue-shopping-btn {
+      display: block;
+      margin: 1.5rem auto 0;
+      padding: 0.625rem 1.25rem;
+      background-color: var(--success-color);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .continue-shopping-btn:hover {
+      background-color: #0a875d;
+    }
+
+    @media (max-width: 640px) {
+      .order-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+
+      .order-actions {
+        width: 100%;
+      }
+
+      .order-actions .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Include navbar -->
+  <div class="navbar-space">
+  <%- include('partials/settingsNavbar') %>
+
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <div class="section-header">
+          <div class="section-title">Your Orders</div>
+          <div class="search-bar">
+          </div>
+        </div>
+        <p class="card-description">View and manage your order history.</p>
+      </div>
+      <div class="card-content">
+        <% if (orders && orders.length > 0) { %>
+          <% orders.forEach(order => { %>
+            <div class="order-item">
+              <div class="order-info">
+                <div class="order-number">Order #<%= order.orderNumber %></div>
+                <div class="order-details">
+                  <p>Status: <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %></p>
+                  <p>Order Date: <%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+                  <p>Total: Rs.<%= order.total.toFixed(2) %></p>
+                  <p>Items: <%= order.order_items.length %></p>
+                </div>
+              </div>
+              <div class="order-actions">
+                <a href="/orders/invoice/<%= order._id %>" class="btn">Download Invoice</a>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p class="no-orders">You haven't placed any orders yet.</p>
+        <% } %>
+
+        <a href="/games" class="continue-shopping-btn">Continue Shopping</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log('Orders page loaded successfully');
+    });
+  </script>
+</body>
+</html>

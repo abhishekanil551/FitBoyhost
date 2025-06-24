@@ -1,0 +1,2239 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FitBoy</title>
+  <link rel="icon" type="image/svg+xml" href="image/logo.svg" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Add SweetAlert2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Add jQuery CDN for OTP modal -->
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <!-- Add GSAP and ScrollTrigger CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <style>
+    /* ==================== GENERAL STYLES ==================== */
+    
+    :root {
+      --primary-color: #007bff;
+      --dark-bg: #000000;
+      --light-text: #ffffff;
+      --error-color: #dc3545;
+      --border-color: #ced4da;
+      --hover-color: #6c757d;
+    }
+    
+    body {
+      background: black;
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-attachment: fixed;
+      min-height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      overflow-x: hidden;
+    }
+    
+    .navbar {
+      background-color: transparent !important;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(-50px);
+      transition: all 0.8s ease;
+    }
+
+    .navbar.loaded {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==================== VIDEO HERO SECTION ==================== */
+    .video-hero-section {
+      position: relative;
+      height: 100vh;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .video-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+
+    .video-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2;
+    }
+
+    .video-content {
+      position: relative;
+      z-index: 3;
+      text-align: center;
+      color: white;
+      padding: 20px;
+      max-width: 800px;
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all 1s ease;
+    }
+
+    .video-content.loaded {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .video-content h1 {
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+      font-size: 3.5rem;
+      transform: translateY(30px);
+      opacity: 0;
+      transition: all 1s ease 0.3s;
+    }
+
+    .video-content.loaded h1 {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .video-content p {
+      margin-bottom: 2rem;
+      font-size: 1.2rem;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+      transform: translateY(30px);
+      opacity: 0;
+      transition: all 1s ease 0.6s;
+    }
+
+    .video-content.loaded p {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ==================== SCROLL DOWN BUTTON STYLES ==================== */
+    .scroll-down-container {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.8s ease 1s;
+    }
+    
+    .scroll-down-container.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .scroll-down-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+    }
+
+    .scroll-down-button:hover {
+      transform: translateY(-5px);
+    }
+    
+    .scroll-down-arrow {
+      margin-top: 8px;
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: pulse-border 2s infinite, bounce-arrow 2s infinite;
+      transition: all 0.3s ease;
+    }
+
+    .scroll-down-button:hover .scroll-down-arrow {
+      border-color: #ff3333;
+      box-shadow: 0 0 20px rgba(255, 51, 51, 0.5);
+    }
+    
+    .scroll-down-arrow::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-right: 2px solid white;
+      border-bottom: 2px solid white;
+      transform: rotate(45deg) translateY(-2px);
+      transition: all 0.3s ease;
+    }
+
+    .scroll-down-button:hover .scroll-down-arrow::after {
+      border-color: #ff3333;
+    }
+    
+    @keyframes pulse-border {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+      }
+    }
+
+    @keyframes bounce-arrow {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-10px);
+      }
+      60% {
+        transform: translateY(-5px);
+      }
+    }
+
+    /* ==================== GAME CARD STYLES ==================== */
+    .game-card {
+      background-color: #8d816f;
+      height: 500px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      /* Initial state - hidden */
+      opacity: 0;
+      transform: translateY(80px) scale(0.9);
+      visibility: hidden;
+    }
+
+    /* Animation states */
+    .game-card.animate-in {
+      animation: cardRevealIn 1s ease forwards;
+    }
+
+    .game-card.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      visibility: visible;
+    }
+
+    @keyframes cardRevealIn {
+      0% {
+        opacity: 0;
+        transform: translateY(80px) scale(0.9);
+        visibility: hidden;
+      }
+      50% {
+        opacity: 0.7;
+        transform: translateY(20px) scale(0.95);
+        visibility: visible;
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        visibility: visible;
+      }
+    }
+    
+    .game-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    .game-card img {
+      height: 400px;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    
+    .game-card:hover img {
+      transform: scale(1.05);
+    }
+    
+    .game-card .card-body {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1rem;
+      position: relative;
+      z-index: 1;
+      transition: background-color 0.3s ease;
+    }
+    
+    .game-card:hover .card-body {
+      background-color: #9a8e7a;
+    }
+    
+    .game-card .card-title {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      transition: transform 0.3s ease, color 0.3s ease;
+    }
+    
+    .game-card:hover .card-title {
+      transform: translateY(-2px);
+      color: #ffffff;
+    }
+    
+    .game-card .price {
+      font-size: 0.9rem;
+      color: #686550;
+      transition: color 0.3s ease;
+    }
+    
+    .game-card:hover .price {
+      color: #ffffff;
+    }
+    
+    /* Game card overlay effect */
+    .game-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 70%, rgba(0,0,0,0.7) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1;
+      pointer-events: none;
+    }
+    
+    .game-card:hover::before {
+      opacity: 1;
+    }
+    
+    /* Shine effect */
+    .game-card::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 20%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: rotate(30deg);
+      transition: transform 0.7s ease;
+      pointer-events: none;
+    }
+    
+    .game-card:hover::after {
+      transform: rotate(30deg) translateX(350%);
+    }
+    
+    /* Game card floating animation */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    .game-card.floating {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    /* ==================== SECTION TITLE ANIMATIONS ==================== */
+    .section-title-container {
+      position: relative;
+      overflow: hidden;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      position: relative;
+      display: inline-block;
+      color: #ffffff;
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-bottom: 0;
+      opacity: 0;
+      transform: translateX(-50px);
+      transition: all 0.8s ease;
+    }
+
+    .section-title.animated {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 3px;
+      background-color: #ff3333;
+      transition: width 0.5s ease 0.3s;
+    }
+    
+    .section-title.animated::after {
+      width: 100%;
+    }
+    
+    /* Animated background for sections */
+    .animated-bg {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .animated-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.05), transparent);
+      transform: skewX(-25deg);
+      animation: shine 3s infinite;
+    }
+    
+    @keyframes shine {
+      0% { left: -100%; }
+      100% { left: 150%; }
+    }
+
+    /* ==================== MODAL STYLES ==================== */
+    .modal-backdrop {
+      backdrop-filter: blur(5px);
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .auth-modal .modal-content {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 25px;
+      color: var(--light-text);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .auth-modal .modal-header {
+      border-bottom: none;
+      padding-bottom: 0;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .auth-modal .modal-title {
+      font-weight: 600;
+      font-size: 1.5rem;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+    
+    .auth-modal .btn-close {
+      position: absolute;
+      right: 0;
+      top: 0;
+      color: white;
+      opacity: 0.8;
+    }
+    
+    .auth-modal .btn-close:hover {
+      opacity: 1;
+    }
+    
+    .auth-modal .modal-body {
+      padding: 20px 0;
+    }
+    
+    .auth-modal .modal-footer {
+      border-top: none;
+      padding-top: 0;
+      justify-content: center;
+    }
+    
+    .auth-input {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 12px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: var(--light-text);
+      color: var(--dark-bg);
+      font-size: 16px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .auth-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      outline: none;
+    }
+    
+    .password-wrapper {
+      position: relative;
+    }
+    
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 15px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #6c757d;
+      transition: color 0.3s ease;
+    }
+    
+    .toggle-password:hover {
+      color: var(--dark-bg);
+    }
+    
+    .auth-btn {
+      background-color: var(--light-text);
+      color: var(--dark-bg);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 20px;
+      width: 100%;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      margin-top: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .auth-btn:hover {
+      background-color: var(--hover-color);
+      color: var(--light-text);
+    }
+    
+    /* Button ripple effect */
+    .auth-btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.5);
+      opacity: 0;
+      border-radius: 100%;
+      transform: scale(1, 1) translate(-50%);
+      transform-origin: 50% 50%;
+    }
+    
+    @keyframes ripple {
+      0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+      }
+      100% {
+        transform: scale(20, 20);
+        opacity: 0;
+      }
+    }
+    
+    .auth-btn:focus:not(:active)::after {
+      animation: ripple 1s ease-out;
+    }
+    
+    .auth-link {
+      text-decoration: none;
+      font-size: 14px;
+      display: block;
+      margin-top: 12px;
+      color: var(--light-text);
+      transition: color 0.3s ease;
+      text-align: center;
+    }
+    
+    .auth-link:hover {
+      color: var(--primary-color);
+      text-decoration: underline;
+    }
+    
+    .error-text {
+      color: var(--error-color);
+      font-size: 0.8rem;
+      margin-top: 4px;
+      margin-left: 5px;
+      display: block;
+    }
+    
+    .social-login {
+      margin-top: 25px;
+      text-align: center;
+    }
+    
+    .social-login p {
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: var(--light-text);
+    }
+    
+    .social-login img {
+      width: 180px;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+    }
+    
+    .social-login img:hover {
+      opacity: 0.9;
+    }
+    
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 20px 0;
+      color: var(--light-text);
+    }
+    
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .divider span {
+      padding: 0 10px;
+      font-size: 14px;
+    }
+    
+    .otp-modal-container {
+      background-color: #111;
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .otp-modal-container h2 {
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+      font-weight: 500;
+    }
+
+    .timer-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    #timerValue {
+      display: none;
+      width: 60px;
+      height: 60px;
+      line-height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff6b6b, #feca57);
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    #timerValue.expired {
+      background: linear-gradient(135deg, #e63946, #d00000);
+      color: #fff;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
+      50% { transform: scale(1.05); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5); }
+      100% { transform: scale(1); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
+    }
+
+    .otp-modal-container label {
+      display: block;
+      text-align: left;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .otp-modal-container input[type="text"] {
+      width: 100%;
+      padding: 14px 20px;
+      border: 2px solid #fff;
+      border-radius: 40px;
+      background-color: #000;
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 20px;
+      outline: none;
+    }
+
+    .otp-modal-container .verify-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #fff;
+      color: #000;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .otp-modal-container .verify-btn:hover {
+      background-color: #ccc;
+      transform: scale(1.02);
+    }
+
+    .otp-modal-container .resend {
+      display: none;
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #1e90ff, #00b4d8);
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: background 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .otp-modal-container .resend.visible {
+      display: block;
+    }
+
+    .otp-modal-container .resend:hover {
+      background: linear-gradient(135deg, #00b4d8, #1e90ff);
+      transform: scale(1.02);
+    }
+
+    .otp-modal-container .resend.disabled {
+      background: linear-gradient(135deg, #a9a9a9, #808080);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .simple-auth-modal .modal-content {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    .simple-auth-modal .modal-body {
+      padding: 20px;
+    }
+    
+    .simple-auth-modal .modal-description {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .simple-auth-modal .auth-btn {
+      margin-top: 20px;
+    }
+
+    /* Explore button animation */
+    .explorebtn {
+      text-decoration: none;
+      color: #fff;
+      background-color: #8b0808;
+      border: 1px solid #ffffff;
+      padding: 0.375rem 0.75rem;
+      font-size: 1rem;
+      line-height: 1.5;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      transform: translateY(30px);
+      opacity: 0;
+    }
+
+    .video-content.loaded .explorebtn {
+      transform: translateY(0);
+      opacity: 1;
+      transition: all 1s ease 0.9s, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+    }
+
+    .explorebtn:hover {
+      color: #fff;
+      background-color: #c51c1c;
+      border-color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Pulse animation for explore button */
+    @keyframes pulse-border {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+      }
+    }
+    
+    .explorebtn.animated {
+      animation: pulse-border 2s infinite;
+    }
+
+    /* ==================== FOOTER STYLES ==================== */
+    .confany-footer {
+      background:transparent;
+      padding: 40px 0 20px;
+      font-family: Arial, sans-serif;
+      color: #333;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .footer-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+
+    .footer-brand {
+      flex: 0 0 200px;
+    }
+
+    .footer-logo {
+      max-width: 100px;
+      height: auto;
+    }
+
+    .footer-links {
+      flex: 1;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 30px;
+    }
+
+    .footer-column {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .footer-header {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .footer-column a {
+      color: #a09999;
+      text-decoration: none;
+      margin-bottom: 10px;
+      transition: color 0.2s;
+      font-size: 0.95rem;
+    }
+
+    .footer-column a:hover {
+      color: #000;
+      text-decoration: underline;
+    }
+
+    .footer-legal {
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .footer-legal a {
+      color: #ffffff;
+      text-decoration: none;
+      margin: 0 5px;
+    }
+
+    .footer-legal a:hover {
+      text-decoration: underline;
+    }
+
+    /* ==================== RESPONSIVE STYLES ==================== */
+    @media (max-width: 992px) {
+      .footer-content {
+        flex-direction: column;
+        gap: 30px;
+      }
+      
+      .footer-brand {
+        flex: 0 0 auto;
+        text-align: center;
+        width: 100%;
+      }
+      
+      .video-content h1 {
+        font-size: 2.5rem;
+      }
+
+      .scroll-down-container {
+        bottom: 20px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+      }
+      
+      .video-content h1 {
+        font-size: 2rem;
+      }
+      
+      .video-content p {
+        font-size: 1rem;
+      }
+
+      .scroll-down-button {
+        font-size: 0.8rem;
+      }
+      
+      .scroll-down-arrow {
+        width: 35px;
+        height: 35px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .footer-legal p {
+        font-size: 0.8rem;
+      }
+      
+      .otp-input {
+        width: 40px;
+        height: 50px;
+        font-size: 1rem;
+      }
+      
+      .video-content h1 {
+        font-size: 1.8rem;
+      }
+
+      .scroll-down-container {
+        bottom: 15px;
+      }
+      
+      .scroll-down-button {
+        font-size: 0.7rem;
+      }
+      
+      .scroll-down-arrow {
+        width: 30px;
+        height: 30px;
+      }
+    }
+
+    .fitboy-logo {
+      display: flex;
+      align-items: center;
+      height: 40px;
+    }
+    
+    .logo-container {
+      position: relative;
+      text-align: center;
+    }
+    
+    .star {
+      color: #cc0000;
+      font-size: 1rem;
+      position: absolute;
+      top: -1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      text-shadow: 0 0 3px rgba(255, 0, 0, 0.8);
+      margin-bottom: 110px;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #dd0000;
+      text-shadow: 
+          0 0 2px #ff0000, 
+          0 0 4px rgba(255, 0, 0, 0.7),
+          -1px -1px 0 #990000,
+          1px -1px 0 #990000,
+          -1px 1px 0 #990000,
+          1px 1px 0 #990000,
+          2px 2px 3px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.12em;
+      transform: scaleY(1.2);
+      font-family: 'Arial Black', Impact, sans-serif;
+      -webkit-text-stroke: 0.5px #990000;
+    }
+    
+    /* Logo animation */
+    @keyframes logo-pulse {
+      0% { text-shadow: 0 0 2px #ff0000, 0 0 4px rgba(255, 0, 0, 0.7); }
+      50% { text-shadow: 0 0 10px #ff0000, 0 0 15px rgba(255, 0, 0, 0.9); }
+      100% { text-shadow: 0 0 2px #ff0000, 0 0 4px rgba(255, 0, 0, 0.7); }
+    }
+    
+    .logo.animated {
+      animation: logo-pulse 2s infinite;
+    }
+    
+    /* Star animation */
+    @keyframes star-twinkle {
+      0% { opacity: 0.5; transform: translateX(-50%) scale(0.8) rotate(0deg); }
+      50% { opacity: 1; transform: translateX(-50%) scale(1.2) rotate(180deg); }
+      100% { opacity: 0.5; transform: translateX(-50%) scale(0.8) rotate(360deg); }
+    }
+    
+    .star.animated {
+      animation: star-twinkle 3s infinite;
+    }
+
+    /* Particle effects */
+    .particles-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .particle {
+      position: absolute;
+      background-color: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Particles container for background effects -->
+  <div class="particles-container" id="particles-container"></div>
+
+  <!-- ==================== NAVBAR ==================== -->
+  <nav class="navbar navbar-expand-lg bg-black" id="main-navbar">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <div class="fitboy-logo">
+          <div class="logo-container">
+            <div class="star" id="logo-star">★</div>
+            <div class="logo" id="main-logo">FITBOY</div>
+          </div>
+        </div>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">About Us</a>
+            <ul class="dropdown-menu bg-white">
+              <li><a class="dropdown-item text-dark" href="#">Our Team</a></li>
+              <li><a class="dropdown-item text-dark" href="#">Contact Us</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">Support</a>
+            <ul class="dropdown-menu bg-white">
+              <li><a class="dropdown-item text-dark" href="#">Help Center</a></li>
+              <li><a class="dropdown-item text-dark" href="#">Contact Support</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-outline-light ms-3" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== VIDEO HERO SECTION ==================== -->
+  <section class="video-hero-section">
+    <video class="video-background" id="hero-video" muted autoplay>
+      <source src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/vada-sYcGN4Dw4fwXdzkHDOPJaZprzrT3eT.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-overlay"></div>
+    <div class="video-content" id="hero-content">
+      <h1 class="display-4 fw-bold" id="hero-title">Welcome to FITBOY!</h1>
+      <p class="lead" id="hero-subtitle">Discover new and exciting games tailored just for you.</p>
+      <a href="#free-games" class="explorebtn" id="exploreGamesBtn">Explore Games</a>
+    </div>
+
+    <!-- Scroll Down Button -->
+    <div class="scroll-down-container" id="scrollDownContainer">
+      <button class="scroll-down-button" id="scrollDownButton">
+        <span>Scroll Down</span>
+        <div class="scroll-down-arrow"></div>
+      </button>
+    </div>
+  </section>
+
+  <!-- ==================== FREE GAMES SECTION ==================== -->
+  <section class="container my-5 animated-bg" id="free-games">
+    <div class="section-title-container">
+      <h2 class="text-uppercase fw-bold mb-4 section-title" style="color: #ffffff;">Free Games</h2>
+    </div>
+    <div class="row row-cols-1 row-cols-md-4 g-4" id="free-games-row">
+      <div class="col">
+        <div class="card game-card border-0">
+          <img src="https://imgur.com/y1gndvx.png" class="card-img-top" alt="Call of Duty Warzone">
+          <div class="card-body text-center">
+            <h5 class="card-title">CALL OF DUTY WARZONE</h5>
+            <p class="price">Free to Play</p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card game-card border-0">
+          <img src="https://imgur.com/K3NrQBw.png" class="card-img-top" alt="Apex Legends">
+          <div class="card-body text-center">
+            <h5 class="card-title">APEX LEGENDS</h5>
+            <p class="price">Free to Play</p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card game-card border-0">
+          <img src="https://imgur.com/lOBhPcB.png" class="card-img-top" alt="Delta Force">
+          <div class="card-body text-center">
+            <h5 class="card-title">DELTA FORCE</h5>
+            <p class="price">Free to Play</p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card game-card border-0">
+          <img src="https://imgur.com/2nkitAm.png" class="card-img-top" alt="Valorant">
+          <div class="card-body text-center">
+            <h5 class="card-title">VALORANT</h5>
+            <p class="price">Free to Play</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== MOST POPULAR SECTION ==================== -->
+  <section class="container my-5 animated-bg" id="most-popular">
+    <div class="section-title-container">
+      <h2 class="text-uppercase fw-bold mb-4 section-title" style="color: white;">Most Popular</h2>
+    </div>
+    <div class="row row-cols-1 row-cols-md-4 g-4" id="popular-games-row">
+      <div class="col">
+        <div class="card game-card border-0">
+          <img src="https://imgur.com/xJ2jFkS.png" class="card-img-top" alt="GTA V">
+          <div class="card-body text-center">
+            <h5 class="card-title">GRAND THEFT AUTO V</h5>
+            <p class="price">₹ 2,200</p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card game-card border-0">
+          <img src="https://imgur.com/vM8CnOH.png" class="card-img-top" alt="Red Dead Redemption 2">
+          <div class="card-body text-center">
+            <h5 class="card-title">RED DEAD REDEMPTION 2</h5>
+            <p class="price">₹ 4,999</p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card game-card border-0">
+          <img src="https://imgur.com/Pr9sUc1.png" class="card-img-top" alt="Uncharted">
+          <div class="card-body text-center">
+            <h5 class="card-title">UNCHARTED: THE LOST LEGACY</h5>
+            <p class="price">₹ 3,299</p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card game-card border-0">
+          <img src="https://imgur.com/7eQOoKE.png" class="card-img-top" alt="Black Myth: Wukong">
+          <div class="card-body text-center">
+            <h5 class="card-title">BLACK MYTH: WUKONG</h5>
+            <p class="price">₹ 3,599</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="confany-footer">
+    <div class="footer-container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <img src="https://imgur.com/70ZWbzk.png" alt="CONFANY Logo" class="footer-logo">
+        </div>
+        <div class="footer-links">
+          <div class="footer-grid">
+            <div class="footer-column">
+              <div class="footer-header">COMPANY</div>
+              <a href="#">About</a>
+              <a href="#">Works</a>
+              <a href="#">Career</a>
+            </div>
+            <div class="footer-column">
+              <div class="footer-header">HELP</div>
+              <a href="#">Customer Support</a>
+              <a href="#">Terms & Conditions</a>
+              <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-column">
+              <div class="footer-header">FAQ</div>
+              <a href="#">Account</a>
+              <a href="#">Orders</a>
+              <a href="#">Payments</a>
+            </div>
+            <div class="footer-column">
+              <div class="footer-header">RESOURCES</div>
+              <a href="#">Gameplays</a>
+              <a href="#">Development Tutorial</a>
+              <a href="#">How-to Blog</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-legal">
+        <p>© 2025 FITBOY. All rights reserved. All trademarks are property of their respective owners in the INDIA and other countries.<br>
+        VAT included in all prices where applicable. <a href="#">Privacy Policy</a> | <a href="#">Legal</a> | <a href="#">Refunds</a> | <a href="#">Cookies</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS SECTION ==================== -->
+
+  <!-- Login Modal -->
+  <div class="modal fade auth-modal" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="loginModalLabel">LOGIN</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm">
+            <div class="mb-3">
+              <input type="email" class="auth-input" placeholder="Email Address" name="loginEmail" id="loginEmail">
+              <span id="emailError" class="error-text"></span>
+            </div>
+            <div class="mb-3">
+              <div class="password-wrapper">
+                <input type="password" class="auth-input" placeholder="Password" name="loginPassword" id="loginPassword">
+                <span class="toggle-password fa fa-eye" toggle="#loginPassword"></span>
+              </div>
+              <span id="passwordError" class="error-text"></span>
+            </div>
+            <div class="mb-3 text-end">
+              <a href="#" id="forgotPasswordLink" class="auth-link">Forgot password?</a>
+            </div>
+            <button type="button" class="auth-btn" id="loginButton">Login</button>
+            <div class="divider">
+              <span>OR</span>
+            </div>
+            <div class="social-login">
+              <a href="/auth/google">
+                <img src="https://developers.google.com/static/identity/images/branding_guideline_sample_lt_rd_lg.svg" alt="Sign in with Google" class="google-btn" />
+              </a>
+            </div>
+            <a href="#" class="auth-link mt-4" id="showSignupModal">Don't have an account? Create one</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signup Modal -->
+  <div class="modal fade auth-modal" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="signupModalLabel">SIGN UP</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="signupForm">
+            <div class="mb-3">
+              <input type="text" class="auth-input" placeholder="Full Name" name="name" id="name">
+              <span id="name-error" class="error-text"></span>
+            </div>
+            <div class="mb-3">
+              <input type="email" class="auth-input" placeholder="Email Address" name="email" id="email">
+              <span id="email-error" class="error-text"></span>
+            </div>
+            <div class="mb-3">
+              <div class="password-wrapper">
+                <input type="password" class="auth-input" placeholder="Password" name="password" id="password">
+                <span class="toggle-password fa fa-eye" toggle="#password"></span>
+              </div>
+              <span id="password-error" class="error-text"></span>
+            </div>
+            <div class="mb-3">
+              <div class="password-wrapper">
+                <input type="password" class="auth-input" placeholder="Confirm Password" name="cPassword" id="cPassword">
+                <span class="toggle-password fa fa-eye" toggle="#cPassword"></span>
+              </div>
+              <span id="cPassword-error" class="error-text"></span>
+            </div>
+            <button type="button" class="auth-btn" id="signupButton">Sign Up</button>
+            <div class="divider">
+              <span>OR</span>
+            </div>
+            <div class="social-login">
+              <a href="auth/google">
+                <img src="https://developers.google.com/static/identity/images/branding_guideline_sample_lt_rd_lg.svg" alt="Sign up with Google" class="google-btn" />
+              </a>
+            </div>
+            <a href="#" class="auth-link mt-4" id="showLoginModal">Already have an account? Login</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Forgot Password Modal -->
+  <div class="modal fade auth-modal simple-auth-modal" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="forgotPasswordModalLabel">Forgot Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-description">Enter your email address and we'll send you a verification code to reset your password.</p>
+          <form id="forgotPasswordForm">
+            <div class="mb-3">
+              <input type="email" class="auth-input" placeholder="Email Address" id="forgotEmail" required>
+              <span id="forgotEmail-error" class="error-text"></span>
+            </div>
+            <button type="submit" class="auth-btn" id="sendOtp">Send Verification Code</button>
+            <a href="#" class="auth-link mt-3" id="backToLogin">Back to Login</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OTP Verification Modal -->
+  <div class="modal fade auth-modal simple-auth-modal" id="otpVerificationModal" tabindex="-1" aria-labelledby="otpVerificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content otp-modal-container">
+        <div class="modal-header">
+          <h2 class="modal-title" id="otpVerificationModalLabel">ENTER YOUR OTP HERE</h2>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="timer-wrapper">
+            <span id="timerValue"></span>
+          </div>
+          <form id="otpVerificationForm" onsubmit="return validateOtpForm()">
+            <label for="otp">OTP :</label>
+            <input type="text" id="otp" name="otp" maxlength="6" placeholder="Enter 6-digit OTP" />
+            <button type="submit" class="verify-btn" id="verifyOtpBtn">VERIFY</button>
+            <button type="button" class="resend" id="resendOtpBtn">RESEND OTP</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div class="modal fade auth-modal simple-auth-modal" id="resetPasswordModal" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="resetPasswordModalLabel">Reset Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-description">Create a new password for your account.</p>
+          <form id="resetPasswordForm">
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">New Password</label>
+              <div class="password-wrapper">
+                <input type="password" class="auth-input" placeholder="New Password" id="newPassword">
+                <span class="toggle-password fa fa-eye" toggle="#newPassword"></span>
+              </div>
+              <span id="newPassword-error" class="error-text"></span>
+            </div>
+            <div class="mb-3">
+              <label for="confirmNewPassword" class="form-label">Confirm Password</label>
+              <div class="password-wrapper">
+                <input type="password" class="auth-input" placeholder="Confirm Password" id="confirmNewPassword">
+                <span class="toggle-password fa fa-eye" toggle="#confirmNewPassword"></span>
+              </div>
+              <span id="confirmNewPassword-error" class="error-text"></span>
+            </div>
+            <button type="button" class="auth-btn" id="resetPasswordBtn">Reset Password</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SCRIPTS SECTION ==================== -->
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <!-- Signup and OTP JS -->
+  <script src="/js/signup.js"></script>
+  <!-- Forgot Password JS -->
+  <script src="/js/forgotPassword.js"></script>
+
+  <script>
+
+
+
+// Store referral code from URL (if exists) into localStorage
+const urlParams = new URLSearchParams(window.location.search);
+const referralCode = urlParams.get('ref');
+if (referralCode) {
+  localStorage.setItem('referralCode', referralCode);
+}
+
+
+    // ==================== MAIN INITIALIZATION ====================
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize all animations and functionality immediately
+      initializeWebsite();
+    });
+
+    function initializeWebsite() {
+      // Register GSAP ScrollTrigger
+      gsap.registerPlugin(ScrollTrigger);
+
+      // Create background particles
+      createParticles();
+
+      // Initialize navbar animation
+      setTimeout(() => {
+        document.getElementById('main-navbar').classList.add('loaded');
+      }, 300);
+
+      // Initialize video and hero content
+      initializeHeroSection();
+
+      // Initialize scroll animations
+      initializeScrollAnimations();
+
+      // Initialize logo animations
+      initializeLogoAnimations();
+
+      // Initialize scroll down button
+      initializeScrollDownButton();
+
+      // Initialize game card animations
+      initializeGameCardAnimations();
+    }
+
+    function initializeHeroSection() {
+      const video = document.getElementById('hero-video');
+      const heroContent = document.getElementById('hero-content');
+      const scrollDownContainer = document.getElementById('scrollDownContainer');
+
+      // Start video immediately
+      if (video) {
+        video.play().catch(e => console.log('Video autoplay failed:', e));
+        
+        // Animate hero content after a short delay
+        setTimeout(() => {
+          heroContent.classList.add('loaded');
+          
+          // Show scroll down button after hero content is loaded
+          setTimeout(() => {
+            scrollDownContainer.classList.add('visible');
+          }, 1500);
+        }, 500);
+
+        // Add pulse animation to explore button after it's visible
+        setTimeout(() => {
+          document.getElementById('exploreGamesBtn').classList.add('animated');
+        }, 2000);
+      }
+    }
+
+    function initializeScrollDownButton() {
+      const scrollDownButton = document.getElementById('scrollDownButton');
+      const scrollDownContainer = document.getElementById('scrollDownContainer');
+      let hasScrolled = false;
+
+      // Handle scroll down button click
+      if (scrollDownButton) {
+        scrollDownButton.addEventListener('click', function() {
+          const freeGamesSection = document.getElementById('free-games');
+          if (freeGamesSection) {
+            freeGamesSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      }
+
+      // Hide scroll button after first scroll
+      window.addEventListener('scroll', function() {
+        if (!hasScrolled && window.scrollY > 100) {
+          hasScrolled = true;
+          scrollDownContainer.classList.remove('visible');
+          
+          // After animation completes, hide completely
+          setTimeout(() => {
+            scrollDownContainer.style.display = 'none';
+          }, 500);
+        }
+      });
+    }
+
+    function initializeScrollAnimations() {
+      // Section Titles Animation
+      document.querySelectorAll('.section-title').forEach(title => {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              title.classList.add('animated');
+            }
+          });
+        }, { threshold: 0.5 });
+        
+        observer.observe(title);
+      });
+
+      // Improved Game Cards Animation with better visibility handling
+      const gameCardSections = ['#free-games-row', '#popular-games-row'];
+      
+      gameCardSections.forEach(sectionSelector => {
+        const section = document.querySelector(sectionSelector);
+        if (section) {
+          const cards = section.querySelectorAll('.game-card');
+          
+          // Create observer for the section
+          const sectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                // Animate all cards in this section
+                animateCardsInSection(cards);
+                // Stop observing this section once animated
+                sectionObserver.unobserve(entry.target);
+              }
+            });
+          }, { 
+            threshold: 0.2,
+            rootMargin: '0px 0px -50px 0px'
+          });
+          
+          sectionObserver.observe(section);
+        }
+      });
+    }
+
+    function animateCardsInSection(cards) {
+      cards.forEach((card, index) => {
+        // Ensure card is visible first
+        card.style.visibility = 'visible';
+        
+        // Add staggered animation
+        setTimeout(() => {
+          card.classList.add('animate-in');
+          card.classList.add('visible');
+          
+          // Add floating animation to every other card after main animation
+          setTimeout(() => {
+            if (index % 2 === 0) {
+              card.classList.add('floating');
+            }
+          }, 1000);
+        }, index * 150); // Stagger by 150ms
+      });
+    }
+
+    function initializeLogoAnimations() {
+      // Logo animations
+      document.getElementById('main-logo').classList.add('animated');
+      document.getElementById('logo-star').classList.add('animated');
+    }
+
+    function initializeGameCardAnimations() {
+      // Enhanced game card hover effects
+      document.querySelectorAll('.game-card').forEach(card => {
+        card.addEventListener('mouseenter', function(event) {
+          // Only apply hover effects if card is visible
+          if (!card.classList.contains('visible')) return;
+          
+          // Create a subtle tilt effect
+          const rect = card.getBoundingClientRect();
+          const mouseX = event.clientX - rect.left;
+          const mouseY = event.clientY - rect.top;
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          
+          const tiltX = (mouseY - centerY) / 20;
+          const tiltY = (centerX - mouseX) / 20;
+          
+          gsap.to(card, {
+            rotationX: tiltX,
+            rotationY: tiltY,
+            duration: 0.5,
+            ease: "power2.out"
+          });
+        });
+        
+        card.addEventListener('mouseleave', function() {
+          // Only reset if card is visible
+          if (!card.classList.contains('visible')) return;
+          
+          // Reset all animations
+          gsap.to(card, {
+            rotationX: 0,
+            rotationY: 0,
+            duration: 0.5,
+            ease: "power2.out"
+          });
+        });
+        
+        // Add 3D perspective to cards
+        card.addEventListener('mousemove', function(e) {
+          // Only apply if card is visible
+          if (!card.classList.contains('visible')) return;
+          
+          const rect = card.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          
+          const tiltX = (mouseY - centerY) / 20;
+          const tiltY = (centerX - mouseX) / 20;
+          
+          gsap.to(card, {
+            rotationX: tiltX,
+            rotationY: tiltY,
+            duration: 0.2,
+            ease: "power2.out"
+          });
+        });
+      });
+    }
+
+    // Create background particles
+    function createParticles() {
+      const container = document.getElementById('particles-container');
+      const particleCount = 50;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        
+        // Random size between 2px and 5px
+        const size = Math.random() * 3 + 2;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        
+        // Random position
+        const posX = Math.random() * window.innerWidth;
+        const posY = Math.random() * window.innerHeight;
+        particle.style.left = `${posX}px`;
+        particle.style.top = `${posY}px`;
+        
+        // Random opacity
+        particle.style.opacity = Math.random() * 0.5 + 0.1;
+        
+        container.appendChild(particle);
+        
+        // Animate particle
+        gsap.to(particle, {
+          y: `+=${Math.random() * 200 + 100}`,
+          x: `+=${Math.random() * 50 - 25}`,
+          opacity: 0,
+          duration: Math.random() * 10 + 10,
+          ease: "none",
+          repeat: -1,
+          delay: Math.random() * 10,
+          onComplete: function() {
+            // Reset position when animation completes
+            particle.style.top = `${Math.random() * window.innerHeight}px`;
+            particle.style.left = `${Math.random() * window.innerWidth}px`;
+            particle.style.opacity = Math.random() * 0.5 + 0.1;
+          }
+        });
+      }
+    }
+
+    // ==================== NAVIGATION SCRIPTS ====================
+    
+    document.getElementById('exploreGamesBtn').addEventListener('click', function(e) {
+      e.preventDefault();
+      const freeGamesSection = document.getElementById('free-games');
+      freeGamesSection.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Game card click handler
+    document.querySelectorAll('.game-card').forEach(card => {
+      card.addEventListener('click', function() {
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        loginModal.show();
+      });
+    });
+
+    // ==================== MODAL TOGGLE SCRIPTS ====================
+    
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.id === 'showSignupModal') {
+        e.preventDefault();
+        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        const signupModal = new bootstrap.Modal(document.getElementById('signupModal'));
+        loginModal.hide();
+        signupModal.show();
+      }
+      
+      if (e.target && e.target.id === 'showLoginModal') {
+        e.preventDefault();
+        const signupModal = bootstrap.Modal.getInstance(document.getElementById('signupModal'));
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        signupModal.hide();
+        loginModal.show();
+      }
+      
+      if (e.target && e.target.id === 'forgotPasswordLink') {
+        e.preventDefault();
+        const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+        const forgotModal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+        loginModal.hide();
+        forgotModal.show();
+      }
+      
+      if (e.target && e.target.id === 'backToLogin') {
+        e.preventDefault();
+        const forgotModal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+        const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+        forgotModal.hide();
+        loginModal.show();
+      }
+    });
+
+    // ==================== PASSWORD VISIBILITY SCRIPTS ====================
+    
+    document.querySelectorAll('.toggle-password').forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        const input = document.querySelector(this.getAttribute('toggle'));
+        const isPassword = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isPassword ? 'text' : 'password');
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+      });
+    });
+
+    // ==================== LOGIN FORM SCRIPTS ====================
+    
+    document.getElementById('loginButton').addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      const emailInput = document.getElementById('loginEmail');
+      const passwordInput = document.getElementById('loginPassword');
+      const emailError = document.getElementById('emailError');
+      const passwordError = document.getElementById('passwordError');
+
+      emailError.textContent = '';
+      passwordError.textContent = '';
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      let hasError = false;
+
+      if (!email) {
+        emailError.textContent = 'Email is required';
+        hasError = true;
+      }
+
+      if (!password) {
+        passwordError.textContent = 'Password is required';
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      const loginBtn = document.getElementById('loginButton');
+      const originalText = loginBtn.textContent;
+      loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Logging in...';
+      loginBtn.disabled = true;
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ loginEmail: email, loginPassword: password })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          window.location.href = data.redirectUrl || '/home';
+        } else {
+          if (data.message.includes('password')) {
+            passwordError.textContent = data.message;
+          } else {
+            emailError.textContent = data.message;
+          }
+        }
+      } catch (err) {
+        console.error('Login failed:', err);
+        emailError.textContent = 'Something went wrong. Try again.';
+      } finally {
+        loginBtn.textContent = originalText;
+        loginBtn.disabled = false;
+      }
+    });
+
+    // ==================== SIGNUP FORM ====================
+    const signupButton = document.getElementById('signupButton');
+    if (signupButton) {
+      signupButton.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const cPasswordInput = document.getElementById('cPassword');
+
+        const nameError = document.getElementById('name-error');
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+        const cPasswordError = document.getElementById('cPassword-error');
+
+        nameError.textContent = '';
+        emailError.textContent = '';
+        passwordError.textContent = '';
+        cPasswordError.textContent = '';
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const cPassword = cPasswordInput.value;
+
+        let isValid = true;
+
+        if (!name) {
+          nameError.textContent = "Name is required";
+          isValid = false;
+        } else if (!/^[A-Za-z\s]+$/.test(name)) {
+          nameError.textContent = "Name can only contain alphabets and spaces";
+          isValid = false;
+        }
+
+        if (!email) {
+          emailError.textContent = "Email is required";
+          isValid = false;
+        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+          emailError.textContent = "Invalid email format";
+          isValid = false;
+        }
+
+        if (!password) {
+          passwordError.textContent = "Password is required";
+          isValid = false;
+        } else if (password.length < 8) {
+          passwordError.textContent = "Should contain at least 8 characters";
+          isValid = false;
+        }
+
+        if (!cPassword) {
+          cPasswordError.textContent = "Please confirm your password";
+          isValid = false;
+        } else if (password !== cPassword) {
+          cPasswordError.textContent = "Passwords do not match";
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        const signupBtn = document.getElementById('signupButton');
+        const originalText = signupBtn.textContent;
+        signupBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing up...';
+        signupBtn.disabled = true;
+
+        try {
+          const res = await fetch('/signUp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ name, email, password, cPassword,ref: referralCode })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            document.getElementById('otpVerificationModal').dataset.email = email;
+            document.getElementById('otpVerificationModal').dataset.flow = 'signup';
+
+            const signupModal = bootstrap.Modal.getInstance(document.getElementById('signupModal'));
+            signupModal.hide();
+
+            const otpModal = new bootstrap.Modal(document.getElementById('otpVerificationModal'));
+            otpModal.show();
+
+            window.startTimer();
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.message || 'Signup failed.',
+            });
+          }
+        } catch (err) {
+          console.error('Signup error:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong. Please try again later.',
+          });
+        } finally {
+          signupBtn.textContent = originalText;
+          signupBtn.disabled = false;
+        }
+      });
+    }
+
+    // ==================== OTP VERIFICATION ====================
+    let timer = 60;
+    let timerInterval;
+
+    window.startTimer = function() {
+      timer = 60;
+      $('#timerValue').text(`${timer}s`).show();
+      $('#otp').prop("disabled", false);
+      $('#resendOtpBtn').removeClass("visible").addClass("disabled");
+
+      timerInterval = setInterval(() => {
+        timer--;
+        $('#timerValue').text(`${timer}s`);
+
+        if (timer <= 0) {
+          clearInterval(timerInterval);
+          $('#timerValue').text("Expired").addClass("expired");
+          $('#otp').prop("disabled", true);
+          $('#resendOtpBtn').addClass("visible").removeClass("disabled");
+        }
+      }, 1000);
+    };
+
+    window.validateOtpForm = function() {
+      const otpInput = $('#otp').val();
+      const flow = document.getElementById('otpVerificationModal').dataset.flow;
+      const url = flow === 'signup' ? '/verify-Otp' : '/verifyOtp';
+
+      $.ajax({
+        type: 'POST',
+        url: url,
+        data: { otp: otpInput },
+          xhrFields: {
+             withCredentials: true 
+                   },
+        success: function(response) {
+          if (response.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'OTP verification successful',
+              showConfirmButton: false,
+              timer: 1500,
+            }).then(() => {
+              const otpModal = bootstrap.Modal.getInstance(document.getElementById('otpVerificationModal'));
+              otpModal.hide();
+
+              if (flow === 'signup') {
+                window.location.href = response.redirectUrl || '/home';
+              } else {
+                const resetPasswordModal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+                resetPasswordModal.show();
+              }
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.message,
+            });
+          }
+        },
+        error: function() {
+          Swal.fire({
+            icon: 'error',
+            title: 'Invalid OTP',
+            text: 'Try again',
+          });
+        }
+      });
+      return false;
+    };
+
+    const resendOtpBtn = document.getElementById('resendOtpBtn');
+    if (resendOtpBtn) {
+      resendOtpBtn.addEventListener('click', function() {
+        if ($(this).hasClass("disabled")) return;
+
+        const email = document.getElementById('otpVerificationModal').dataset.email;
+        const flow = document.getElementById('otpVerificationModal').dataset.flow;
+        const url = flow === 'signup' ? '/resend-Otp' : '/resendOtp';
+
+        if (!email) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Email not found',
+          });
+          return;
+        }
+
+        $.ajax({
+          type: 'POST',
+          url: url,
+          data: { email: email },
+          success: function(response) {
+            if (response.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'OTP Resent',
+                text: 'Check your email again.',
+                timer: 1500,
+                showConfirmButton: false
+              });
+              $('#otp').val('');
+              window.startTimer();
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Failed to resend',
+                text: response.message,
+              });
+            }
+          },
+          error: function() {
+            Swal.fire({
+              icon: 'error',
+              title: 'Server Error',
+              text: 'Could not resend OTP',
+            });
+          }
+        });
+      });
+    }
+
+    // ==================== FORGOT PASSWORD ====================
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    if (forgotPasswordForm) {
+      forgotPasswordForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const email = document.getElementById('forgotEmail').value.trim();
+        const sendOtpBtn = document.getElementById('sendOtp');
+        const emailError = document.getElementById('forgotEmail-error');
+
+        emailError.textContent = '';
+
+        const originalText = sendOtpBtn.textContent;
+        sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...';
+        sendOtpBtn.disabled = true;
+
+        try {
+          const res = await fetch('/forgotPassword', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            const forgotModal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+            forgotModal.hide();
+
+            const otpModal = new bootstrap.Modal(document.getElementById('otpVerificationModal'));
+            otpModal.show();
+
+            document.getElementById('otpVerificationModal').dataset.email = email;
+            document.getElementById('otpVerificationModal').dataset.flow = 'forgotPassword';
+
+            window.startTimer();
+          } else {
+            emailError.textContent = data.message || "User not found.";
+          }
+        } catch (error) {
+          console.error('Error sending OTP:', error);
+          emailError.textContent = "Something went wrong. Please try again.";
+        } finally {
+          sendOtpBtn.innerHTML = originalText;
+          sendOtpBtn.disabled = false;
+        }
+      });
+    }
+
+    // ==================== RESET PASSWORD ====================
+    const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+    if (resetPasswordBtn) {
+      resetPasswordBtn.addEventListener('click', async function() {
+        const newPassword = document.getElementById('newPassword').value.trim();
+        const confirmNewPassword = document.getElementById('confirmNewPassword').value.trim();
+        const newPasswordError = document.getElementById('newPassword-error');
+        const confirmNewPasswordError = document.getElementById('confirmNewPassword-error');
+
+        newPasswordError.textContent = '';
+        confirmNewPasswordError.textContent = '';
+
+        let isValid = true;
+
+        if (!newPassword) {
+          newPasswordError.textContent = 'New password is required';
+          isValid = false;
+        } else if (newPassword.length < 8) {
+          newPasswordError.textContent = 'Password should be at least 8 characters';
+          isValid = false;
+        }
+
+        if (!confirmNewPassword) {
+          confirmNewPasswordError.textContent = 'Please confirm your password';
+          isValid = false;
+        } else if (newPassword !== confirmNewPassword) {
+          confirmNewPasswordError.textContent = 'Passwords do not match';
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        const resetBtn = document.getElementById('resetPasswordBtn');
+        const originalText = resetBtn.textContent;
+        resetBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Resetting...';
+        resetBtn.disabled = true;
+
+        const email = document.getElementById('otpVerificationModal').dataset.email;
+
+        try {
+          const res = await fetch('/resetPassword', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              password: newPassword,
+              confirmPassword: confirmNewPassword
+            })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            const resetPasswordModal = bootstrap.Modal.getInstance(document.getElementById('resetPasswordModal'));
+            resetPasswordModal.hide();
+
+            const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            loginModal.show();
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Password reset successfully! Please login.',
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.message || 'Password reset failed.',
+            });
+          }
+        } catch (err) {
+          console.error('Reset password error:', err);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong. Please try again later.',
+          });
+        } finally {
+          resetBtn.textContent = originalText;
+          resetBtn.disabled = false;
+        }
+      });
+    }
+  </script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get('error');
+      if (error) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: decodeURIComponent(error)
+        });
+      }
+    })();
+  </script>
+  
+</body>
+</html>

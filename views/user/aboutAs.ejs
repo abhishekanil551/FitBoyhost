@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Fitboy - Game Store</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9fafb;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: white;
+            color: #e11d48;
+        }
+
+        .btn-primary:hover {
+            background-color: #f8f8f8;
+            transform: translateY(-2px);
+        }
+
+        .btn-buy {
+            background-color: #e11d48;
+            color: white;
+        }
+
+        .btn-buy:hover {
+            background-color: #c81b3e;
+            transform: translateY(-2px);
+        }
+
+        /* Back Button */
+        .back-btn-container {
+            margin: 2rem 0;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: none;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            color: #111827;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .back-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            height: 50vh;
+            background: linear-gradient(to right, #e11d48, #f97316);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        /* Section Styles */
+        section {
+            padding: 5rem 0;
+        }
+
+        section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+
+        .bg-light {
+            background-color: #f9fafb;
+        }
+
+        /* Story Section */
+        .story-container {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        @media (min-width: 768px) {
+            .story-container {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+
+        .story-image,
+        .story-content {
+            flex: 1;
+        }
+
+        .story-image img {
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .story-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .story-content h2 {
+            text-align: left;
+            margin-bottom: 0;
+        }
+
+        /* Games Section */
+        .games-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .games-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .games-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .game-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-image img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .game-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .game-content h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-price {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e11d48;
+        }
+
+        /* Values Section */
+        .values-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .values-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .values-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .value-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .value-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-container {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .icon-container.red {
+            background-color: #fee2e2;
+        }
+
+        .icon-container.orange {
+            background-color: #ffedd5;
+        }
+
+        .icon-container.amber {
+            background-color: #fef3c7;
+        }
+
+        .icon-container.rose {
+            background-color: #ffe4e6;
+        }
+
+        .icon-container i {
+            font-size: 1.75rem;
+        }
+
+        .red i {
+            color: #e11d48;
+        }
+
+        .orange i {
+            color: #f97316;
+        }
+
+        .amber i {
+            color: #d97706;
+        }
+
+        .rose i {
+            color: #e11d48;
+        }
+
+        .value-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Vision Section */
+        .vision {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .vision-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .vision-item {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+
+        .phase-badge {
+            background-color: #f97316;
+            color: white;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .phase-badge {
+                margin-bottom: 0;
+                white-space: nowrap;
+            }
+        }
+
+        .vision-content {
+            flex: 1;
+            background-color: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .vision-content h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Founder Section */
+        .founder {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .founder-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 2rem;
+            border: 5px solid white;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .founder h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .founder .position {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .founder-bio {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(to right, #e11d48, #f97316);
+            color: white;
+            text-align: center;
+        }
+
+        .cta h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .cta p {
+            font-size: 1.25rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+            opacity: 0.9;
+        }
+
+        /* Animation classes */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <div class="container">
+        <div class="back-btn-container">
+            <button class="back-btn" onclick="history.back()">
+                <i class="fas fa-arrow-left"></i> Back
+            </button>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>About Fitboy</h1>
+            <p>Your ultimate destination for video games</p>
+        </div>
+    </section>
+
+    <!-- Our Story Section -->
+    <section>
+        <div class="container">
+            <div class="story-container">
+                <div class="story-image fade-in">
+                    <img src="https://imgur.com/NtbyY7h.jpg" alt="Gaming concept">
+                </div>
+                <div class="story-content fade-in">
+                    <h2>Our Story</h2>
+                    <p>
+                        Welcome to Fitboy! I'm a lifelong gamer who wanted to create a platform where players can discover 
+                        and purchase the best video games from various genres, all in one place.
+                    </p>
+                    <p>
+                        Fitboy was born out of a passion for gaming and a desire to make game shopping easy, affordable, 
+                        and exciting. My mission is to curate a diverse collection of games that cater to every type of gamer, 
+                        from casual players to hardcore enthusiasts.
+                    </p>
+                    <p>
+                        We're just getting started, but I'm thrilled to build a community of gamers who share my love for 
+                        immersive and entertaining games. Join us on this gaming adventure!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   
+
+    <!-- Values Section -->
+    <section>
+        <div class="container">
+            <h2>Our Values</h2>
+            <div class="values-grid">
+                <div class="value-card fade-in">
+                    <div class="icon-container red">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h3>Quality Games</h3>
+                    <p>
+                        We curate only the best games to ensure an exceptional gaming experience.
+                    </p>
+                </div>
+                <div class="value-card fade-in">
+                    <div class="icon-container orange">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h3>Player Satisfaction</h3>
+                    <p>
+                        Your enjoyment is our priority, with easy purchases and great support.
+                    </p>
+                </div>
+                <div class="value-card fade-in">
+                    <div class="icon-container amber">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Gamer Community</h3>
+                    <p>
+                        We foster a vibrant community where gamers connect and share their passion.
+                    </p>
+                </div>
+                <div class="value-card fade-in">
+                    <div class="icon-container rose">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Innovation</h3>
+                    <p>
+                        We're always exploring new ways to enhance your gaming and shopping experience.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Vision Section -->
+    <section class="bg-light">
+        <div class="container">
+            <h2>Our Vision</h2>
+            <div class="vision">
+                <div class="vision-item fade-in">
+                    <div class="phase-badge">Phase 1</div>
+                    <div class="vision-content">
+                        <h3>Launch Game Store</h3>
+                        <p>
+                            Introduce Fitboy with a curated selection of top-tier video games like "StarVoyage."
+                        </p>
+                    </div>
+                </div>
+                <div class="vision-item fade-in">
+                    <div class="phase-badge">Phase 2</div>
+                    <div class="vision-content">
+                        <h3>Grow Community</h3>
+                        <p>
+                            Build an online community where gamers share reviews, tips, and experiences.
+                        </p>
+                    </div>
+                </div>
+                <div class="vision-item fade-in">
+                    <div class="phase-badge">Phase 3</div>
+                    <div class="vision-content">
+                        <h3>Expand Catalog</h3>
+                        <p>
+                            Add a wide variety of games across genres to cater to all gaming preferences.
+                        </p>
+                    </div>
+                </div>
+                <div class="vision-item fade-in">
+                    <div class="phase-badge">Phase 4</div>
+                    <div class="vision-content">
+                        <h3>Global Reach</h3>
+                        <p>
+                            Become a leading game-selling platform, serving gamers worldwide.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Founder Section -->
+    <section>
+        <div class="container">
+            <h2>About the Founder</h2>
+            <div class="founder fade-in">
+                <img src="https://placehold.co/200x200" alt="Founder" class="founder-image">
+                <h3>Abhishek</h3>
+                <p class="position">Founder & Developer</p>
+                <div class="founder-bio">
+                    <p>
+                        As a dedicated gamer and entrepreneur, I've always been passionate about bringing the best gaming 
+                        experiences to players everywhere. With a background in game development and e-commerce, I'm committed 
+                        to making Fitboy the go-to platform for game purchases.
+                    </p>
+                    <p>
+                        Fitboy is my vision for a seamless, exciting game-shopping experience. I'm thrilled to share this 
+                        journey with you and build a platform that celebrates gaming culture.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Discover Your Next Game</h2>
+            <p>
+                Dive into epic adventures with Fitboy's curated game collection.
+            </p>
+            <a href="/games" class="btn btn-primary">
+                Buy Now <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>
+            </a>
+        </div>
+    </section>
+
+    <script>
+        // Scroll animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            
+            // Initial check for elements in viewport
+            checkFade();
+            
+            // Check elements on scroll
+            window.addEventListener('scroll', checkFade);
+            
+            function checkFade() {
+                fadeElements.forEach(element => {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const elementVisible = 150;
+                    
+                    if (elementTop < window.innerHeight - elementVisible) {
+                        element.classList.add('active');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

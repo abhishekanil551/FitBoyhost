@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Requirement Checker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fff;
+            color: #000;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #777;
+            font-weight: 400;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+
+        .back-button:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .back-button svg {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px 0;
+        }
+
+        .form-section {
+            background: #eee;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .auto-detect-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .auto-detect-btn:hover {
+            background: #0f0f0f;
+            transform: translateY(-1px);
+        }
+
+        .auto-detect-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #fff;
+            color: #000;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #000;
+            background: #eee;
+        }
+
+        .form-group input::placeholder {
+            color: #999;
+        }
+
+        .submit-btn {
+            background: #000;
+            color: #fff;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .submit-btn:hover {
+            background: #0f0f0f;
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: #eee;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 2px solid #ccc;
+            border-top: 2px solid #000;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .overall-status {
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-compatible {
+            background: #000;
+            color: #fff;
+        }
+
+        .status-minimum {
+            background: #ccc;
+            color: #000;
+            border: 1px solid #999;
+        }
+
+        .status-incompatible {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+        }
+
+        .requirements-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .requirement-section {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .requirement-header {
+            padding: 15px 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.9rem;
+        }
+
+        .minimum-header {
+            background: #ccc;
+            color: #000;
+        }
+
+        .recommended-header {
+            background: #000;
+            color: #fff;
+        }
+
+        .requirement-list {
+            padding: 0;
+        }
+
+        .requirement-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .requirement-item:last-child {
+            border-bottom: none;
+        }
+
+        .spec-name {
+            font-weight: 500;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .spec-value {
+            font-weight: 600;
+            color: #000;
+        }
+
+        .spec-status {
+            font-size: 1.2rem;
+            margin-left: 15px;
+        }
+
+        .user-specs {
+            margin-top: 30px;
+            border-top: 1px solid #ccc;
+            padding-top: 30px;
+        }
+
+        .user-specs-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .user-spec-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .user-spec-item:last-child {
+            border-bottom: none;
+        }
+
+        .error-message {
+            display: none;
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .detection-status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: none;
+            font-weight: 500;
+        }
+
+        .detection-success {
+            background: #000;
+            color: #fff;
+        }
+
+        .detection-warning {
+            background: #ccc;
+            color: #000;
+            border: 1px solid #999;
+        }
+
+        .detection-error {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+        }
+
+        .compatibility-score {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .score-high {
+            border-color: #000;
+            background: #000;
+            color: #fff;
+        }
+
+        .score-medium {
+            border-color: #999;
+            background: #ccc;
+            color: #000;
+        }
+
+        .score-low {
+            border-color: #000;
+            background: #fff;
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .requirements-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 0 15px;
+                margin: 15px auto;
+            }
+
+            .form-section,
+            .results-section {
+                padding: 20px;
+            }
+
+            .section-title {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .auto-detect-btn {
+                width: 100%;
+            }
+
+            .back-button {
+                top: 40px;
+                left: 15px;
+                padding: 8px 16px;
+                font-size: 0.8rem;
+            }
+        }
+
+        .placeholder-content {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .placeholder-content h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #777;
+        }
+
+        .placeholder-content p {
+            font-size: 0.9rem;
+        }
+
+        /* Footer spacing */
+        footer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <a href="javascript:history.back()" class="back-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+                Back
+            </a>
+            <h1>System Requirements Checker</h1>
+            <p>Check if your system can run your favorite games and applications</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Form Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    System Specifications
+                </div>
+                <div class="detection-status" id="detectionStatus"></div>
+
+                <form id="systemForm">
+                    <div class="form-grid">
+                        <!-- Application Selection -->
+                        <div class="form-group full-width">
+                          <label for="application">Select Application/Game</label>
+                          <select id="application" name="application" required>
+                            <option value="">Choose an application...</option>
+                            <% products.forEach(product => { %>
+                              <option value="<%= product.name %>"><%= product.name %></option>
+                            <% }); %>
+                          </select>
+                        </div>
+
+
+                        <!-- Operating System -->
+                        <div class="form-group">
+                            <label for="os">Operating System</label>
+                            <select id="os" name="os" required>
+                                <option value="">Select OS</option>
+                                <option value="Windows 11">Windows 11</option>
+                                <option value="Windows 10">Windows 10</option>
+                                <option value="macOS">macOS</option>
+                                <option value="Linux">Linux</option>
+                            </select>
+                        </div>
+
+                        <!-- Processor -->
+                        <div class="form-group">
+                            <label for="processor">Processor (CPU)</label>
+                            <input type="text" id="processor" name="processor" placeholder="e.g., Intel Core i5-8400" required>
+                        </div>
+
+                        <!-- RAM -->
+                        <div class="form-group">
+                            <label for="ram">RAM Memory (GB)</label>
+                            <input type="number" id="ram" name="ram" min="1" max="128" placeholder="16" required>
+                        </div>
+
+                        <!-- Graphics Card -->
+                        <div class="form-group">
+                            <label for="graphics">Graphics Card (GPU)</label>
+                            <input type="text" id="graphics" name="graphics" placeholder="e.g., NVIDIA GTX 1060" required>
+                        </div>
+
+                        <!-- Storage -->
+                        <div class="form-group">
+                            <label for="storage">Available Storage (GB)</label>
+                            <input type="number" id="storage" name="storage" min="1" placeholder="500" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="submit-btn">
+                        🚀 Check Compatibility
+                    </button>
+                </form>
+
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section">
+                <!-- Loading Indicator -->
+                <div class="loading" id="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Analyzing your system specifications...</p>
+                </div>
+
+                <!-- Placeholder Content -->
+                <div class="placeholder-content" id="placeholder">
+                    <h3>🎮 Compatibility Results</h3>
+                    <p>Select an application and enter your system specifications to see detailed compatibility analysis and performance predictions.</p>
+                </div>
+
+                <!-- Results Display -->
+                <div class="results" id="results" style="display: none;">
+                    <div class="compatibility-score">
+                        <div class="score-circle" id="scoreCircle">0%</div>
+                        <div class="overall-status" id="overallStatus">Analyzing...</div>
+                    </div>
+
+                    <div class="requirements-grid">
+                        <!-- Minimum Requirements -->
+                        <div class="requirement-section">
+                            <div class="requirement-header minimum-header">Minimum Requirements</div>
+                            <div class="requirement-list" id="minimumList">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Recommended Requirements -->
+                        <div class="requirement-section">
+                            <div class="requirement-header recommended-header">Recommended Requirements</div>
+                            <div class="requirement-list" id="recommendedList">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Specs Comparison -->
+                    <div class="user-specs">
+                        <div class="user-specs-title">📊 Your System Analysis</div>
+                        <div id="userSpecsList">
+                            <!-- Will be populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+
+<script>
+document.getElementById('systemForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const payload = {
+    application: document.getElementById('application').value,
+    os: document.getElementById('os').value,
+    processor: document.getElementById('processor').value,
+    graphics: document.getElementById('graphics').value,
+    ram: parseInt(document.getElementById('ram').value),
+    storage: parseInt(document.getElementById('storage').value),
+  };
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('placeholder').style.display = 'none';
+
+  try {
+    const res = await fetch('/check-compatibility', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+
+    // Update results
+    document.getElementById('scoreCircle').innerText = `${data.compatibilityScore}%`;
+    document.getElementById('overallStatus').innerText = data.statusMessage;
+
+    document.getElementById('minimumList').innerHTML = data.requirements.minimum.map(item => `<li>${item}</li>`).join('');
+    document.getElementById('recommendedList').innerHTML = data.requirements.recommended.map(item => `<li>${item}</li>`).join('');
+
+    document.getElementById('userSpecsList').innerHTML = `
+      <ul>
+        <li>CPU: ${data.user.processor} (Score: ${data.user.cpuScore})</li>
+        <li>GPU: ${data.user.graphics} (Score: ${data.user.gpuScore})</li>
+        <li>RAM: ${data.user.ram} GB</li>
+        <li>Storage: ${data.user.storage} GB</li>
+        <li>OS: ${data.user.os}</li>
+      </ul>
+    `;
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('errorMessage').innerText = "Something went wrong. Please try again.";
+  }
+});
+</script>
+
+</html>

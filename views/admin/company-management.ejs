@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FITBOY Admin - Company Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+      /* Modal Styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        overflow-y: auto;
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 50px auto;
+        padding: 25px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        position: relative;
+      }
+
+      .modal h2 {
+        margin-top: 0;
+        color: #333;
+        font-size: 1.5rem;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .close {
+        color: #aaa;
+        position: absolute;
+        right: 20px;
+        top: 15px;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s;
+      }
+
+      .close:hover {
+        color: #333;
+      }
+
+      /* Form Styles */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #555;
+      }
+
+      .form-group input[type="text"],
+      .form-group input[type="email"],
+      .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      .form-group textarea {
+        min-height: 80px;
+        resize: vertical;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+      }
+
+      .error-message {
+        color: #e74c3c;
+        font-size: 12px;
+        margin-top: 5px;
+      }
+
+      /* Logo Preview */
+      .logo-preview {
+        margin-top: 10px;
+      }
+
+      .logo-preview img {
+        max-width: 100px;
+        max-height: 100px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+        background: #f9f9f9;
+      }
+      
+      .no-logo-preview {
+        display: inline-block;
+        padding: 10px;
+        border: 1px dashed #ddd;
+        color: #777;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin-container">
+      <%- include('partials/sidebar', {page: 'company-management'}) %>
+
+      <div class="main-content">
+        <%- include('partials/header') %>
+
+        <div class="dashboard-content">
+          <div class="page-header">
+            <h1 class="page-title">Company Management</h1>
+            <button class="add-button" id="openAddCompanyModal">
+              Add Company
+            </button>
+          </div>
+
+          <!-- Add Company Modal -->
+          <div id="addCompanyModal" class="modal">
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <h2>Add New Company</h2>
+              <form id="companyForm">
+                <div class="form-group">
+                  <label for="companyName">Company Name *</label>
+                  <input type="text" id="companyName" name="name" required>
+                  <div class="error-message" id="companyNameError"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="companyDescription">Description</label>
+                  <textarea id="companyDescription" name="description" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="companyEmail">Email *</label>
+                  <input type="email" id="companyEmail" name="email" required>
+                  <div class="error-message" id="companyEmailError"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="companyLogo">Logo</label>
+                  <input type="file" id="companyLogo" name="logoUrl" accept="image/*">
+                  <small>Recommended size: 200x200 pixels (Max 2MB)</small>
+                  <div class="error-message" id="companyLogoError"></div>
+                  <div class="logo-preview">
+                    <img id="addLogoPreview" src="" alt="Logo Preview" style="display: none;">
+                    <div id="addNoLogoPreview" class="no-logo-preview" style="display: none;">No logo selected</div>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="cancel-button" id="cancelAddCompany">
+                    Cancel
+                  </button>
+                  <button type="submit" class="submit-button">
+                    Add Company
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Edit Company Modal -->
+          <div id="editCompanyModal" class="modal">
+            <div class="modal-content">
+              <span class="close edit-close">&times;</span>
+              <h2>Edit Company</h2>
+              <form id="editCompanyForm">
+                <input type="hidden" id="editCompanyId" name="id">
+                <input type="hidden" id="editCurrentLogoUrl" name="currentLogoUrl">
+                <input type="hidden" id="editCurrentPublicId" name="currentPublicId">
+                
+                <div class="form-group">
+                  <label for="editCompanyName">Company Name *</label>
+                  <input type="text" id="editCompanyName" name="name" required>
+                  <div class="error-message" id="editCompanyNameError"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="editCompanyDescription">Description</label>
+                  <textarea id="editCompanyDescription" name="description" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="editCompanyEmail">Email *</label>
+                  <input type="email" id="editCompanyEmail" name="email" required>
+                  <div class="error-message" id="editCompanyEmailError"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="editCompanyLogo">Logo</label>
+                  <input type="file" id="editCompanyLogo" name="logoUrl" accept="image/*">
+                  <small>Recommended size: 200x200 pixels (Max 2MB)</small>
+                  <div class="error-message" id="editCompanyLogoError"></div>
+                  <div class="logo-preview">
+                    <img id="currentLogoPreview" src="" alt="Current Logo" style="display: none;">
+                    <div id="noLogoPreview" class="no-logo-preview" style="display: none;">No logo</div>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="cancel-button edit-cancel">Cancel</button>
+                  <button type="submit" class="submit-button">Update Company</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="filter-bar">
+              <div class="search-box">
+                <input type="text" placeholder="Search company... " id="searchInput">
+                <button class="search-button">Search</button>
+              </div>
+            </div>  
+            <div class="card-content">
+              <table class="company-table">
+                <thead>
+                  <tr>
+                    <th>Logo</th>
+                    <th>Company Name</th>
+                    <th>Description</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (companyData && companyData.length > 0) { %> 
+                    <% companyData.reverse().forEach((company,index) => { %>
+                    <tr data-id="<%= company._id %>" data-public-id="<%= company.logoPublicId || '' %>">
+                      <td>
+                        <div class="logo-container">
+                          <% if (company.companyLogo && company.companyLogo.length > 0) { %>
+                            <img src="<%= company.companyLogo %>" class="company-logo" />
+                          <% } else { %>
+                            <div class="no-logo">No Logo</div>
+                          <% } %>                                           
+                        </div>
+                      </td>
+                      <td data-name="name"><%= company.companyName %></td>
+                      <td data-description="description"><%= company.companyDescription %></td>
+                      <td data-email="email"><%= company.email %></td>
+                      <td>
+                        <button class="action-btn edit-btn">Edit</button>
+                        <% if (company.isBlocked === false) { %>
+                          <a href="/admin/block-company?id=<%= company._id %>" class="text-white">
+                            <button class="action-btnn">Block</button>
+                          </a>
+                        <% } else { %>
+                          <a href="/admin/unblock-company?id=<%= company._id %>" class="text-white">
+                            <button class="action-btn">Unblock</button>       
+                          </a>
+                        <% } %>
+                        <a href="/admin/delete-company?id=<%= company._id %>" class="text-white">
+                          <button class="action-btnn">Delete</button>
+                        </a>
+                      </td>
+                    </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="7" class="no-data">No companies found</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <%- include('partials/pagination', {currentPage: 1, totalPages: 2}) %>
+      </div>
+    </div>
+    <%- include('partials/footer') %>
+
+    <script src="/js/script.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Initialize modals and functionality
+        initializeModals();
+        setupFormValidation();
+        setupDeleteConfirmation();
+        setupSearchFunctionality();
+        setupFileValidation();
+        setupBlockUnblockConfirmation();
+        setupEditModal();
+        setupLogoPreviews();
+      });
+
+      function initializeModals() {
+        // Add Company Modal
+        const addModal = document.getElementById("addCompanyModal");
+        const addBtn = document.getElementById("openAddCompanyModal");
+        const addCloseBtn = document.querySelector("#addCompanyModal .close");
+        const addCancelBtn = document.getElementById("cancelAddCompany");
+
+        // Open modal
+        addBtn.addEventListener("click", function () {
+          addModal.style.display = "block";
+          document.body.style.overflow = "hidden";
+          document.getElementById("companyName").focus();
+        });
+
+        // Close modal
+        addCloseBtn.onclick = addCancelBtn.onclick = function () {
+          addModal.style.display = "none";
+          document.body.style.overflow = "";
+          resetForm("companyForm");
+        };
+
+        // Edit Company Modal
+        const editModal = document.getElementById("editCompanyModal");
+        const editCloseBtn = document.querySelector("#editCompanyModal .close");
+        const editCancelBtn = document.querySelector("#editCompanyModal .edit-cancel");
+
+        // Close modal
+        editCloseBtn.onclick = editCancelBtn.onclick = function () {
+          editModal.style.display = "none";
+          document.body.style.overflow = "";
+          resetForm("editCompanyForm");
+        };
+
+        // Close modals when clicking outside
+        window.onclick = function (event) {
+          if (event.target == addModal) {
+            addModal.style.display = "none";
+            document.body.style.overflow = "";
+            resetForm("companyForm");
+          }
+          if (event.target == editModal) {
+            editModal.style.display = "none";
+            document.body.style.overflow = "";
+            resetForm("editCompanyForm");
+          }
+        };
+      }
+
+      function setupLogoPreviews() {
+        // Add company logo preview
+        document.getElementById('companyLogo').addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          const preview = document.getElementById('addLogoPreview');
+          const noPreview = document.getElementById('addNoLogoPreview');
+          
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              preview.src = e.target.result;
+              preview.style.display = 'block';
+              noPreview.style.display = 'none';
+            }
+            reader.readAsDataURL(file);
+          } else {
+            preview.style.display = 'none';
+            noPreview.style.display = 'block';
+          }
+        });
+      }
+
+      function setupEditModal() {
+        // Handle edit button clicks
+        document.addEventListener('click', function(e) {
+          if (e.target.classList.contains('edit-btn')) {
+            const row = e.target.closest("tr");
+            const companyId = row.getAttribute("data-id");
+            const companyName = row.querySelector("[data-name]").textContent;
+            const companyDescription = row.querySelector("[data-description]").textContent;
+            const companyEmail = row.querySelector("[data-email]").textContent;
+            const companyLogo = row.querySelector(".company-logo")?.src || '';
+            const companyPublicId = row.getAttribute("data-public-id") || '';
+            
+            // Populate the edit form
+            document.getElementById("editCompanyId").value = companyId;
+            document.getElementById("editCompanyName").value = companyName;
+            document.getElementById("editCompanyDescription").value = companyDescription;
+            document.getElementById("editCompanyEmail").value = companyEmail;
+            document.getElementById("editCurrentLogoUrl").value = companyLogo;
+            document.getElementById("editCurrentPublicId").value = companyPublicId;
+            
+            // Handle logo preview
+            const logoPreview = document.getElementById("currentLogoPreview");
+            const noLogoPreview = document.getElementById("noLogoPreview");
+            
+            if (companyLogo) {
+              logoPreview.src = companyLogo;
+              logoPreview.style.display = "block";
+              noLogoPreview.style.display = "none";
+            } else {
+              logoPreview.style.display = "none";
+              noLogoPreview.style.display = "block";
+            }
+            
+            // Show the modal
+            document.getElementById("editCompanyModal").style.display = "block";
+            document.body.style.overflow = "hidden";
+          }
+        });
+
+        // Edit form submission
+        document.getElementById("editCompanyForm").addEventListener("submit", async function(e) {
+          e.preventDefault();
+          
+          // Validate form
+          if (!validateForm("editCompanyForm")) {
+            return;
+          }
+
+          const companyId = document.getElementById("editCompanyId").value;
+          const currentPublicId = document.getElementById("editCurrentPublicId").value;
+          
+          // Prepare form data
+          const formData = {
+            name: document.getElementById('editCompanyName').value.trim(),
+            description: document.getElementById('editCompanyDescription').value.trim(),
+            email: document.getElementById('editCompanyEmail').value.trim()
+          };
+
+          // Show loading
+          const submitBtn = this.querySelector('.submit-button');
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = "Updating...";
+          submitBtn.disabled = true;
+
+          try {
+            // Handle file upload if exists
+            const fileInput = document.getElementById('editCompanyLogo');
+            if (fileInput.files.length > 0) {
+              // Upload new image
+              const { url, publicId } = await uploadToCloudinary(fileInput.files[0]);
+              formData.logoUrl = url;
+              formData.publicId = publicId;
+              
+              // Delete old image if exists
+              if (currentPublicId) {
+                await deleteFromCloudinary(currentPublicId);
+              }
+            } else {
+              // Keep existing image if not changed
+              const currentLogoUrl = document.getElementById("editCurrentLogoUrl").value;
+              if (currentLogoUrl) {
+                formData.logoUrl = currentLogoUrl;
+                formData.publicId = currentPublicId;
+              }
+            }
+
+            // Submit company data
+            const response = await fetch(`/admin/editCompany/${companyId}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.message || 'Failed to update company');
+            }
+
+            // Success
+            await Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Company updated successfully!',
+              timer: 2000,
+              showConfirmButton: false
+            });
+            
+            window.location.reload();
+            
+          } catch (error) {
+            console.error('Error:', error);
+            showError(error.message);
+          } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
+        });
+      }
+
+      function setupFormValidation() {
+        document.getElementById("companyForm").addEventListener("submit", async function(e) {
+          e.preventDefault();
+          
+          // Validate form
+          if (!validateForm("companyForm")) {
+            return;
+          }
+
+          // Prepare form data
+          const formData = {
+            name: document.getElementById('companyName').value.trim(),
+            description: document.getElementById('companyDescription').value.trim(),
+            email: document.getElementById('companyEmail').value.trim()
+          };
+
+          // Show loading
+          const submitBtn = this.querySelector('.submit-button');
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = "Processing...";
+          submitBtn.disabled = true;
+
+          try {
+            // Handle file upload if exists
+            const fileInput = document.getElementById('companyLogo');
+            if (fileInput.files.length > 0) {
+              const { url, publicId } = await uploadToCloudinary(fileInput.files[0]);
+              formData.logoUrl = url;
+              formData.publicId = publicId;
+            }
+
+            // Submit company data
+            const response = await fetch('/admin/addCompany', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.message || 'Failed to add company');
+            }
+
+            // Success
+            await Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Company added successfully!',
+              timer: 2000,
+              showConfirmButton: false
+            });
+            
+            window.location.reload();
+            
+          } catch (error) {
+            console.error('Error:', error);
+            showError(error.message);
+          } finally {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+          }
+        });
+      }
+
+      // Cloudinary upload function
+      async function uploadToCloudinary(file) {
+        const cloudName = 'duxe6ofu7';
+        const uploadPreset = 'fitboy_products';
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', uploadPreset);
+
+        try {
+          const response = await fetch(uploadUrl, {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error('Image upload failed');
+          }
+
+          const data = await response.json();
+          return {
+            url: data.secure_url,
+            publicId: data.public_id
+          };
+        } catch (error) {
+          console.error('Upload error:', error);
+          throw new Error('Error uploading image. Please try again.');
+        }
+      }
+
+      // Cloudinary delete function (called from backend)
+      async function deleteFromCloudinary(publicId) {
+        try {
+          const response = await fetch('/admin/deleteCloudinaryImage', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ publicId })
+          });
+
+          if (!response.ok) {
+            console.error('Failed to delete old image');
+          }
+        } catch (error) {
+          console.error('Error deleting image:', error);
+        }
+      }
+
+      // Generic form validation
+      function validateForm(formId) {
+        let isValid = true;
+        const form = document.getElementById(formId);
+
+        // Clear previous errors
+        form.querySelectorAll(".error-message").forEach(el => el.textContent = "");
+
+        // Validate required fields
+        const nameField = form.querySelector('[name="name"]');
+        if (!nameField?.value.trim()) {
+          form.querySelector('#companyNameError, #editCompanyNameError').textContent = "Company name is required.";
+          isValid = false;
+        }
+
+        const emailField = form.querySelector('[name="email"]');
+        if (!emailField?.value.trim()) {
+          form.querySelector('#companyEmailError, #editCompanyEmailError').textContent = "Email is required.";
+          isValid = false;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value.trim())) {
+          form.querySelector('#companyEmailError, #editCompanyEmailError').textContent = "Please enter a valid email address.";
+          isValid = false;
+        }
+
+        // Validate file if exists
+        const fileInput = form.querySelector('[type="file"]');
+        if (fileInput?.files.length > 0) {
+          const fileError = validateFile(fileInput.files[0]);
+          if (fileError) {
+            form.querySelector('#companyLogoError, #editCompanyLogoError').textContent = fileError;
+            isValid = false;
+          }
+        }
+
+        return isValid;
+      }
+
+      function validateFile(file) {
+        if (file.size > 2 * 1024 * 1024) {
+          return 'File size must be less than 2MB';
+        }
+        
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+          return 'Only JPG, PNG, and GIF files are allowed';
+        }
+        
+        return null;
+      }
+
+      function resetForm(formId) {
+        const form = document.getElementById(formId);
+        form.reset();
+        form.querySelectorAll(".error-message").forEach(el => el.textContent = "");
+        
+        // Reset previews
+        if (formId === "companyForm") {
+          document.getElementById('addLogoPreview').style.display = 'none';
+          document.getElementById('addNoLogoPreview').style.display = 'block';
+        } else if (formId === "editCompanyForm") {
+          document.getElementById('currentLogoPreview').style.display = 'none';
+          document.getElementById('noLogoPreview').style.display = 'block';
+        }
+      }
+
+      function setupDeleteConfirmation() {
+        document.addEventListener('click', function(e) {
+          if (e.target.classList.contains('action-btnn') && e.target.textContent.trim() === 'Delete') {
+            e.preventDefault();
+            const url = e.target.parentElement.getAttribute('href');
+            
+            Swal.fire({
+              title: 'Are you sure?',
+              text: "This company will be permanently deleted!",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                window.location.href = url;
+              }
+            });
+          }
+        });
+      }
+
+      function setupBlockUnblockConfirmation() {
+        document.addEventListener('click', function(e) {
+          if ((e.target.classList.contains('action-btn') || e.target.classList.contains('action-btnn')) && 
+              (e.target.textContent.trim() === 'Block' || e.target.textContent.trim() === 'Unblock')) {
+            e.preventDefault();
+            const url = e.target.parentElement.getAttribute('href');
+            const action = e.target.textContent.trim();
+            
+            Swal.fire({
+              title: `Are you sure?`,
+              text: `Do you want to ${action.toLowerCase()} this company?`,
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: action === 'Block' ? '#d33' : '#3085d6',
+              cancelButtonColor: '#6c757d',
+              confirmButtonText: `Yes, ${action.toLowerCase()} it!`
+            }).then((result) => {
+              if (result.isConfirmed) {
+                window.location.href = url;
+              }
+            });
+          }
+        });
+      }
+
+      function setupSearchFunctionality() {
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.querySelector('.search-button');
+        
+        if (searchButton && searchInput) {
+          searchButton.addEventListener('click', performSearch);
+          
+          searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+              performSearch();
+            }
+          });
+          
+          const searchBox = document.querySelector('.search-box');
+          const clearButton = document.createElement('button');
+          clearButton.classList.add('clear-search');
+          clearButton.innerHTML = '&times;';
+          clearButton.style.display = 'none';
+          searchBox.appendChild(clearButton);
+          
+          searchInput.addEventListener('input', function() {
+            clearButton.style.display = this.value ? 'block' : 'none';
+          });
+          
+          clearButton.addEventListener('click', function() {
+            searchInput.value = '';
+            this.style.display = 'none';
+            searchInput.focus();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('search')) {
+              window.location.href = window.location.pathname;
+            }
+          });
+        }
+      }
+
+      function performSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const searchTerm = searchInput.value.trim();
+        
+        if (searchTerm) {
+          window.location.href = `/admin/company-management?search=${encodeURIComponent(searchTerm)}`;
+        }
+      }
+
+      function setupFileValidation() {
+        const companyLogo = document.getElementById('companyLogo');
+        if (companyLogo) {
+          companyLogo.addEventListener('change', function() {
+            const fileError = document.getElementById('companyLogoError');
+            fileError.textContent = '';
+            
+            if (this.files.length > 0) {
+              const error = validateFile(this.files[0]);
+              if (error) {
+                fileError.textContent = error;
+                this.value = '';
+              }
+            }
+          });
+        }
+
+        const editCompanyLogo = document.getElementById('editCompanyLogo');
+        if (editCompanyLogo) {
+          editCompanyLogo.addEventListener('change', function() {
+            const fileError = document.getElementById('editCompanyLogoError');
+            fileError.textContent = '';
+            
+            if (this.files.length > 0) {
+              const error = validateFile(this.files[0]);
+              if (error) {
+                fileError.textContent = error;
+                this.value = '';
+              }
+            }
+          });
+        }
+      }
+
+      function showError(message) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: message
+        });
+      }
+    </script>
+  </body>
+</html>

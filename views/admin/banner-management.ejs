@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FITBOY Admin - Banner Management</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <%- include('partials/sidebar', {page: 'banner-management'}) %>
+        
+        <div class="main-content">
+            <%- include('partials/header') %>
+            
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <h1 class="page-title">Banner Management</h1>
+                    <button class="add-button">Add New Banner</button>
+                </div>
+                
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <input type="text" placeholder="Search banners...">
+                        <button class="search-button">Search</button>
+                    </div>
+                    <div class="filter-options">
+                        <select>
+                            <option value="">All Positions</option>
+                            <option value="home">Home Page</option>
+                            <option value="category">Category Page</option>
+                            <option value="product">Product Page</option>
+                        </select>
+                        <select>
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="scheduled">Scheduled</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="data-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Position</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Clicks</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td data-label="ID">#BNR-001</td>
+                                <td data-label="Image">
+                                    <div class="banner-thumbnail">
+                                        <img src="/img/banner-placeholder.jpg" alt="Summer Sale">
+                                    </div>
+                                </td>
+                                <td data-label="Title">Summer Sale</td>
+                                <td data-label="Position">Home Page</td>
+                                <td data-label="Start Date">Jun 1, 2025</td>
+                                <td data-label="End Date">Aug 31, 2025</td>
+                                <td data-label="Clicks">245</td>
+                                <td data-label="Status"><span class="status-badge status-active">Active</span></td>
+                                <td data-label="Actions" class="actions">
+                                    <button class="action-button view">View</button>
+                                    <button class="action-button edit">Edit</button>
+                                    <button class="action-button delete">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td data-label="ID">#BNR-002</td>
+                                <td data-label="Image">
+                                    <div class="banner-thumbnail">
+                                        <img src="/img/banner-placeholder.jpg" alt="New Arrivals">
+                                    </div>
+                                </td>
+                                <td data-label="Title">New Arrivals</td>
+                                <td data-label="Position">Category Page</td>
+                                <td data-label="Start Date">Apr 15, 2025</td>
+                                <td data-label="End Date">May 15, 2025</td>
+                                <td data-label="Clicks">187</td>
+                                <td data-label="Status"><span class="status-badge status-active">Active</span></td>
+                                <td data-label="Actions" class="actions">
+                                    <button class="action-button view">View</button>
+                                    <button class="action-button edit">Edit</button>
+                                    <button class="action-button delete">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td data-label="ID">#BNR-003</td>
+                                <td data-label="Image">
+                                    <div class="banner-thumbnail">
+                                        <img src="/img/banner-placeholder.jpg" alt="Holiday Special">
+                                    </div>
+                                </td>
+                                <td data-label="Title">Holiday Special</td>
+                                <td data-label="Position">Home Page</td>
+                                <td data-label="Start Date">Dec 1, 2025</td>
+                                <td data-label="End Date">Dec 31, 2025</td>
+                                <td data-label="Clicks">0</td>
+                                <td data-label="Status"><span class="status-badge status-processing">Scheduled</span></td>
+                                <td data-label="Actions" class="actions">
+                                    <button class="action-button view">View</button>
+                                    <button class="action-button edit">Edit</button>
+                                    <button class="action-button delete">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td data-label="ID">#BNR-004</td>
+                                <td data-label="Image">
+                                    <div class="banner-thumbnail">
+                                        <img src="/img/banner-placeholder.jpg" alt="Fitness Challenge">
+                                    </div>
+                                </td>
+                                <td data-label="Title">Fitness Challenge</td>
+                                <td data-label="Position">Product Page</td>
+                                <td data-label="Start Date">Mar 1, 2025</td>
+                                <td data-label="End Date">Mar 31, 2025</td>
+                                <td data-label="Clicks">320</td>
+                                <td data-label="Status"><span class="status-badge status-inactive">Expired</span></td>
+                                <td data-label="Actions" class="actions">
+                                    <button class="action-button view">View</button>
+                                    <button class="action-button edit">Edit</button>
+                                    <button class="action-button delete">Delete</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td data-label="ID">#BNR-005</td>
+                                <td data-label="Image">
+                                    <div class="banner-thumbnail">
+                                        <img src="/img/banner-placeholder.jpg" alt="Protein Sale">
+                                    </div>
+                                </td>
+                                <td data-label="Title">Protein Sale</td>
+                                <td data-label="Position">Category Page</td>
+                                <td data-label="Start Date">Apr 10, 2025</td>
+                                <td data-label="End Date">Apr 20, 2025</td>
+                                <td data-label="Clicks">95</td>
+                                <td data-label="Status"><span class="status-badge status-active">Active</span></td>
+                                <td data-label="Actions" class="actions">
+                                    <button class="action-button view">View</button>
+                                    <button class="action-button edit">Edit</button>
+                                    <button class="action-button delete">Delete</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <%- include('partials/pagination', {currentPage: 1, totalPages: 2}) %>
+            </div>
+            
+            <%- include('partials/footer') %>
+        </div>
+    </div>
+    
+    <script src="/js/script.js"></script>
+</body>
+</html>

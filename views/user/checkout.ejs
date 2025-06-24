@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Fitboy Games</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+      /* Base Styles */
+:root {
+  --primary-color: #000000;
+  --secondary-color: #333333;
+  --accent-color: #ff4500;
+  --background-color: #ffffff;
+  --text-color: #000000;
+  --border-color: #e0e0e0;
+  --success-color: #28a745;
+  --error-color: #dc3545;
+  --input-bg: #f8f8f8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    padding-top: 80px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Checkout Container */
+.checkout-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.checkout-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.checkout-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+/* Progress Indicator */
+.progress-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 2rem 0;
+}
+
+.progress-step {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.progress-step.active {
+  background-color: var(--accent-color);
+}
+
+.progress-line {
+  height: 2px;
+  width: 80px;
+  background-color: var(--border-color);
+  margin: 0 10px;
+}
+
+/* Checkout Content Layout */
+.checkout-content {
+  color:#000000;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .checkout-content {
+    flex-direction: row;
+  }
+
+  .checkout-left {
+    flex: 3;
+  }
+
+  .checkout-right {
+    flex: 2;
+  }
+}
+
+/* Checkout Sections */
+.checkout-section {
+  color:#000000;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.checkout-section h2 {
+  color:#000000;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--input-bg);
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+/* Error and Success Messages */
+.error-message {
+  color: var(--error-color);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: none;
+}
+
+#addressMessage.success {
+  color: var(--success-color);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+#addressMessage.error {
+  color: var(--error-color);
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Buttons */
+button {
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+.success-message {
+  color: green;
+}
+.error-message {
+  color: red;
+}
+.primary-btn,
+.checkout-btn {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+}
+
+.primary-btn:hover,
+.checkout-btn:hover {
+  background-color: #e03e00;
+}
+
+.secondary-btn,
+.back-btn {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.secondary-btn:hover,
+.back-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.edit-btn {
+  background-color: transparent;
+  color: var(--accent-color);
+  border: none;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.edit-btn:hover {
+  text-decoration: underline;
+}
+
+/* Payment Methods */
+.payment-methods {
+  color:#000000;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.payment-method {
+  color:#000000;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.payment-method.active {
+  border-color: var(--accent-color);
+}
+
+.payment-method-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  cursor: pointer;
+  background-color: var(--input-bg);
+}
+
+.payment-method.active .payment-method-header {
+  background-color: white;
+}
+
+.payment-icon {
+  width: 32px;
+  height: 32px;
+  margin-right: 1rem;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.razorpay-icon {
+  width: 30px;
+  height: 30px;
+  background-image: url('/images/razorpay.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.wallet-icon {
+  width: 30px;
+  height: 30px;
+  background-image: url('/images/wallet.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Terms Section */
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.terms-checkbox input {
+  margin-top: 0.25rem;
+}
+
+.terms-checkbox a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.terms-checkbox a:hover {
+  text-decoration: underline;
+}
+
+/* Order Summary */
+.cart-items {
+  color:#000000;
+  margin-bottom: 1.5rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  color:#000000;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.item-image {
+  width: 100px;
+  height: 150px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-name {
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.item-price {
+  font-weight: 600;
+}
+
+.order-totals {
+  margin-top: 1.5rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.total-row.grand-total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Checkout Actions */
+.checkout-actions {
+  color:#000000;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.checkout-btn {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Address Section */
+.address-section {
+  color:#000000;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+}
+
+.address-list {
+  margin-bottom: 1.5rem;
+}
+
+.address-item {
+  color:#000000;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.address-item:hover {
+  border-color: var(--accent-color);
+}
+
+.address-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.address-label input[type="radio"] {
+  margin-top: 0.25rem;
+}
+
+.address-details {
+  flex: 1;
+}
+
+.address-details p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-color);
+}
+
+.address-details p:first-child {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.default-badge {
+  display: inline-block;
+  background-color: var(--success-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.no-addresses {
+  font-size: 0.875rem;
+  color: var(--secondary-color);
+  text-align: center;
+  padding: 1rem;
+  background-color: var(--input-bg);
+  border-radius: 4px;
+}
+
+.add-address-btn {
+  width: 100%;
+  text-align: center;
+}
+
+.new-address-form {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--input-bg);
+  border-radius: 4px;
+}
+
+.new-address-form h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cancel-btn {
+  flex: 1;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767px) {
+  .checkout-header h1 {
+    font-size: 2rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .checkout-actions {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .back-btn {
+    order: 2;
+  }
+
+  .checkout-btn {
+    order: 1;
+  }
+
+  .address-item {
+    padding: 0.75rem;
+  }
+
+  .address-details p {
+    font-size: 0.75rem;
+  }
+
+  .new-address-form {
+    padding: 0.75rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+    </style>
+</head>
+<body>
+  <%- include('partials/header') %>
+
+  <main class="checkout-container">
+    <div class="checkout-header">
+      <h1>Checkout</h1>
+    </div>
+
+    <div class="checkout-content">
+      <div class="checkout-left">
+        <section class="checkout-section address-section">
+          <h2>Billing Information</h2>
+          <section class="checkout-section user-info">
+            <h2>Account Information</h2>
+            <% if (userData) { %>
+              <div class="user-details">
+                <p><strong>Email:</strong> <%= userData.email %></p>
+              </div>
+            <% } else { %>
+              <div class="login-options">
+                <p>Please log in to continue with checkout. <a href="/login">Log In</a></p>
+              </div>
+            <% } %>
+          </section>
+          <% if (userData) { %>
+            <div class="address-list" id="addressList">
+              <% if (userData.addresses && userData.addresses.length > 0) { %>
+                <% userData.addresses.forEach((addr, index) => { %>
+                  <div class="address-item">
+                    <label class="address-label">
+                      <input type="radio" name="selectedAddress" value="<%= index %>" <%= addr.isDefault ? 'checked' : '' %>>
+                      <div class="address-details">
+                        <p><strong><%= addr.street %></strong></p>
+                        <p><%= addr.city %>, <%= addr.state %> <%= addr.postalCode %>, <%= addr.country %></p>
+                        <% if (addr.isDefault) { %>
+                          <span class="default-badge">Default</span>
+                        <% } %>
+                      </div>
+                    </label>
+                  </div>
+                <% }) %>
+              <% } else { %>
+                <p class="no-addresses">No addresses added yet.</p>
+              <% } %>
+            </div>
+            <button class="secondary-btn add-address-btn" id="addAddressBtn">+ Add New Address</button>
+            <div class="new-address-form hidden" id="newAddressForm">
+              <h3>Add New Address</h3>
+              <form id="addAddressForm">
+                <div class="form-group">
+                  <label for="street">Street Address</label>
+                  <input type="text" id="street" name="street" placeholder="123 Main St">
+                  <div id="streetError" class="error-message"></div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="city">City</label>
+                    <input type="text" id="city" name="city" placeholder="New York">
+                    <div id="cityError" class="error-message"></div>
+                  </div>
+                  <div class="form-group">
+                    <label for="state">State</label>
+                    <input type="text" id="state" name="state" placeholder="NY">
+                    <div id="stateError" class="error-message"></div>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="postalCode">Postal Code</label>
+                    <input type="text" id="postalCode" name="postalCode" placeholder="10001">
+                    <div id="postalCodeError" class="error-message"></div>
+                  </div>
+                  <div class="form-group">
+                    <label for="country">Country</label>
+                    <input type="text" id="country" name="country" placeholder="United States">
+                    <div id="countryError" class="error-message"></div>
+                  </div>
+                </div>
+                <div class="form-group save-card">
+                  <input type="checkbox" id="isDefault" name="isDefault">
+                  <label for="isDefault">Set as default address</label>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="primary-btn">Save Address</button>
+                  <button type="button" class="secondary-btn cancel-btn" id="cancelAddressBtn">Cancel</button>
+                </div>
+              </form>
+              <div id="addressMessage" class="hidden"></div>
+            </div>
+          <% } %>
+        </section>
+
+        <% if (userData) { %>
+          <section class="checkout-section payment-options">
+            <h2>Payment Method</h2>
+            <div class="payment-methods">
+              <div class="payment-method active" data-method="razorpay">
+                <div class="payment-method-header">
+                  <div class="payment-icon razorpay-icon"></div>
+                  <span>Razorpay</span>
+                </div>
+                <div class="payment-method-content">
+                  <p>Click below to pay securely with Razorpay.</p>
+                  <button id="razorpayBtn" class="razorpay-btn primary-btn">Pay with Razorpay</button>
+                </div>
+              </div>
+              <div class="payment-method" data-method="wallet">
+                <div class="payment-method-header">
+                  <div class="payment-icon wallet-icon"></div>
+                  <span>Wallet ₹<%= balance %> </span>
+                </div>
+                <div class="payment-method-content hidden">
+                  <p>Pay using your wallet balance.</p>
+                  <button id="walletBtn" class="wallet-btn primary-btn">Pay with Wallet</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="checkout-section terms">
+            <div class="terms-checkbox">
+              <input type="checkbox" id="termsAgree">
+              <label for="termsAgree">I agree to the <a href="/terms" target="_blank">Terms & Conditions</a> and <a href="/refund-policy" target="_blank">Refund Policy</a></label>
+            </div>
+          </section>
+        <% } %>
+      </div>
+
+      <div class="checkout-right">
+        <section class="checkout-section order-summary">
+          <h2>Order Summary</h2>
+          <div class="cart-items">
+            <% if (products && products.length > 0) { %>
+              <% products.forEach(product => { %>
+                <div class="cart-item">
+                  <div class="item-image">
+                    <img src="<%= product.image || 'https://placehold.co/100x150' %>" alt="<%= product.name %>">
+                  </div>
+                  <div class="item-details">
+                    <h3 class="item-name"><%= product.name %></h3>
+                    <p class="item-price">₹<%= product.price.toFixed(2) %></p>
+                  </div>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <p class="empty-cart">Your cart is empty.</p>
+            <% } %>
+          </div>
+
+          <div class="order-totals">
+            <% 
+              const subtotal = products.reduce((sum, product) => sum + product.price, 0);
+              const taxRate = 0.18;
+              const tax = subtotal * taxRate;
+              const total = subtotal + tax;
+            %>
+            <div class="coupon-box" style="margin-bottom: 1rem;">
+              <input type="text" id="couponInput" placeholder="Enter Coupon Code" style="padding: 8px; width: 60%;">
+              <button onclick="applyCoupon()" style="padding: 8px 12px; background-color: #ff5a00; color: white; border: none; cursor: pointer;">Apply</button>
+              <div id="couponMessage" style="margin-top: 5px;"></div>
+            </div>
+            <div class="total-row">
+              <span>Subtotal</span>
+              <span id="subtotal">₹<%= subtotal.toFixed(2) %></span>
+            </div>
+            <div class="total-row">
+              <span>Tax (18%)</span>
+              <span id="tax">₹<%= tax.toFixed(2) %></span>
+            </div>
+            <div class="total-row grand-total">
+              <span>Total</span>
+              <span id="total">₹<%= total.toFixed(2) %></span>
+            </div>
+          </div>
+        </section>
+
+        <div class="checkout-actions">
+          <button class="back-btn" onclick="window.location.href='/cart'">Back to Cart</button>
+          <% if (userData) { %>
+            <button class="checkout-btn" id="completeCheckout">Complete Purchase</button>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+ <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Get wallet balance from server-side rendering
+      let walletBalance = <%- balance || 0 %>; // Use server-rendered balance
+      let appliedCoupon = null; // Store applied coupon details
+
+      // Update wallet balance display
+      const walletBalanceDisplay = document.getElementById('walletBalanceDisplay');
+      if (walletBalanceDisplay) {
+        walletBalanceDisplay.textContent = `(₹${walletBalance.toFixed(2)})`;
+      }
+
+      // Function to validate address form
+      const validateAddressForm = (formData) => {
+        let isValid = true;
+        const errors = {};
+
+        // Street validation
+        const street = formData.get("street")?.trim();
+        if (!street) {
+          errors.street = "Street address is required";
+          isValid = false;
+        } else if (street.length < 5) {
+          errors.street = "Street address must be at least 5 characters";
+          isValid = false;
+        } else if (!/^[a-zA-Z0-9\s,.-]+$/.test(street)) {
+          errors.street = "Street address contains invalid characters";
+          isValid = false;
+        }
+
+        // City validation
+        const city = formData.get("city")?.trim();
+        if (!city) {
+          errors.city = "City is required";
+          isValid = false;
+        } else if (!/^[a-zA-Z\s]+$/.test(city)) {
+          errors.city = "City must contain only letters and spaces";
+          isValid = false;
+        } else if (city.length < 2) {
+          errors.city = "City must be at least 2 characters";
+          isValid = false;
+        }
+
+        // State validation
+        const state = formData.get("state")?.trim();
+        if (!state) {
+          errors.state = "State is required";
+          isValid = false;
+        } else if (!/^[a-zA-Z\s]+$/.test(state)) {
+          errors.state = "State must contain only letters and spaces";
+          isValid = false;
+        } else if (state.length < 2) {
+          errors.state = "State must be at least 2 characters";
+          isValid = false;
+        }
+
+        // Postal code validation (Indian 6-digit PIN or US 5/5-4 format)
+        const postalCode = formData.get("postalCode")?.trim();
+        if (!postalCode) {
+          errors.postalCode = "Postal code is required";
+          isValid = false;
+        } else if (!/^\d{6}$|^\d{5}(-\d{4})?$/.test(postalCode)) {
+          errors.postalCode = "Invalid postal code (e.g., 123456 or 12345 or 12345-6789)";
+          isValid = false;
+        }
+
+        // Country validation
+        const country = formData.get("country")?.trim();
+        if (!country) {
+          errors.country = "Country is required";
+          isValid = false;
+        } else if (!/^[a-zA-Z\s]+$/.test(country)) {
+          errors.country = "Country must contain only letters and spaces";
+          isValid = false;
+        } else if (country.length < 2) {
+          errors.country = "Country must be at least 2 characters";
+          isValid = false;
+        }
+
+        // Display errors
+        ['street', 'city', 'state', 'postalCode', 'country'].forEach(field => {
+          const errorElement = document.getElementById(`${field}Error`);
+          if (errorElement) {
+            errorElement.textContent = errors[field] || '';
+            errorElement.style.display = errors[field] ? 'block' : 'none';
+          }
+        });
+
+        return isValid;
+      };
+
+      // Wallet Payment Processing
+      const walletBtn = document.getElementById('walletBtn');
+      if (walletBtn) {
+        walletBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+
+          const totalText = document.getElementById('total').textContent;
+          const amountInRupees = parseFloat(totalText.replace('₹', '').trim());
+
+          if (isNaN(amountInRupees)) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Invalid Amount',
+              text: 'Unable to process the total amount. Please refresh the page and try again.',
+            });
+            return;
+          }
+
+          if (walletBalance < amountInRupees) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Insufficient Balance',
+              html: `Your wallet balance (₹${walletBalance.toFixed(2)}) is insufficient for this purchase (₹${amountInRupees.toFixed(2)}).<br><br>
+                     Please use another payment method or <a href="/wallet">add funds to your wallet</a>.`,
+              confirmButtonText: 'Go to Wallet',
+              showCancelButton: true,
+              cancelButtonText: 'Try Another Method'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                window.location.href = "/wallet";
+              }
+            });
+            return;
+          }
+
+          const selectedAddressRadio = document.querySelector('input[name="selectedAddress"]:checked');
+          let address = '';
+          const userAddresses = <%- JSON.stringify(userData ? userData.addresses : []) %>;
+
+          if (!userAddresses || userAddresses.length === 0) {
+            Swal.fire({
+              icon: 'error',
+              title: 'No Address',
+              text: 'No addresses available. Please add an address before proceeding.',
+            });
+            return;
+          }
+
+          if (selectedAddressRadio) {
+            const addressIndex = selectedAddressRadio.value;
+            const selectedAddress = userAddresses[addressIndex];
+            if (selectedAddress) {
+              address = `${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.postalCode}, ${selectedAddress.country}`;
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Invalid Address',
+                text: 'Selected address is invalid. Please select a valid address.',
+              });
+              return;
+            }
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Address Required',
+              text: 'Please select a billing address.',
+            });
+            return;
+          }
+
+          const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
+          if (!products || products.length === 0) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Empty Cart',
+              text: 'No products in the order. Please add items to your cart.',
+            });
+            return;
+          }
+
+          try {
+            const response = await fetch('/wallet-payment', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ 
+                amount: amountInRupees * 100, // Amount in paise
+                address: address,
+                paymentMethod: 'wallet',
+                products: products,
+                couponCode: appliedCoupon ? appliedCoupon.code : null
+              })
+            });
+
+            const rawResponse = await response.text();
+            console.log('Raw response from /wallet-payment:', rawResponse);
+
+            let result;
+            try {
+              result = JSON.parse(rawResponse);
+            } catch (parseError) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Server Error',
+                text: 'Invalid response from server. Please try again.',
+              });
+              return;
+            }
+
+            if (response.ok && result.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Payment Successful',
+                text: 'Your order has been placed successfully!',
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => {
+                window.location.href = "/order-success?id=" + (result.orderId || '');
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Payment Failed',
+                text: result.message || 'Failed to process wallet payment. Please try again.',
+              });
+            }
+          } catch (error) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: error.message || 'An error occurred while processing your payment.',
+            });
+          }
+        });
+      }
+
+      // Razorpay Payment Processing
+      const razorpayBtn = document.getElementById('razorpayBtn');
+      if (razorpayBtn) {
+        razorpayBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+
+          const totalText = document.getElementById('total').textContent;
+          const amountInRupees = parseFloat(totalText.replace('₹', '').trim());
+
+          const selectedAddressRadio = document.querySelector('input[name="selectedAddress"]:checked');
+          let address = '';
+          const userAddresses = <%- JSON.stringify(userData ? userData.addresses : []) %>;
+
+          if (!userAddresses || userAddresses.length === 0) {
+            Swal.fire({
+              icon: 'error',
+              title: 'No Address',
+              text: 'No addresses available. Please add an address before proceeding.',
+            });
+            return;
+          }
+
+          if (selectedAddressRadio) {
+            const addressIndex = selectedAddressRadio.value;
+            const selectedAddress = userAddresses[addressIndex];
+            if (selectedAddress) {
+              address = `${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.postalCode}, ${selectedAddress.country}`;
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Invalid Address',
+                text: 'Selected address is invalid. Please select a valid address.',
+              });
+              return;
+            }
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Address Required',
+              text: 'Please select a billing address.',
+            });
+            return;
+          }
+
+          const paymentMethod = 'razorpay';
+          const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
+
+          if (!products || products.length === 0) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Empty Cart',
+              text: 'No products in the order. Please add items to your cart.',
+            });
+            return;
+          }
+
+          try {
+            const response = await fetch('/create-order', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ 
+                amount: amountInRupees * 100,
+                address: address,
+                paymentMethod: paymentMethod,
+                products: products,
+                couponCode: appliedCoupon ? appliedCoupon.code : null
+              })
+            });
+
+            const rawResponse = await response.text();
+            console.log('Raw response from /create-order:', rawResponse);
+
+            let order;
+            try {
+              order = JSON.parse(rawResponse);
+            } catch (parseError) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Server Error',
+                text: 'Invalid response from server. Please try again.',
+              });
+              return;
+            }
+
+            if (!response.ok) {
+              Swal.fire({
+                icon: 'error',
+                title: 'Payment Error',
+                text: order.message || 'Failed to initiate payment. Please try again.',
+              });
+              return;
+            }
+
+            const options = {
+              key: order.key,
+              amount: order.amount,
+              currency: order.currency,
+              name: "Fitboy Games",
+              description: "Game purchase",
+              order_id: order.orderId,
+              handler: async function (response) {
+                try {
+                  const verify = await fetch('/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(response)
+                  });
+                  const result = await verify.json();
+                  if (result.success) {
+                    window.location.href = "/order-success";
+                  } else {
+                    showRetryModal(result.message || 'Payment failed. Please try again.');
+                  }
+                } catch (error) {
+                  showRetryModal('Error verifying payment: ' + error.message);
+                }
+              },
+              prefill: {
+                name: "<%= userData ? userData.name : '' %>",
+                email: "<%= userData ? userData.email : '' %>"
+              },
+              theme: {
+                color: "#3399cc"
+              }
+            };
+
+            const razorpay = new Razorpay(options);
+            razorpay.open();
+
+            razorpay.on('payment.failed', async function (response) {
+              try {
+                const verify = await fetch('/verify-payment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    razorpay_order_id: order.orderId,
+                    razorpay_payment_id: response.error.metadata.payment_id,
+                    razorpay_signature: null
+                  })
+                });
+                const result = await verify.json();
+                showRetryModal(result.message || `Payment failed: ${response.error.description}`);
+              } catch (error) {
+                showRetryModal('Error handling payment failure: ' + error.message);
+              }
+            });
+          } catch (error) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: error.message,
+            });
+          }
+        });
+      }
+
+      // Retry Payment Modal
+      function showRetryModal(errorMessage) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Payment Failed',
+          text: errorMessage,
+          showCancelButton: true,
+          confirmButtonText: 'Retry Payment',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#ff4500',
+          cancelButtonColor: '#333333'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const activeMethod = document.querySelector(".payment-method.active");
+            if (activeMethod.dataset.method === 'razorpay') {
+              document.getElementById('razorpayBtn').click();
+            } else if (activeMethod.dataset.method === 'wallet') {
+              document.getElementById('walletBtn').click();
+            }
+          }
+        });
+      }
+
+      // Payment method selection
+      const paymentMethods = document.querySelectorAll(".payment-method");
+      paymentMethods.forEach((method) => {
+        const header = method.querySelector(".payment-method-header");
+        header.addEventListener("click", () => {
+          document.querySelectorAll(".payment-method-content").forEach((content) => {
+            content.classList.add("hidden");
+          });
+          paymentMethods.forEach((m) => m.classList.remove("active"));
+          method.classList.add("active");
+          method.querySelector(".payment-method-content").classList.remove("hidden");
+        });
+      });
+
+      // Address form toggle
+      const addAddressBtn = document.getElementById("addAddressBtn");
+      const newAddressForm = document.getElementById("newAddressForm");
+      const cancelAddressBtn = document.getElementById("cancelAddressBtn");
+      const addressForm = document.getElementById("addAddressForm");
+      const addressMessage = document.getElementById("addressMessage");
+
+      if (addAddressBtn && newAddressForm) {
+        addAddressBtn.addEventListener("click", () => {
+          newAddressForm.classList.toggle("hidden");
+          if (!newAddressForm.classList.contains("hidden")) {
+            setTimeout(() => {
+              document.getElementById("street").focus();
+            }, 100);
+          }
+        });
+      }
+
+      if (cancelAddressBtn) {
+        cancelAddressBtn.addEventListener("click", () => {
+          newAddressForm.classList.add("hidden");
+          addressForm.reset();
+          addressMessage.classList.add("hidden");
+          ['street', 'city', 'state', 'postalCode', 'country'].forEach(field => {
+            const errorElement = document.getElementById(`${field}Error`);
+            if (errorElement) {
+              errorElement.textContent = '';
+              errorElement.style.display = 'none';
+            }
+          });
+        });
+      }
+
+      if (addressForm) {
+        addressForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const formData = new FormData(addressForm);
+          
+          // Validate form
+          if (!validateAddressForm(formData)) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Validation Error',
+              text: 'Please correct the errors in the address form.',
+            });
+            return;
+          }
+
+          const data = {
+            street: formData.get("street"),
+            city: formData.get("city"),
+            state: formData.get("state"),
+            postalCode: formData.get("postalCode"),
+            country: formData.get("country"),
+            isDefault: formData.get("isDefault") === "on",
+          };
+
+          try {
+            const response = await fetch("/add-address", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            });
+
+            const rawResponse = await response.text();
+            console.log('Raw response from /add-address:', rawResponse);
+
+            let result;
+            try {
+              result = JSON.parse(rawResponse);
+            } catch (parseError) {
+              console.error('JSON parse error:', parseError);
+              Swal.fire({
+                icon: 'error',
+                title: 'Server Error',
+                text: 'Invalid server response. Please try again.',
+              });
+              addressMessage.textContent = "Invalid server response. Please try again.";
+              addressMessage.classList.add("error");
+              addressMessage.classList.remove("hidden", "success");
+              return;
+            }
+
+            if (response.ok) {
+              addressMessage.textContent = result.message;
+              addressMessage.classList.add("success");
+              addressMessage.classList.remove("hidden", "error");
+
+              Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: result.message,
+                timer: 1500,
+                showConfirmButton: false
+              }).then(() => {
+                location.reload();
+              });
+            } else {
+              throw new Error(result.message || "Failed to add address");
+            }
+          } catch (error) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: error.message,
+            });
+            addressMessage.textContent = error.message;
+            addressMessage.classList.add("error");
+            addressMessage.classList.remove("hidden", "success");
+          }
+        });
+      }
+
+      // Checkout button validation
+      const checkoutBtn = document.getElementById("completeCheckout");
+      if (checkoutBtn) {
+        checkoutBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          const activeMethod = document.querySelector(".payment-method.active");
+          if (!activeMethod) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Payment Method Required',
+              text: 'Please select a payment method.',
+            });
+            return;
+          }
+
+          const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
+          const addressList = document.getElementById("addressList");
+          if (!selectedAddress && addressList.children.length > 0 && !addressList.querySelector(".no-addresses")) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Address Required',
+              text: 'Please select a billing address.',
+            });
+            return;
+          }
+
+          const termsAgree = document.getElementById("termsAgree");
+          if (!termsAgree.checked) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Terms Agreement Required',
+              text: 'You must agree to the Terms & Conditions and Refund Policy.',
+            });
+            return;
+          }
+
+          const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
+          if (!products || products.length === 0) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Empty Cart',
+              text: 'Your cart is empty. Please add items to proceed.',
+            });
+            return;
+          }
+
+          if (activeMethod.dataset.method === 'razorpay') {
+            document.getElementById('razorpayBtn').click();
+          } else if (activeMethod.dataset.method === 'wallet') {
+            document.getElementById('walletBtn').click();
+          }
+        });
+      }
+
+      // Coupon application
+      async function applyCoupon() {
+        const messageBox = document.getElementById("couponMessage");
+        const code = document.getElementById("couponInput").value.trim();
+
+        if (appliedCoupon) {
+          messageBox.innerText = 'Coupon already applied.';
+          messageBox.style.color = 'red';
+          return;
+        }
+
+        if (!code) {
+          messageBox.innerText = 'Please enter a coupon code.';
+          messageBox.style.color = 'red';
+          return;
+        }
+
+        try {
+          const res = await fetch('/apply-coupon', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            appliedCoupon = { code, discountPercent: data.discountPercent };
+
+            const originalSubtotal = parseFloat(document.getElementById("subtotal").innerText.replace(/[₹,]/g, ''));
+            if (isNaN(originalSubtotal)) {
+              messageBox.innerText = "Error reading subtotal.";
+              messageBox.style.color = "red";
+              return;
+            }
+
+            const discount = originalSubtotal * (data.discountPercent / 100);
+            const newSubtotal = originalSubtotal - discount;
+            const newTax = newSubtotal * 0.18;
+            const newTotal = newSubtotal + newTax;
+
+            document.getElementById("subtotal").innerText = `₹${newSubtotal.toFixed(2)}`;
+            document.getElementById("tax").innerText = `₹${newTax.toFixed(2)}`;
+            document.getElementById("total").innerText = `₹${newTotal.toFixed(2)}`;
+
+            document.getElementById("couponInput").disabled = true;
+
+            messageBox.innerText = `Coupon applied: ${data.discountPercent}% off!`;
+            messageBox.style.color = 'green';
+          } else {
+            messageBox.innerText = data.message;
+            messageBox.style.color = 'red';
+          }
+        } catch (err) {
+          console.error('Error applying coupon:', err);
+          messageBox.innerText = "Something went wrong!";
+          messageBox.style.color = 'red';
+        }
+      }
+    });
+  </script>
+</body>
+</html>
