@@ -107,9 +107,7 @@
                   <td>
                     <div class="product-poster-container">
                       <img class="product-poster" src="<%= product.poster %>" alt="<%= product.name %>" />
-                    <button class="upload-btn" data-product-id="<%= product._id %>" data-bs-toggle="modal" data-bs-target="#uploadGameFileModal">
-                      <%= product.gameFile ? 'Update' : 'Upload' %>
-                    </button>                    </div>
+                   </div>
                   </td>                  <td><%= product.name %></td>
                   <td>
                     <% if (product.categoryId && product.categoryId.length > 0) { %>

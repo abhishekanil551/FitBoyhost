@@ -35,15 +35,12 @@ const addCompany = async (req, res) => {
     const { name, description, email, logoUrl } = req.body;
     console.log("Received body:", req.body);
 
-    // Validate input data
     if (!name?.trim() || !email?.trim()) {
       return res.status(400).json({
         success: false,
         message: "Company name and email are required",
       });
     }
-
-    // Check if company already exists
     const existingCompany = await Company.findOne({ companyName: name.trim() });
     if (existingCompany) {
       return res.status(409).json({
@@ -51,7 +48,6 @@ const addCompany = async (req, res) => {
         message: "A company with this name already exists",
       });
     }
-
     // Create company object
     const companyData = {
       companyName: name,
@@ -107,7 +103,7 @@ const editCompany = async (req, res) => {
       });
     }
 
-    // Check if another company with the same name exists (excluding current company)
+    
     const duplicateCompany = await Company.findOne({ 
       companyName: name.trim(),
       _id: { $ne: id } 

@@ -14,12 +14,17 @@ const fs = require('fs');
 
 const loadHome = async (req, res) => {
   try {
+    if (req.session.userId) {
+      return res.redirect('/home'); 
+    }
     return res.render('welcomeHome');
   } catch (error) {
     console.log('Home page not found:', error);
-    res.status(500).send('Server error', error);
+    res.status(500).send('Server error');
   }
 };
+
+
 
 const loadHomepage = async (req, res) => {
   try {
@@ -79,7 +84,7 @@ const loadHomepage = async (req, res) => {
         },
       },
       { $sort: { units: -1 } },
-      { $limit: 10 },
+      { $limit: 4 },
       {
         $project: {
           _id: 1,
@@ -356,6 +361,9 @@ const loadLogin = async (req, res) => {
 };
 
 const login = async (req, res) => {
+  if(req.session.userId){
+    res.redirect('/home')
+  }
   try {
     const { loginEmail, loginPassword } = req.body;
     const findUser = await User.findOne({ isAdmin: 0, email: loginEmail });
@@ -541,58 +549,37 @@ const productDetails = async (req, res) => {
 
     if (userId) {
       try {
-        // More efficient query: Find orders that contain the specific product
-        const userOrders = await Order.find({ 
+        const userOrders = await Order.find({
           userId,
-          status: { $in: ['pending', 'paid', 'failed'] } // Only check relevant statuses
-        })
-        .populate({
+          status: { $in: ['paid'] }
+        }).populate({
           path: 'order_items',
           populate: {
             path: 'productId',
             model: 'Product'
           }
-        })
-        .lean(); // Use lean() for better performance
+        }).lean();
 
         console.log(`Checking ownership for user ${userId} and product ${productId}`);
         console.log(`Found ${userOrders.length} orders for user`);
 
-        // Check each order to see if the product exists in the order
         for (const order of userOrders) {
-          if (!order.order_items || order.order_items.length === 0) {
-            console.log(`Order ${order._id} has no items`);
-            continue;
+          if (!order.order_items || order.order_items.length === 0) continue;
+
+          for (const item of order.order_items) {
+            if (item.productId && item.productId._id.toString() === productId.toString()) {
+              ownsProduct = true;
+              orderStatus = order.status;
+
+              if (order.status === 'paid') {
+                canInstall = true;
+              }
+
+              break;
+            }
           }
 
-          // Find the matching product in order_items
-          const matchingOrderItem = order.order_items.find(item => {
-            if (!item || !item.productId) {
-              console.log('Invalid order item or missing productId');
-              return false;
-            }
-            
-            const itemProductId = item.productId._id.toString();
-            const targetProductId = productId.toString();
-            
-            return itemProductId === targetProductId;
-          });
-
-          if (matchingOrderItem) {
-            ownsProduct = true;
-            orderStatus = order.status;
-            
-            console.log(`Product found in order ${order._id} with status: ${orderStatus}`);
-            
-            // Allow installation only if the order status is 'paid'
-            if (orderStatus === 'paid') {
-              canInstall = true;
-              console.log('User can install the product');
-            } else {
-              console.log(`Cannot install - order status is: ${orderStatus}`);
-            }
-            break; // Exit loop once we find the product
-          }
+          if (ownsProduct) break;
         }
 
         if (!ownsProduct) {
@@ -601,7 +588,6 @@ const productDetails = async (req, res) => {
 
       } catch (orderError) {
         console.error('Error checking product ownership:', orderError);
-        // Continue execution even if ownership check fails
       }
     }
 
@@ -619,7 +605,7 @@ const productDetails = async (req, res) => {
       isListed: true,
     }).limit(4);
 
-    // Log final results for debugging
+    // Final debug log
     console.log('Final ownership status:', {
       ownsProduct,
       orderStatus,
@@ -632,9 +618,9 @@ const productDetails = async (req, res) => {
     res.render('productDetials', {
       userData,
       user: userData,
-      product: product,
-      relatedProducts: relatedProducts,
-      publisherProducts: publisherProducts,
+      product,
+      relatedProducts,
+      publisherProducts,
       ownsProduct,
       orderStatus,
       canInstall,
@@ -645,6 +631,7 @@ const productDetails = async (req, res) => {
     res.redirect('/pageNotFound');
   }
 };
+
 
 
 

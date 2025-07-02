@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FITBOY Admin - Order Controller</title>
     <link rel="stylesheet" href="/css/style.css">
-      <link rel="stylesheet" href="/css/style.css"/>
-
     <style>
         .status-badge {
             display: inline-block;
@@ -33,7 +31,79 @@
             border-radius: 4px;
             text-decoration: none;
         }
-
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 700px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .close-modal {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+            color: #333;
+        }
+        .close-modal:hover {
+            color: #000;
+        }
+        .product-poster {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .modal-content p {
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        .modal-content h3 {
+            margin: 20px 0 15px;
+            color: #333;
+        }
+        .modal-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        .modal-content ul li {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .modal-content ul li p {
+            margin: 5px 0;
+        }
+        .view-details-btn {
+            padding: 0.25rem 0.5rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .view-details-btn:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -71,7 +141,7 @@
                                     <% }) %>
                                 </select>
                                 <div class="date-filter d-flex gap-2">
-                                    <input type="date" name="startDate" placeholder="From Date" value="<%= startDate %>">
+                                    <input type="date" name=":startDate" placeholder="From Date" value="<%= startDate %>">
                                     <input type="date" name="endDate" placeholder="To Date" value="<%= endDate %>">
                                 </div>
                                 <a href="/admin/order-Management" class="btn btn-secondary">Clear Filters</a>
@@ -91,6 +161,7 @@
                                 <th>Total</th>
                                 <th>Payment</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -99,7 +170,7 @@
                                     <tr>
                                         <td>#<%= order.orderNumber || order._id.toString().slice(-6).toUpperCase() %></td>
                                         <td><%= order.userId?.name || 'N/A' %></td>
-                                        <td><%= order.orderDate ? order.orderDate.toDateString() : 'N/A' %></td>
+                                        <td><%= order.formattedDate || 'N/A' %></td>
                                         <td>
                                             <%= order.order_items?.length || 0 %> item(s)
                                             <ul>
@@ -119,6 +190,9 @@
                                                 <%= order.statusDisplay || order.status %>
                                             </span>
                                         </td>
+                                        <td>
+                                            <button class="view-details-btn" data-order-id="<%= order._id %>">View Details</button>
+                                        </td>
                                     </tr>
                                 <% }) %>
                             <% } else { %>
@@ -130,6 +204,15 @@
                     </table>
                 </div>
 
+                <!-- Modal for order details -->
+                <div id="orderDetailsModal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-modal">×</span>
+                        <h2>Order Details</h2>
+                        <div id="modalContent"></div>
+                    </div>
+                </div>
+
                 <%- include('partials/pagination', {currentPage: currentPage || 1, totalPages: totalPages || 1, baseUrl: `/admin/orders?search=${encodeURIComponent(search)}&status=${status}&sort=${sort}&startDate=${startDate}&endDate=${endDate}`}) %>
             </div>
             
@@ -138,6 +221,7 @@
     </div>
 
     <script>
+        // Existing edit status script
         document.querySelectorAll('.action-button.edit').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const orderId = btn.dataset.orderId;
@@ -167,6 +251,60 @@
                     alert('Invalid status. Please use pending, paid, or failed.');
                 }
             });
+        });
+
+        // Modal handling script
+        const modal = document.getElementById('orderDetailsModal');
+        const modalContent = document.getElementById('modalContent');
+        const closeModal = document.querySelector('.close-modal');
+
+        document.querySelectorAll('.view-details-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const orderId = btn.dataset.orderId;
+                const order = <%- JSON.stringify(orders) %>.find(o => o._id === orderId);
+                
+                if (order) {
+                    const discountPercentage = (item) => {
+                        if (item.productId?.regularPrice && item.productId?.salesPrice) {
+                            return (((item.productId.regularPrice - item.productId.salesPrice) / item.productId.regularPrice) * 100).toFixed(2);
+                        }
+                        return '0';
+                    };
+
+                    modalContent.innerHTML = `
+                        <p><strong>Order ID:</strong> #${order.orderNumber || order._id.toString().slice(-6).toUpperCase()}</p>
+                        <p><strong>Customer Name:</strong> ${order.userId?.name || 'N/A'}</p>
+                        <p><strong>Customer Email:</strong> ${order.userId?.email || 'N/A'}</p>
+                        <p><strong>Date:</strong> ${order.formattedDate || 'N/A'}</p>
+                        <p><strong>Payment Method:</strong> ${order.paymentMethod || 'N/A'}</p>
+                        <p><strong>Status:</strong> ${order.statusDisplay || order.status}</p>
+                        <h3>Products</h3>
+                        <ul>
+                            ${order.order_items?.map(item => `
+                                <li>
+                                    <p><strong>Name:</strong> ${item.productId?.name || 'Unnamed Product'}</p>
+                                    <p><strong>Quantity:</strong> ${item.quantity || 1}</p>
+                                    <p><strong>Price:</strong> ₹${item.price ? item.price.toFixed(2) : '0.00'}</p>
+                                    <p><strong>Regular Price:</strong> ₹${item.productId?.regularPrice ? item.productId.regularPrice.toFixed(2) : '0.00'}</p>
+                                    <p><strong>Discount:</strong> ${discountPercentage(item)}%</p>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <p><strong>Total:</strong> ₹${order.total ? order.total.toFixed(2) : '0.00'}</p>
+                    `;
+                    modal.style.display = 'block';
+                }
+            });
+        });
+
+        closeModal.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
         });
     </script>
 </body>

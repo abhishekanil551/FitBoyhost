@@ -5,7 +5,6 @@ const app = express();
 
 
 const customerInfo=async (req,res)=>{
-
     try {
         let search=''
         if(req.query.search){

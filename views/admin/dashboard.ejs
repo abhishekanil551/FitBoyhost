@@ -196,7 +196,7 @@
                                 <div class="product-list">
                                     <% topProducts.forEach(product => { %>
                                         <div class="product-item">
-                                         <img src="<%= product.poster %>" alt="<%= product.name %>" class="product-logo"  onerror="this.src='/images/product-placeholder.png'">
+                                         <img src="<%= product.poster %>" alt="<%= product.name %>" class="product-logo"  onerror="this.src='/images/product-placeholder.png'" style="width: 40px; height: 60px; margin-right: 10px;">
                                             <div class="product-info">
                                                 <div class="product-name"><%= product.name %></div>
                                                 <div class="product-sales"><%= product.units %> sales</div>
@@ -243,69 +243,102 @@
     </div>
 </div>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Chart initialization
-            const chartData = <%- JSON.stringify(chartData) %>;
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            const salesChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartData.labels,
-                    datasets: [{
-                        label: 'Sales (₹)',
-                        data: chartData.values,
-                        borderColor: '#8B4513',
-                        backgroundColor: 'rgba(139, 69, 19, 0.2)',
-                        fill: true,
-                        tension: 0.4,
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Sales (₹)' },
+    document.addEventListener('DOMContentLoaded', () => {
+        // Chart data from server
+        const chartData = <%- JSON.stringify(chartData) %>;
+
+        // Handle empty or single-point charts
+        if (chartData.labels.length === 0) {
+            chartData.labels.push('No Data');
+            chartData.values.push(0);
+        } else if (chartData.labels.length === 1) {
+            chartData.labels.push('');
+            chartData.values.push(0);
+        }
+
+        // Chart.js rendering
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'Sales (₹)',
+                    data: chartData.values,
+                    borderColor: '#8B4513',
+                    backgroundColor: 'rgba(139, 69, 19, 0.2)',
+                    fill: true,
+                    tension: 0.4,
+                }],
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Sales (₹)'
                         },
-                        x: {
-                            title: { display: true, text: chartData.filter.charAt(0).toUpperCase() + chartData.filter.slice(1) },
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: chartData.filter.charAt(0).toUpperCase() + chartData.filter.slice(1)
                         },
                     },
                 },
-            });
-
-            // Chart filter handling
-            const chartFilter = document.getElementById('chartFilter');
-            const startDateInput = document.getElementById('startDate');
-            const endDateInput = document.getElementById('endDate');
-            const customDateInputs = document.querySelectorAll('.custom-date');
-
-            // Show/hide custom date inputs
-            const toggleCustomInputs = () => {
-                const isCustom = chartFilter.value === 'custom';
-                customDateInputs.forEach(input => {
-                    input.style.display = isCustom ? 'inline-block' : 'none';
-                });
-            };
-            toggleCustomInputs();
-
-            chartFilter.addEventListener('change', () => {
-                toggleCustomInputs();
-                if (chartFilter.value !== 'custom') {
-                    window.location.href = `/admin/dashboard?chartFilter=${chartFilter.value}`;
+                plugins: {
+                    title: {
+                        display: chartData.labels.length > 1,
+                        text: chartData.labels.includes('No Data') ? 'No Chart Data Available' : 'Sales Performance'
+                    },
+                    tooltip: {
+                        enabled: chartData.labels.includes('No Data') ? false : true
+                    }
                 }
-            });
-
-            // Handle custom date submission
-            const applyCustomFilter = () => {
-                if (chartFilter.value === 'custom' && startDateInput.value && endDateInput.value) {
-                    window.location.href = `/admin/dashboard?chartFilter=custom&startDate=${startDateInput.value}&endDate=${endDateInput.value}`;
-                }
-            };
-            startDateInput.addEventListener('change', applyCustomFilter);
-            endDateInput.addEventListener('change', applyCustomFilter);
+            },
         });
-    </script>
+
+        // Chart filter form handling
+        const chartFilter = document.getElementById('chartFilter');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const customDateInputs = document.querySelectorAll('.custom-date');
+
+        // Show/hide date inputs based on filter
+        const toggleCustomInputs = () => {
+            const isCustom = chartFilter.value === 'custom';
+            customDateInputs.forEach(input => {
+                input.style.display = isCustom ? 'inline-block' : 'none';
+            });
+        };
+        toggleCustomInputs();
+
+        chartFilter.addEventListener('change', () => {
+            toggleCustomInputs();
+            if (chartFilter.value !== 'custom') {
+                window.location.href = `/admin/dashboard?chartFilter=${chartFilter.value}`;
+            }
+        });
+
+        // Apply custom range if both dates are filled
+        const isValidDate = (dateStr) => !isNaN(new Date(dateStr).getTime());
+
+        const applyCustomFilter = () => {
+            const start = startDateInput.value;
+            const end = endDateInput.value;
+
+            if (chartFilter.value === 'custom' && isValidDate(start) && isValidDate(end)) {
+                window.location.href = `/admin/dashboard?chartFilter=custom&startDate=${start}&endDate=${end}`;
+            }
+        };
+
+        startDateInput.addEventListener('change', applyCustomFilter);
+        endDateInput.addEventListener('change', applyCustomFilter);
+    });
+</script>
+
     <%- include('partials/footer') %>
 </body>
 </html>

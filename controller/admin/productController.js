@@ -109,7 +109,7 @@ const addProduct = async (req, res) => {
     const { errors, isValid } = validateProductInput(req.body);
 
     function validateProductInput(body) {
-      const { name, regularPrice, salesPrice, categoryId, description, poster } = body;
+      const { name, regularPrice, salesPrice, categoryId, description, poster,gameFile } = body;
 
       if (!name || !regularPrice || !salesPrice || !categoryId || !description || !poster) {
         return { errors: { message: 'All required fields must be filled.' }, isValid: false };
@@ -179,6 +179,7 @@ const addProduct = async (req, res) => {
       categoryId: categoryId,
       regularPrice: req.body.regularPrice,
       salesPrice: req.body.salesPrice,
+      gameFile:req.body.gameFile
     });
 
     const savedProduct = await newProduct.save();
@@ -339,6 +340,7 @@ const editProduct = async (req, res) => {
       categoryId,
       regularPrice,
       salesPrice,
+      gameFile
     } = req.body;
 
     console.log('Received data:', req.body);
@@ -410,6 +412,7 @@ const editProduct = async (req, res) => {
       categoryId: categoriesArray,
       regularPrice: parseFloat(regularPrice),
       salesPrice: parseFloat(salesPrice),
+      gameFile:gameFile,
       updatedAt: Date.now(),
     };
 
@@ -456,40 +459,6 @@ const editProduct = async (req, res) => {
 };
 
 
-const uploadGameFile = async (req, res) => {
-  try {
-    const { productId, gameFileLink } = req.body;
-
-    // Validate inputs
-    if (!productId || !gameFileLink) {
-      return res.redirect('/admin/product-management?error=Product ID and game file link are required');
-    }
-
-    // Validate URL format
-    try {
-      new URL(gameFileLink);
-    } catch {
-      return res.redirect('/admin/product-management?error=Invalid URL format');
-    }
-
-    // Update product with game file link
-    const product = await Product.findByIdAndUpdate(
-      productId,
-      { gameFile: gameFileLink },
-      { new: true }
-    );
-
-    if (!product) {
-      return res.redirect('/admin/product-management?error=Product not found');
-    }
-
-    // Redirect back to product management page on success
-    res.redirect('/admin/product-management?success=Game file link uploaded successfully');
-  } catch (error) {
-    console.error('Error uploading game file:', error);
-    res.redirect('/admin/product-management?error=Server error occurred');
-  }
-};
 
 
 
@@ -505,5 +474,5 @@ module.exports = {
   editProduct,
   toggleRecommended,
   FreeProduct,
-  uploadGameFile,
+  
 };

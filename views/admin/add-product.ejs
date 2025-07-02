@@ -109,6 +109,71 @@
     .cropper-btn.primary:hover {
       background: #45a049;
     }
+
+    /* Error and Success Border Styles */
+    .error-border {
+      border-color: red !important;
+    }
+    .success-border {
+      border-color: #4CAF50 !important;
+    }
+    .error-message {
+      color: red;
+      font-size: 12px;
+      display: none;
+      margin-top: 5px;
+    }
+
+    /* File Preview Styles */
+    .file-preview-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      position: relative;
+      max-width: 300px;
+      background-color: #f9f9f9;
+    }
+    
+    .file-preview-item .folder-icon {
+      width: 20px;
+      height: 20px;
+      fill: #666;
+      flex-shrink: 0;
+    }
+    
+    .file-preview-item span {
+      flex-grow: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .remove-file {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: #666;
+      padding: 2px 6px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    
+    .remove-file:hover {
+      background-color: #e0e0e0;
+      color: #000;
+    }
+
+    /* Hide game file link when file is uploaded */
+    .game-file-link-container.hidden {
+      display: none;
+    }
   </style>
   <body>
     <div class="admin-container">
@@ -178,6 +243,22 @@
                   <div id="banner-preview-container" class="preview-container"></div>
                   <input type="hidden" id="banner-urls" />
                   <small class="help-text">Recommended aspect ratio: 16:9</small>
+                </div>
+
+                <div class="form-group">
+                  <label for="game-file">Game File*</label>
+                  <div class="file-upload-container">
+                    <input type="file" id="game-file" name="gameFile" accept=".zip,.rar,.exe,.dmg,.app" />
+                    <label for="game-file" class="file-upload-label">Choose File</label>
+                  </div>
+                  <div class="form-group game-file-link-container">
+                    <label for="game-file-link">Or Game File Link*</label>
+                    <input type="text" id="game-file-link" name="gameFileLink" placeholder="https://example.com/gamefile.zip" />
+                  </div>
+                  <div id="game-file-error" class="error-message"></div>
+                  <div id="game-file-preview-container" class="preview-container"></div>
+                  <input type="hidden" id="game-file-url" />
+                  <small class="help-text">Upload a game file (max 100MB) or provide a direct download link. Only one is required.</small>
                 </div>
               </div>
 
@@ -300,14 +381,13 @@
         let currentFileInput = null;
         let currentFileIndex = 0;
         let currentFiles = [];
-        let imageUrls = { poster: '', banners: [] };
+        let imageUrls = { poster: '', banners: [], gameFile: '' };
         const cropperModal = document.getElementById('cropper-modal');
         const imageToEdit = document.getElementById('image-to-crop');
 
         // Cloudinary configuration
         const CLOUD_NAME = 'duxe6ofu7'; // Replace with your Cloudinary cloud name
         const UPLOAD_PRESET = 'fitboy_products'; // Replace with your upload preset name
-        const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
         // Initialize category dropdown functionality
         const toggleDropdown = document.getElementById('toggle-category-dropdown');
@@ -385,19 +465,25 @@
           });
         });
 
-        // ---- IMAGE HANDLING WITH CROPPER ----
+        // ---- IMAGE AND FILE HANDLING ----
 
-        async function uploadToCloudinary(blob, folder) {
+        async function uploadToCloudinary(file, folder, isImage = true) {
           const formData = new FormData();
-          formData.append('file', blob, `${folder}.jpg`);
+          formData.append('file', file);
           formData.append('upload_preset', UPLOAD_PRESET);
           formData.append('folder', `products/${folder}`);
 
           try {
-            const response = await fetch(UPLOAD_URL, {
+            const uploadUrl = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${isImage ? 'image' : 'raw'}/upload`;
+            const response = await fetch(uploadUrl, {
               method: 'POST',
               body: formData,
             });
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const result = await response.json();
             if (result.secure_url) {
               return result.secure_url;
@@ -440,6 +526,30 @@
           };
 
           reader.readAsDataURL(file);
+        }
+
+        function showGameFilePreview(fileName) {
+          const previewContainer = document.getElementById('game-file-preview-container');
+          const fileExtension = fileName.split('.').pop().toUpperCase();
+          previewContainer.innerHTML = `
+            <div class="file-preview-item">
+              <svg class="folder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>${fileName} (${fileExtension})</span>
+              <button type="button" class="remove-file">×</button>
+            </div>
+          `;
+        }
+
+        function hideGameFileLink() {
+          const linkContainer = document.querySelector('.game-file-link-container');
+          linkContainer.classList.add('hidden');
+        }
+
+        function showGameFileLink() {
+          const linkContainer = document.querySelector('.game-file-link-container');
+          linkContainer.classList.remove('hidden');
         }
 
         document.getElementById('product-poster').addEventListener('change', function (e) {
@@ -485,6 +595,84 @@
 
             currentFileIndex = 0;
             openCropperModal(currentFiles[0], this, 16 / 9, 0);
+          }
+        });
+
+        document.getElementById('game-file').addEventListener('change', async function (e) {
+          if (this.files && this.files.length > 0) {
+            const file = this.files[0];
+            if (file.size > 100 * 1024 * 1024) {
+              Swal.fire({
+                icon: 'error',
+                title: 'File Too Large',
+                text: 'Game file must be less than 100MB',
+              });
+              this.value = '';
+              document.getElementById('game-file-preview-container').innerHTML = '';
+              showGameFileLink();
+              return;
+            }
+
+            // Show loading state
+            const previewContainer = document.getElementById('game-file-preview-container');
+            previewContainer.innerHTML = `
+              <div class="file-preview-item">
+                <svg class="folder-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Uploading ${file.name}...</span>
+              </div>
+            `;
+
+            try {
+              const url = await uploadToCloudinary(file, 'game_files', false);
+              imageUrls.gameFile = url;
+              document.getElementById('game-file-url').value = url;
+              document.getElementById('game-file-link').value = ''; // Clear link if file is uploaded
+              hideGameFileLink(); // Hide the link field
+              showGameFilePreview(file.name);
+              markAsTouched('game-file');
+            } catch (error) {
+              console.error('Upload error:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Upload Failed',
+                text: 'Failed to upload game file to Cloudinary: ' + error.message,
+              });
+              this.value = '';
+              document.getElementById('game-file-preview-container').innerHTML = '';
+              showGameFileLink();
+            }
+          } else {
+            // If no file selected, show the link field again
+            showGameFileLink();
+            document.getElementById('game-file-preview-container').innerHTML = '';
+            imageUrls.gameFile = '';
+            document.getElementById('game-file-url').value = '';
+          }
+        });
+
+        document.getElementById('game-file-link').addEventListener('input', function () {
+          if (this.value.trim()) {
+            document.getElementById('game-file').value = ''; // Clear file input if link is provided
+            document.getElementById('game-file-preview-container').innerHTML = ''; // Clear file preview
+            imageUrls.gameFile = this.value.trim();
+            document.getElementById('game-file-url').value = this.value.trim();
+          } else {
+            imageUrls.gameFile = '';
+            document.getElementById('game-file-url').value = '';
+          }
+          markAsTouched('game-file');
+        });
+
+        document.getElementById('game-file-preview-container').addEventListener('click', function (e) {
+          if (e.target.classList.contains('remove-file')) {
+            document.getElementById('game-file').value = '';
+            document.getElementById('game-file-url').value = '';
+            imageUrls.gameFile = '';
+            document.getElementById('game-file-preview-container').innerHTML = '';
+            showGameFileLink(); // Show the link field again
+            markAsTouched('game-file');
           }
         });
 
@@ -663,6 +851,25 @@
           }
         }
 
+        function validateGameFile() {
+          const gameFileUrl = document.getElementById('game-file-url').value.trim();
+          const gameFileLink = document.getElementById('game-file-link').value.trim();
+          const gameFileInput = document.getElementById('game-file').files.length;
+
+          if (!gameFileUrl && !gameFileLink && !gameFileInput) {
+            showError('game-file', 'Either a game file or a game file link is required');
+            return false;
+          } else if (gameFileLink) {
+            const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+            if (!urlRegex.test(gameFileLink)) {
+              showError('game-file', 'Please enter a valid URL for the game file link');
+              return false;
+            }
+          }
+          showSuccess('game-file');
+          return true;
+        }
+
         function validateCompany() {
           const company = document.getElementById('company').value;
           if (!company) {
@@ -715,29 +922,66 @@
 
         function showError(elementId, message) {
           if (!touchedFields.has(elementId)) return;
-          const inputElement = document.getElementById(elementId);
+          const inputElements = [
+            document.getElementById(elementId),
+            document.getElementById(`${elementId}-link`)
+          ].filter(el => el);
           const errorElement = document.getElementById(`${elementId}-error`);
           if (errorElement) {
             errorElement.textContent = message;
             errorElement.style.display = 'block';
           }
-          if (inputElement) {
-            inputElement.classList.add('error-border');
-            inputElement.classList.remove('success-border');
-          }
+          inputElements.forEach(inputElement => {
+            if (inputElement) {
+              inputElement.classList.add('error-border');
+              inputElement.classList.remove('success-border');
+            }
+          });
         }
 
         function showSuccess(elementId) {
           if (!touchedFields.has(elementId)) return;
-          const inputElement = document.getElementById(elementId);
+          const inputElements = [
+            document.getElementById(elementId),
+            document.getElementById(`${elementId}-link`)
+          ].filter(el => el);
           const errorElement = document.getElementById(`${elementId}-error`);
           if (errorElement) {
             errorElement.style.display = 'none';
           }
-          if (inputElement) {
-            inputElement.classList.remove('error-border');
-            inputElement.classList.add('success-border');
-          }
+          inputElements.forEach(inputElement => {
+            if (inputElement) {
+              inputElement.classList.remove('error-border');
+              inputElement.classList.add('success-border');
+            }
+          });
+        }
+
+        function resetForm() {
+          const form = document.getElementById('add-product-form');
+          form.reset();
+          imageUrls = { poster: '', banners: [], gameFile: '' };
+          document.getElementById('poster-url').value = '';
+          document.getElementById('banner-urls').value = '';
+          document.getElementById('game-file-url').value = '';
+          document.getElementById('poster-preview-container').innerHTML = '';
+          document.getElementById('banner-preview-container').innerHTML = '';
+          document.getElementById('game-file-preview-container').innerHTML = '';
+          document.getElementById('selected-categories-display').innerHTML = '';
+          showGameFileLink(); // Show the link field again
+          document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+          });
+          document.querySelectorAll('.error-message').forEach(error => {
+            error.style.display = 'none';
+          });
+          document.querySelectorAll('.error-border').forEach(input => {
+            input.classList.remove('error-border');
+          });
+          document.querySelectorAll('.success-border').forEach(input => {
+            input.classList.remove('success-border');
+          });
+          touchedFields.clear();
         }
 
         function markAsTouched(elementId) {
@@ -748,6 +992,7 @@
             systemRequirements: validateSystemRequirements,
             trailer: validateTrailer,
             'product-poster': validatePoster,
+            'game-file': validateGameFile,
             company: validateCompany,
             categoryId: validateCategories,
             regularPrice: validateRegularPrice,
@@ -758,23 +1003,36 @@
 
         const setupFieldValidation = (fieldId, validationFn) => {
           const field = document.getElementById(fieldId);
-          if (!field) return;
-          field.addEventListener('blur', () => {
-            markAsTouched(fieldId);
-          });
-          if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA' || field.tagName === 'SELECT') {
-            field.addEventListener('input', () => {
-              if (touchedFields.has(fieldId)) {
-                validationFn();
-              }
+          const fieldLink = document.getElementById(`${fieldId}-link`);
+          if (!field && !fieldLink) return;
+          if (field) {
+            field.addEventListener('blur', () => {
+              markAsTouched(fieldId);
             });
-            if (field.tagName === 'SELECT') {
-              field.addEventListener('change', () => {
+            if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA' || field.tagName === 'SELECT') {
+              field.addEventListener('input', () => {
                 if (touchedFields.has(fieldId)) {
                   validationFn();
                 }
               });
+              if (field.tagName === 'SELECT') {
+                field.addEventListener('change', () => {
+                  if (touchedFields.has(fieldId)) {
+                    validationFn();
+                  }
+                });
+              }
             }
+          }
+          if (fieldLink) {
+            fieldLink.addEventListener('blur', () => {
+              markAsTouched(fieldId);
+            });
+            fieldLink.addEventListener('input', () => {
+              if (touchedFields.has(fieldId)) {
+                validationFn();
+              }
+            });
           }
         };
 
@@ -785,6 +1043,7 @@
         setupFieldValidation('regularPrice', validateRegularPrice);
         setupFieldValidation('salesPrice', validateSalesPrice);
         setupFieldValidation('company', validateCompany);
+        setupFieldValidation('game-file', validateGameFile);
 
         document.getElementById('product-poster').addEventListener('change', () => {
           markAsTouched('product-poster');
@@ -806,6 +1065,7 @@
             'description',
             'systemRequirements',
             'product-poster',
+            'game-file',
             'company',
             'categoryId',
             'regularPrice',
@@ -819,6 +1079,7 @@
             validateDescription() &&
             validateSystemRequirements() &&
             validatePoster() &&
+            validateGameFile() &&
             validateCompany() &&
             validateCategories() &&
             validateRegularPrice() &&
@@ -841,6 +1102,7 @@
             trailer: document.getElementById('trailer').value.trim(),
             poster: document.getElementById('poster-url').value,
             banners: JSON.parse(document.getElementById('banner-urls').value || '[]'),
+            gameFile: document.getElementById('game-file-url').value,
             company: document.getElementById('company').value,
             categoryId: Array.from(document.getElementById('categoryId').options)
               .filter((option) => option.selected)
@@ -865,6 +1127,7 @@
                 title: 'Success',
                 text: 'Product added successfully!',
               }).then(() => {
+                resetForm();
                 window.location.href = '/admin/product-management';
               });
             } else {

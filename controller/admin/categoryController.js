@@ -11,8 +11,6 @@ const categoryInfo = async (req, res) => {
         const skip = (page - 1) * limit;  
 
         const query = {};
-        
-        // If a search term is provided, add search criteria to the query
         if (search) {
             query.$or = [
                 { name: { $regex: search, $options: 'i' } },  
@@ -27,15 +25,13 @@ const categoryInfo = async (req, res) => {
 
 
         const totalCategories = await category.countDocuments(query);
-        const totalPages = Math.ceil(totalCategories / limit);  // Calculate total pages for pagination
-
-        // Render the category management page with the search term and results
+        const totalPages = Math.ceil(totalCategories / limit);  
         res.render('category-management', {
             categoryData,
             currentPage: page,
             totalPages,
             totalCategories,
-            search  // Send the search term back to the view for the input field
+            search  
         });
     } catch (error) {
         console.error('Error loading category info:', error);

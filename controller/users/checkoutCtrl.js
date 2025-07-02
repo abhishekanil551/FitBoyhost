@@ -2,6 +2,7 @@ const Product = require('../../models/productDb');
 const User = require('../../models/userDb');
 const Cart = require('../../models/cartDb');
 const WalletTransaction = require('../../models/walletDb');
+const Coupon=require('../../models/couponDb');
 
 const checkoutPage = async (req, res) => {
   try {

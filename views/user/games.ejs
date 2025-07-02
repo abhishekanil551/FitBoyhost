@@ -133,16 +133,32 @@
     }
 
     /* Filter Section */
-    .filter-container {
-      background-color: white;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      height: fit-content;
-    }
+.filter-container {
+  background-color: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: fit-content;
+
+  position: fixed;
+  right: 180px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 300px; /* Optional fixed width */
+}
+
+@media (max-width: 992px) {
+  .filter-container {
+    position: static;         /* Removes fixed position */
+    transform: none;          /* Reset transform */
+    width: 100%;              /* Full width */
+    order: 2;                 /* Change order if in flex parent */
+    margin: 100px 0;           /* Add spacing */
+  }
+}
 
     .filter-container h2 {
       font-size: 1.5rem;

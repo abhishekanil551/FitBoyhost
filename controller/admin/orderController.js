@@ -1,4 +1,3 @@
-// controllers/admin/orderController.js
 const User = require('../../models/userDb');
 const Order = require('../../models/orderDb');
 
@@ -19,7 +18,6 @@ const orderManagement = async (req, res) => {
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    // Normalize and build search filter
     const trimmedSearch = search.trim();
 
     if (trimmedSearch) {

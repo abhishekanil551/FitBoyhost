@@ -688,38 +688,51 @@ button {
             <% } %>
           </div>
 
-          <div class="order-totals">
-            <% 
-              const subtotal = products.reduce((sum, product) => sum + product.price, 0);
-              const taxRate = 0.18;
-              const tax = subtotal * taxRate;
-              const total = subtotal + tax;
-            %>
-            <div class="coupon-box" style="margin-bottom: 1rem;">
-              <input type="text" id="couponInput" placeholder="Enter Coupon Code" style="padding: 8px; width: 60%;">
-              <button onclick="applyCoupon()" style="padding: 8px 12px; background-color: #ff5a00; color: white; border: none; cursor: pointer;">Apply</button>
-              <div id="couponMessage" style="margin-top: 5px;"></div>
-            </div>
-            <div class="total-row">
-              <span>Subtotal</span>
-              <span id="subtotal">₹<%= subtotal.toFixed(2) %></span>
-            </div>
-            <div class="total-row">
-              <span>Tax (18%)</span>
-              <span id="tax">₹<%= tax.toFixed(2) %></span>
-            </div>
-            <div class="total-row grand-total">
-              <span>Total</span>
-              <span id="total">₹<%= total.toFixed(2) %></span>
-            </div>
-          </div>
+<div class="order-totals">
+    <% 
+      const subtotal = products.reduce((sum, product) => sum + product.price, 0);
+      const taxRate = 0.18;
+      let coupleDiscount = 0;
+      const coupleDiscountRate = 0.10; // 10% discount for couple discount
+      if (products.length >= 2) { // Apply couple discount if 2 or more items
+        coupleDiscount = subtotal * coupleDiscountRate;
+      }
+      const tax = (subtotal - coupleDiscount) * taxRate;
+      const total = subtotal - coupleDiscount + tax;
+    %>
+    <div class="coupon-box" style="margin-bottom: 1rem;">
+      <input type="text" id="couponInput" placeholder="Enter Coupon Code" style="padding: 8px; width: 60%;">
+      <button onclick="applyCoupon()" style="padding: 8px 12px; background-color: #ff5a00; color: white; border: none; cursor: pointer;" id="applyCouponBtn">Apply</button>
+      <button onclick="removeCoupon()" style="padding: 8px 12px; background-color: transparent; color: #333333; border: 1px solid #333333; cursor: pointer; display: none;" id="removeCouponBtn">Remove </button>
+      <div id="couponMessage" style="margin-top: 5px;"></div>
+    </div>
+    <div class="total-row">
+      <span>Subtotal</span>
+      <span id="subtotal">₹<%= subtotal.toFixed(2) %></span>
+    </div>
+    <% if (coupleDiscount > 0) { %>
+      <div class="total-row discount">
+        <span>Couple Discount (10%)</span>
+        <span id="coupleDiscount">-₹<%= coupleDiscount.toFixed(2) %></span>
+      </div>
+    <% } %>
+    <div class="total-row discount" id="couponDiscountRow" style="display: none;">
+      <span>Coupon Discount</span>
+      <span id="couponDiscount"></span>
+    </div>
+    <div class="total-row">
+      <span>Tax (18%)</span>
+      <span id="tax">₹<%= tax.toFixed(2) %></span>
+    </div>
+    <div class="total-row grand-total">
+      <span>Total</span>
+      <span id="total">₹<%= total.toFixed(2) %></span>
+    </div>
+  </div>
         </section>
 
         <div class="checkout-actions">
           <button class="back-btn" onclick="window.location.href='/cart'">Back to Cart</button>
-          <% if (userData) { %>
-            <button class="checkout-btn" id="completeCheckout">Complete Purchase</button>
-          <% } %>
         </div>
       </div>
     </div>
@@ -727,662 +740,734 @@ button {
 
   <%- include('partials/footer') %>
 
- <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // Get wallet balance from server-side rendering
-      let walletBalance = <%- balance || 0 %>; // Use server-rendered balance
-      let appliedCoupon = null; // Store applied coupon details
+<script>
+  // Define appliedCoupon in global scope for access by applyCoupon and payment logic
+  let appliedCoupon = null;
 
-      // Update wallet balance display
-      const walletBalanceDisplay = document.getElementById('walletBalanceDisplay');
-      if (walletBalanceDisplay) {
-        walletBalanceDisplay.textContent = `(₹${walletBalance.toFixed(2)})`;
+  // Function to apply coupon
+  async function applyCoupon() {
+    const messageBox = document.getElementById("couponMessage");
+    const codeInput = document.getElementById("couponInput");
+    const applyBtn = document.getElementById("applyCouponBtn");
+    const removeBtn = document.getElementById("removeCouponBtn");
+    const code = codeInput.value.trim();
+
+    // Clear previous messages
+    messageBox.innerText = '';
+    messageBox.style.color = '';
+
+    if (appliedCoupon) {
+      messageBox.innerText = 'Coupon already applied.';
+      messageBox.style.color = 'red';
+      return;
+    }
+
+    if (!code) {
+      messageBox.innerText = 'Please enter a coupon code.';
+      messageBox.style.color = 'red';
+      return;
+    }
+
+    try {
+      const res = await fetch('/apply-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        appliedCoupon = { code, discountPercent: data.discountPercent };
+
+        // Get original subtotal and couple discount
+        const subtotalText = document.getElementById("subtotal").innerText.replace(/[₹,]/g, '');
+        const originalSubtotal = parseFloat(subtotalText);
+        const coupleDiscountText = document.getElementById("coupleDiscount")?.innerText.replace('-₹', '') || '0';
+        const coupleDiscount = parseFloat(coupleDiscountText) || 0;
+
+        if (isNaN(originalSubtotal)) {
+          messageBox.innerText = "Error calculating subtotal.";
+          messageBox.style.color = "red";
+          appliedCoupon = null; // Reset coupon on error
+          return;
+        }
+
+        // Calculate discounts and new totals
+        const subtotalAfterCouple = originalSubtotal - coupleDiscount;
+        const couponDiscount = subtotalAfterCouple * (data.discountPercent / 100);
+        const newSubtotal = subtotalAfterCouple - couponDiscount;
+        const newTax = newSubtotal * 0.18;
+        const newTotal = newSubtotal + newTax;
+
+        // Update DOM with formatted values
+        document.getElementById("couponDiscountRow").style.display = 'block';
+        document.getElementById("couponDiscount").innerText = `-₹${couponDiscount.toFixed(2)}`;
+        document.getElementById("tax").innerText = `₹${newTax.toFixed(2)}`;
+        document.getElementById("total").innerText = `₹${newTotal.toFixed(2)}`;
+
+        // Update UI: disable input, hide apply button, show remove button
+        codeInput.disabled = true;
+        applyBtn.style.display = 'none';
+        removeBtn.style.display = 'inline-block';
+
+        messageBox.innerText = `Coupon applied: ${data.discountPercent}% off!`;
+        messageBox.style.color = 'green';
+      } else {
+        messageBox.innerText = data.message || 'Invalid coupon code.';
+        messageBox.style.color = 'red';
+      }
+    } catch (err) {
+      console.error('Error applying coupon:', err);
+      messageBox.innerText = "Failed to apply coupon. Please try again.";
+      messageBox.style.color = 'red';
+    }
+  }
+
+  // Function to remove coupon
+  function removeCoupon() {
+    const messageBox = document.getElementById("couponMessage");
+    const codeInput = document.getElementById("couponInput");
+    const applyBtn = document.getElementById("applyCouponBtn");
+    const removeBtn = document.getElementById("removeCouponBtn");
+
+    // Get original subtotal and couple discount
+    const subtotalText = document.getElementById("subtotal").innerText.replace(/[₹,]/g, '');
+    const originalSubtotal = parseFloat(subtotalText);
+    const coupleDiscountText = document.getElementById("coupleDiscount")?.innerText.replace('-₹', '') || '0';
+    const coupleDiscount = parseFloat(coupleDiscountText) || 0;
+
+    if (isNaN(originalSubtotal)) {
+      messageBox.innerText = "Error calculating subtotal.";
+      messageBox.style.color = "red";
+      return;
+    }
+
+    // Reset totals (remove coupon discount, keep couple discount)
+    const newSubtotal = originalSubtotal - coupleDiscount;
+    const newTax = newSubtotal * 0.18;
+    const newTotal = newSubtotal + newTax;
+
+    // Update DOM
+    document.getElementById("couponDiscountRow").style.display = 'none';
+    document.getElementById("couponDiscount").innerText = '';
+    document.getElementById("tax").innerText = `₹${newTax.toFixed(2)}`;
+    document.getElementById("total").innerText = `₹${newTotal.toFixed(2)}`;
+
+    // Reset UI
+    codeInput.disabled = false;
+    codeInput.value = '';
+    applyBtn.style.display = 'inline-block';
+    removeBtn.style.display = 'none';
+    messageBox.innerText = 'Coupon removed.';
+    messageBox.style.color = 'green';
+
+    // Reset applied coupon
+    appliedCoupon = null;
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Get wallet balance from server-side rendering
+    let walletBalance = <%- balance || 0 %>; // Use server-rendered balance
+
+    // Update wallet balance display
+    const walletBalanceDisplay = document.getElementById('walletBalanceDisplay');
+    if (walletBalanceDisplay) {
+      walletBalanceDisplay.textContent = `(₹${walletBalance.toFixed(2)})`;
+    }
+
+    // Function to validate address form
+    const validateAddressForm = (formData) => {
+      let isValid = true;
+      const errors = {};
+
+      // Street validation
+      const street = formData.get("street")?.trim();
+      if (!street) {
+        errors.street = "Street address is required";
+        isValid = false;
+      } else if (street.length < 5) {
+        errors.street = "Street address must be at least 5 characters";
+        isValid = false;
+      } else if (!/^[a-zA-Z0-9\s,.-]+$/.test(street)) {
+        errors.street = "Street address contains invalid characters";
+        isValid = false;
       }
 
-      // Function to validate address form
-      const validateAddressForm = (formData) => {
-        let isValid = true;
-        const errors = {};
+      // City validation
+      const city = formData.get("city")?.trim();
+      if (!city) {
+        errors.city = "City is required";
+        isValid = false;
+      } else if (!/^[a-zA-Z\s]+$/.test(city)) {
+        errors.city = "City must contain only letters and spaces";
+        isValid = false;
+      } else if (city.length < 2) {
+        errors.city = "City must be at least 2 characters";
+        isValid = false;
+      }
 
-        // Street validation
-        const street = formData.get("street")?.trim();
-        if (!street) {
-          errors.street = "Street address is required";
-          isValid = false;
-        } else if (street.length < 5) {
-          errors.street = "Street address must be at least 5 characters";
-          isValid = false;
-        } else if (!/^[a-zA-Z0-9\s,.-]+$/.test(street)) {
-          errors.street = "Street address contains invalid characters";
-          isValid = false;
+      // State validation
+      const state = formData.get("state")?.trim();
+      if (!state) {
+        errors.state = "State is required";
+        isValid = false;
+      } else if (!/^[a-zA-Z\s]+$/.test(state)) {
+        errors.state = "State must contain only letters and spaces";
+        isValid = false;
+      } else if (state.length < 2) {
+        errors.state = "State must be at least 2 characters";
+        isValid = false;
+      }
+
+      // Postal code validation (Indian 6-digit PIN or US 5/5-4 format)
+      const postalCode = formData.get("postalCode")?.trim();
+      if (!postalCode) {
+        errors.postalCode = "Postal code is required";
+        isValid = false;
+      } else if (!/^\d{6}$|^\d{5}(-\d{4})?$/.test(postalCode)) {
+        errors.postalCode = "Invalid postal code (e.g., 123456 or 12345 or 12345-6789)";
+        isValid = false;
+      }
+
+      // Country validation
+      const country = formData.get("country")?.trim();
+      if (!country) {
+        errors.country = "Country is required";
+        isValid = false;
+      } else if (!/^[a-zA-Z\s]+$/.test(country)) {
+        errors.country = "Country must contain only letters and spaces";
+        isValid = false;
+      } else if (country.length < 2) {
+        errors.country = "Country must be at least 2 characters";
+        isValid = false;
+      }
+
+      // Display errors
+      ['street', 'city', 'state', 'postalCode', 'country'].forEach(field => {
+        const errorElement = document.getElementById(`${field}Error`);
+        if (errorElement) {
+          errorElement.textContent = errors[field] || '';
+          errorElement.style.display = errors[field] ? 'block' : 'none';
+        }
+      });
+
+      return isValid;
+    };
+
+    // Wallet Payment Processing
+    const walletBtn = document.getElementById('walletBtn');
+    if (walletBtn) {
+      walletBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        const totalText = document.getElementById('total').textContent;
+        const amountInRupees = parseFloat(totalText.replace('₹', '').trim());
+
+        if (isNaN(amountInRupees)) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Invalid Amount',
+            text: 'Unable to process the total amount. Please refresh the page and try again.',
+          });
+          return;
         }
 
-        // City validation
-        const city = formData.get("city")?.trim();
-        if (!city) {
-          errors.city = "City is required";
-          isValid = false;
-        } else if (!/^[a-zA-Z\s]+$/.test(city)) {
-          errors.city = "City must contain only letters and spaces";
-          isValid = false;
-        } else if (city.length < 2) {
-          errors.city = "City must be at least 2 characters";
-          isValid = false;
-        }
-
-        // State validation
-        const state = formData.get("state")?.trim();
-        if (!state) {
-          errors.state = "State is required";
-          isValid = false;
-        } else if (!/^[a-zA-Z\s]+$/.test(state)) {
-          errors.state = "State must contain only letters and spaces";
-          isValid = false;
-        } else if (state.length < 2) {
-          errors.state = "State must be at least 2 characters";
-          isValid = false;
-        }
-
-        // Postal code validation (Indian 6-digit PIN or US 5/5-4 format)
-        const postalCode = formData.get("postalCode")?.trim();
-        if (!postalCode) {
-          errors.postalCode = "Postal code is required";
-          isValid = false;
-        } else if (!/^\d{6}$|^\d{5}(-\d{4})?$/.test(postalCode)) {
-          errors.postalCode = "Invalid postal code (e.g., 123456 or 12345 or 12345-6789)";
-          isValid = false;
-        }
-
-        // Country validation
-        const country = formData.get("country")?.trim();
-        if (!country) {
-          errors.country = "Country is required";
-          isValid = false;
-        } else if (!/^[a-zA-Z\s]+$/.test(country)) {
-          errors.country = "Country must contain only letters and spaces";
-          isValid = false;
-        } else if (country.length < 2) {
-          errors.country = "Country must be at least 2 characters";
-          isValid = false;
-        }
-
-        // Display errors
-        ['street', 'city', 'state', 'postalCode', 'country'].forEach(field => {
-          const errorElement = document.getElementById(`${field}Error`);
-          if (errorElement) {
-            errorElement.textContent = errors[field] || '';
-            errorElement.style.display = errors[field] ? 'block' : 'none';
-          }
-        });
-
-        return isValid;
-      };
-
-      // Wallet Payment Processing
-      const walletBtn = document.getElementById('walletBtn');
-      if (walletBtn) {
-        walletBtn.addEventListener("click", async (e) => {
-          e.preventDefault();
-
-          const totalText = document.getElementById('total').textContent;
-          const amountInRupees = parseFloat(totalText.replace('₹', '').trim());
-
-          if (isNaN(amountInRupees)) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Invalid Amount',
-              text: 'Unable to process the total amount. Please refresh the page and try again.',
-            });
-            return;
-          }
-
-          if (walletBalance < amountInRupees) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Insufficient Balance',
-              html: `Your wallet balance (₹${walletBalance.toFixed(2)}) is insufficient for this purchase (₹${amountInRupees.toFixed(2)}).<br><br>
-                     Please use another payment method or <a href="/wallet">add funds to your wallet</a>.`,
-              confirmButtonText: 'Go to Wallet',
-              showCancelButton: true,
-              cancelButtonText: 'Try Another Method'
-            }).then((result) => {
-              if (result.isConfirmed) {
-                window.location.href = "/wallet";
-              }
-            });
-            return;
-          }
-
-          const selectedAddressRadio = document.querySelector('input[name="selectedAddress"]:checked');
-          let address = '';
-          const userAddresses = <%- JSON.stringify(userData ? userData.addresses : []) %>;
-
-          if (!userAddresses || userAddresses.length === 0) {
-            Swal.fire({
-              icon: 'error',
-              title: 'No Address',
-              text: 'No addresses available. Please add an address before proceeding.',
-            });
-            return;
-          }
-
-          if (selectedAddressRadio) {
-            const addressIndex = selectedAddressRadio.value;
-            const selectedAddress = userAddresses[addressIndex];
-            if (selectedAddress) {
-              address = `${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.postalCode}, ${selectedAddress.country}`;
-            } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Invalid Address',
-                text: 'Selected address is invalid. Please select a valid address.',
-              });
-              return;
+        if (walletBalance < amountInRupees) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Insufficient Balance',
+            html: `Your wallet balance (₹${walletBalance.toFixed(2)}) is insufficient for this purchase (₹${amountInRupees.toFixed(2)}).<br><br>
+                   Please use another payment method or <a href="/wallet">add funds to your wallet</a>.`,
+            confirmButtonText: 'Go to Wallet',
+            showCancelButton: true,
+            cancelButtonText: 'Try Another Method'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.href = "/wallet";
             }
+          });
+          return;
+        }
+
+        const selectedAddressRadio = document.querySelector('input[name="selectedAddress"]:checked');
+        let address = '';
+        const userAddresses = <%- JSON.stringify(userData ? userData.addresses : []) %>;
+
+        if (!userAddresses || userAddresses.length === 0) {
+          Swal.fire({
+            icon: 'error',
+            title: 'No Address',
+            text: 'No addresses available. Please add an address before proceeding.',
+          });
+          return;
+        }
+
+        if (selectedAddressRadio) {
+          const addressIndex = selectedAddressRadio.value;
+          const selectedAddress = userAddresses[addressIndex];
+          if (selectedAddress) {
+            address = `${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.postalCode}, ${selectedAddress.country}`;
           } else {
             Swal.fire({
               icon: 'error',
-              title: 'Address Required',
-              text: 'Please select a billing address.',
+              title: 'Invalid Address',
+              text: 'Selected address is invalid. Please select a valid address.',
             });
             return;
           }
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Address Required',
+            text: 'Please select a billing address.',
+          });
+          return;
+        }
 
-          const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
-          if (!products || products.length === 0) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Empty Cart',
-              text: 'No products in the order. Please add items to your cart.',
-            });
-            return;
-          }
+        const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
+        if (!products || products.length === 0) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Empty Cart',
+            text: 'No products in the order. Please add items to your cart.',
+          });
+          return;
+        }
 
+        const coupleDiscountApplied = <%- products.length >= 2 ? 'true' : 'false' %>;
+        const coupleDiscountRate = 0.10; // 10% couple discount
+
+        try {
+          const response = await fetch('/wallet-payment', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ 
+              amount: amountInRupees * 100, // Amount in paise
+              address: address,
+              paymentMethod: 'wallet',
+              products: products,
+              couponCode: appliedCoupon ? appliedCoupon.code : null,
+              coupleDiscount: coupleDiscountApplied ? coupleDiscountRate : null
+            })
+          });
+
+          const rawResponse = await response.text();
+          console.log('Raw response from /wallet-payment:', rawResponse);
+
+          let result;
           try {
-            const response = await fetch('/wallet-payment', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify({ 
-                amount: amountInRupees * 100, // Amount in paise
-                address: address,
-                paymentMethod: 'wallet',
-                products: products,
-                couponCode: appliedCoupon ? appliedCoupon.code : null
-              })
-            });
-
-            const rawResponse = await response.text();
-            console.log('Raw response from /wallet-payment:', rawResponse);
-
-            let result;
-            try {
-              result = JSON.parse(rawResponse);
-            } catch (parseError) {
-              Swal.fire({
-                icon: 'error',
-                title: 'Server Error',
-                text: 'Invalid response from server. Please try again.',
-              });
-              return;
-            }
-
-            if (response.ok && result.success) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Payment Successful',
-                text: 'Your order has been placed successfully!',
-                timer: 1500,
-                showConfirmButton: false
-              }).then(() => {
-                window.location.href = "/order-success?id=" + (result.orderId || '');
-              });
-            } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Payment Failed',
-                text: result.message || 'Failed to process wallet payment. Please try again.',
-              });
-            }
-          } catch (error) {
+            result = JSON.parse(rawResponse);
+          } catch (parseError) {
             Swal.fire({
               icon: 'error',
-              title: 'Error',
-              text: error.message || 'An error occurred while processing your payment.',
-            });
-          }
-        });
-      }
-
-      // Razorpay Payment Processing
-      const razorpayBtn = document.getElementById('razorpayBtn');
-      if (razorpayBtn) {
-        razorpayBtn.addEventListener("click", async (e) => {
-          e.preventDefault();
-
-          const totalText = document.getElementById('total').textContent;
-          const amountInRupees = parseFloat(totalText.replace('₹', '').trim());
-
-          const selectedAddressRadio = document.querySelector('input[name="selectedAddress"]:checked');
-          let address = '';
-          const userAddresses = <%- JSON.stringify(userData ? userData.addresses : []) %>;
-
-          if (!userAddresses || userAddresses.length === 0) {
-            Swal.fire({
-              icon: 'error',
-              title: 'No Address',
-              text: 'No addresses available. Please add an address before proceeding.',
+              title: 'Server Error',
+              text: 'Invalid response from server. Please try again.',
             });
             return;
           }
 
-          if (selectedAddressRadio) {
-            const addressIndex = selectedAddressRadio.value;
-            const selectedAddress = userAddresses[addressIndex];
-            if (selectedAddress) {
-              address = `${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.postalCode}, ${selectedAddress.country}`;
-            } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Invalid Address',
-                text: 'Selected address is invalid. Please select a valid address.',
-              });
-              return;
-            }
+          if (response.ok && result.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Payment Successful',
+              text: 'Your order has been placed successfully!',
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              window.location.href = "/order-success?id=" + (result.orderId || '');
+            });
           } else {
             Swal.fire({
               icon: 'error',
-              title: 'Address Required',
-              text: 'Please select a billing address.',
+              title: 'Payment Failed',
+              text: result.message || 'Failed to process wallet payment. Please try again.',
             });
-            return;
           }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message || 'An error occurred while processing your payment.',
+          });
+        }
+      });
+    }
 
-          const paymentMethod = 'razorpay';
-          const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
+    // Razorpay Payment Processing
+    const razorpayBtn = document.getElementById('razorpayBtn');
+    if (razorpayBtn) {
+      razorpayBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
 
-          if (!products || products.length === 0) {
+        const totalText = document.getElementById('total').textContent;
+        const amountInRupees = parseFloat(totalText.replace('₹', '').trim());
+
+        const selectedAddressRadio = document.querySelector('input[name="selectedAddress"]:checked');
+        let address = '';
+        const userAddresses = <%- JSON.stringify(userData ? userData.addresses : []) %>;
+
+        if (!userAddresses || userAddresses.length === 0) {
+          Swal.fire({
+            icon: 'error',
+            title: 'No Address',
+            text: 'No addresses available. Please add an address before proceeding.',
+          });
+          return;
+        }
+
+        if (selectedAddressRadio) {
+          const addressIndex = selectedAddressRadio.value;
+          const selectedAddress = userAddresses[addressIndex];
+          if (selectedAddress) {
+            address = `${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.state} ${selectedAddress.postalCode}, ${selectedAddress.country}`;
+          } else {
             Swal.fire({
               icon: 'error',
-              title: 'Empty Cart',
-              text: 'No products in the order. Please add items to your cart.',
+              title: 'Invalid Address',
+              text: 'Selected address is invalid. Please select a valid address.',
+            });
+            return;
+          }
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Address Required',
+            text: 'Please select a billing address.',
+          });
+          return;
+        }
+
+        const paymentMethod = 'razorpay';
+        const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
+
+        if (!products || products.length === 0) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Empty Cart',
+            text: 'No products in the order. Please add items to your cart.',
+          });
+          return;
+        }
+
+        const coupleDiscountApplied = <%- products.length >= 2 ? 'true' : 'false' %>;
+        const coupleDiscountRate = 0.10; // 10% couple discount
+
+        try {
+          const response = await fetch('/create-order', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ 
+              amount: amountInRupees * 100,
+              address: address,
+              paymentMethod: paymentMethod,
+              products: products,
+              couponCode: appliedCoupon ? appliedCoupon.code : null,
+              coupleDiscount: coupleDiscountApplied ? coupleDiscountRate : null
+            })
+          });
+
+          const rawResponse = await response.text();
+          console.log('Raw response from /create-order:', rawResponse);
+
+          let order;
+          try {
+            order = JSON.parse(rawResponse);
+          } catch (parseError) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Server Error',
+              text: 'Invalid response from server. Please try again.',
             });
             return;
           }
 
-          try {
-            const response = await fetch('/create-order', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify({ 
-                amount: amountInRupees * 100,
-                address: address,
-                paymentMethod: paymentMethod,
-                products: products,
-                couponCode: appliedCoupon ? appliedCoupon.code : null
-              })
+          if (!response.ok) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Payment Error',
+              text: order.message || 'Failed to initiate payment. Please try again.',
             });
+            return;
+          }
 
-            const rawResponse = await response.text();
-            console.log('Raw response from /create-order:', rawResponse);
-
-            let order;
-            try {
-              order = JSON.parse(rawResponse);
-            } catch (parseError) {
-              Swal.fire({
-                icon: 'error',
-                title: 'Server Error',
-                text: 'Invalid response from server. Please try again.',
-              });
-              return;
-            }
-
-            if (!response.ok) {
-              Swal.fire({
-                icon: 'error',
-                title: 'Payment Error',
-                text: order.message || 'Failed to initiate payment. Please try again.',
-              });
-              return;
-            }
-
-            const options = {
-              key: order.key,
-              amount: order.amount,
-              currency: order.currency,
-              name: "Fitboy Games",
-              description: "Game purchase",
-              order_id: order.orderId,
-              handler: async function (response) {
-                try {
-                  const verify = await fetch('/verify-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(response)
-                  });
-                  const result = await verify.json();
-                  if (result.success) {
-                    window.location.href = "/order-success";
-                  } else {
-                    showRetryModal(result.message || 'Payment failed. Please try again.');
-                  }
-                } catch (error) {
-                  showRetryModal('Error verifying payment: ' + error.message);
-                }
-              },
-              prefill: {
-                name: "<%= userData ? userData.name : '' %>",
-                email: "<%= userData ? userData.email : '' %>"
-              },
-              theme: {
-                color: "#3399cc"
-              }
-            };
-
-            const razorpay = new Razorpay(options);
-            razorpay.open();
-
-            razorpay.on('payment.failed', async function (response) {
+          const options = {
+            key: order.key,
+            amount: order.amount,
+            currency: order.currency,
+            name: "Fitboy Games",
+            description: "Game purchase",
+            order_id: order.orderId,
+            handler: async function (response) {
               try {
                 const verify = await fetch('/verify-payment', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    razorpay_order_id: order.orderId,
-                    razorpay_payment_id: response.error.metadata.payment_id,
-                    razorpay_signature: null
-                  })
+                  body: JSON.stringify(response)
                 });
                 const result = await verify.json();
-                showRetryModal(result.message || `Payment failed: ${response.error.description}`);
+                if (result.success) {
+                  window.location.href = "/order-success";
+                } else {
+                  showRetryModal(result.message || 'Payment failed. Please try again.');
+                }
               } catch (error) {
-                showRetryModal('Error handling payment failure: ' + error.message);
+                showRetryModal('Error verifying payment: ' + error.message);
               }
-            });
-          } catch (error) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: error.message,
-            });
-          }
-        });
-      }
-
-      // Retry Payment Modal
-      function showRetryModal(errorMessage) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Payment Failed',
-          text: errorMessage,
-          showCancelButton: true,
-          confirmButtonText: 'Retry Payment',
-          cancelButtonText: 'Cancel',
-          confirmButtonColor: '#ff4500',
-          cancelButtonColor: '#333333'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            const activeMethod = document.querySelector(".payment-method.active");
-            if (activeMethod.dataset.method === 'razorpay') {
-              document.getElementById('razorpayBtn').click();
-            } else if (activeMethod.dataset.method === 'wallet') {
-              document.getElementById('walletBtn').click();
+            },
+            prefill: {
+              name: "<%= userData ? userData.name : '' %>",
+              email: "<%= userData ? userData.email : '' %>"
+            },
+            theme: {
+              color: "#3399cc"
             }
-          }
-        });
-      }
-
-      // Payment method selection
-      const paymentMethods = document.querySelectorAll(".payment-method");
-      paymentMethods.forEach((method) => {
-        const header = method.querySelector(".payment-method-header");
-        header.addEventListener("click", () => {
-          document.querySelectorAll(".payment-method-content").forEach((content) => {
-            content.classList.add("hidden");
-          });
-          paymentMethods.forEach((m) => m.classList.remove("active"));
-          method.classList.add("active");
-          method.querySelector(".payment-method-content").classList.remove("hidden");
-        });
-      });
-
-      // Address form toggle
-      const addAddressBtn = document.getElementById("addAddressBtn");
-      const newAddressForm = document.getElementById("newAddressForm");
-      const cancelAddressBtn = document.getElementById("cancelAddressBtn");
-      const addressForm = document.getElementById("addAddressForm");
-      const addressMessage = document.getElementById("addressMessage");
-
-      if (addAddressBtn && newAddressForm) {
-        addAddressBtn.addEventListener("click", () => {
-          newAddressForm.classList.toggle("hidden");
-          if (!newAddressForm.classList.contains("hidden")) {
-            setTimeout(() => {
-              document.getElementById("street").focus();
-            }, 100);
-          }
-        });
-      }
-
-      if (cancelAddressBtn) {
-        cancelAddressBtn.addEventListener("click", () => {
-          newAddressForm.classList.add("hidden");
-          addressForm.reset();
-          addressMessage.classList.add("hidden");
-          ['street', 'city', 'state', 'postalCode', 'country'].forEach(field => {
-            const errorElement = document.getElementById(`${field}Error`);
-            if (errorElement) {
-              errorElement.textContent = '';
-              errorElement.style.display = 'none';
-            }
-          });
-        });
-      }
-
-      if (addressForm) {
-        addressForm.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const formData = new FormData(addressForm);
-          
-          // Validate form
-          if (!validateAddressForm(formData)) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Validation Error',
-              text: 'Please correct the errors in the address form.',
-            });
-            return;
-          }
-
-          const data = {
-            street: formData.get("street"),
-            city: formData.get("city"),
-            state: formData.get("state"),
-            postalCode: formData.get("postalCode"),
-            country: formData.get("country"),
-            isDefault: formData.get("isDefault") === "on",
           };
 
-          try {
-            const response = await fetch("/add-address", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(data),
-            });
+          const razorpay = new Razorpay(options);
+          razorpay.open();
 
-            const rawResponse = await response.text();
-            console.log('Raw response from /add-address:', rawResponse);
-
-            let result;
+          razorpay.on('payment.failed', async function (response) {
             try {
-              result = JSON.parse(rawResponse);
-            } catch (parseError) {
-              console.error('JSON parse error:', parseError);
-              Swal.fire({
-                icon: 'error',
-                title: 'Server Error',
-                text: 'Invalid server response. Please try again.',
+              const verify = await fetch('/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: order.orderId,
+                  razorpay_payment_id: response.error.metadata.payment_id,
+                  razorpay_signature: null
+                })
               });
-              addressMessage.textContent = "Invalid server response. Please try again.";
-              addressMessage.classList.add("error");
-              addressMessage.classList.remove("hidden", "success");
-              return;
+              const result = await verify.json();
+              showRetryModal(result.message || `Payment failed: ${response.error.description}`);
+            } catch (error) {
+              showRetryModal('Error handling payment failure: ' + error.message);
             }
+          });
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message,
+          });
+        }
+      });
+    }
 
-            if (response.ok) {
-              addressMessage.textContent = result.message;
-              addressMessage.classList.add("success");
-              addressMessage.classList.remove("hidden", "error");
-
-              Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: result.message,
-                timer: 1500,
-                showConfirmButton: false
-              }).then(() => {
-                location.reload();
-              });
-            } else {
-              throw new Error(result.message || "Failed to add address");
-            }
-          } catch (error) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: error.message,
-            });
-            addressMessage.textContent = error.message;
-            addressMessage.classList.add("error");
-            addressMessage.classList.remove("hidden", "success");
-          }
-        });
-      }
-
-      // Checkout button validation
-      const checkoutBtn = document.getElementById("completeCheckout");
-      if (checkoutBtn) {
-        checkoutBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-
+    // Retry Payment Modal
+    function showRetryModal(errorMessage) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Payment Failed',
+        text: errorMessage,
+        showCancelButton: true,
+        confirmButtonText: 'Retry Payment',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#ff4500',
+        cancelButtonColor: '#333333'
+      }).then((result) => {
+        if (result.isConfirmed) {
           const activeMethod = document.querySelector(".payment-method.active");
-          if (!activeMethod) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Payment Method Required',
-              text: 'Please select a payment method.',
-            });
-            return;
-          }
-
-          const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
-          const addressList = document.getElementById("addressList");
-          if (!selectedAddress && addressList.children.length > 0 && !addressList.querySelector(".no-addresses")) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Address Required',
-              text: 'Please select a billing address.',
-            });
-            return;
-          }
-
-          const termsAgree = document.getElementById("termsAgree");
-          if (!termsAgree.checked) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Terms Agreement Required',
-              text: 'You must agree to the Terms & Conditions and Refund Policy.',
-            });
-            return;
-          }
-
-          const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
-          if (!products || products.length === 0) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Empty Cart',
-              text: 'Your cart is empty. Please add items to proceed.',
-            });
-            return;
-          }
-
           if (activeMethod.dataset.method === 'razorpay') {
             document.getElementById('razorpayBtn').click();
           } else if (activeMethod.dataset.method === 'wallet') {
             document.getElementById('walletBtn').click();
           }
+        }
+      });
+    }
+
+    // Payment method selection
+    const paymentMethods = document.querySelectorAll(".payment-method");
+    paymentMethods.forEach((method) => {
+      const header = method.querySelector(".payment-method-header");
+      header.addEventListener("click", () => {
+        document.querySelectorAll(".payment-method-content").forEach((content) => {
+          content.classList.add("hidden");
         });
-      }
+        paymentMethods.forEach((m) => m.classList.remove("active"));
+        method.classList.add("active");
+        method.querySelector(".payment-method-content").classList.remove("hidden");
+      });
+    });
 
-      // Coupon application
-      async function applyCoupon() {
-        const messageBox = document.getElementById("couponMessage");
-        const code = document.getElementById("couponInput").value.trim();
+    // Address form toggle
+    const addAddressBtn = document.getElementById("addAddressBtn");
+    const newAddressForm = document.getElementById("newAddressForm");
+    const cancelAddressBtn = document.getElementById("cancelAddressBtn");
+    const addressForm = document.getElementById("addAddressForm");
+    const addressMessage = document.getElementById("addressMessage");
 
-        if (appliedCoupon) {
-          messageBox.innerText = 'Coupon already applied.';
-          messageBox.style.color = 'red';
+    if (addAddressBtn && newAddressForm) {
+      addAddressBtn.addEventListener("click", () => {
+        newAddressForm.classList.toggle("hidden");
+        if (!newAddressForm.classList.contains("hidden")) {
+          setTimeout(() => {
+            document.getElementById("street").focus();
+          }, 100);
+        }
+      });
+    }
+
+    if (cancelAddressBtn) {
+      cancelAddressBtn.addEventListener("click", () => {
+        newAddressForm.classList.add("hidden");
+        addressForm.reset();
+        addressMessage.classList.add("hidden");
+        ['street', 'city', 'state', 'postalCode', 'country'].forEach(field => {
+          const errorElement = document.getElementById(`${field}Error`);
+          if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+          }
+        });
+      });
+    }
+
+    if (addressForm) {
+      addressForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(addressForm);
+        
+        // Validate form
+        if (!validateAddressForm(formData)) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please correct the errors in the address form.',
+          });
           return;
         }
 
-        if (!code) {
-          messageBox.innerText = 'Please enter a coupon code.';
-          messageBox.style.color = 'red';
-          return;
-        }
+        const data = {
+          street: formData.get("street"),
+          city: formData.get("city"),
+          state: formData.get("state"),
+          postalCode: formData.get("postalCode"),
+          country: formData.get("country"),
+          isDefault: formData.get("isDefault") === "on",
+        };
 
         try {
-          const res = await fetch('/apply-coupon', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code })
+          const response = await fetch("/add-address", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
           });
 
-          const data = await res.json();
+          const rawResponse = await response.text();
+          console.log('Raw response from /add-address:', rawResponse);
 
-          if (data.success) {
-            appliedCoupon = { code, discountPercent: data.discountPercent };
-
-            const originalSubtotal = parseFloat(document.getElementById("subtotal").innerText.replace(/[₹,]/g, ''));
-            if (isNaN(originalSubtotal)) {
-              messageBox.innerText = "Error reading subtotal.";
-              messageBox.style.color = "red";
-              return;
-            }
-
-            const discount = originalSubtotal * (data.discountPercent / 100);
-            const newSubtotal = originalSubtotal - discount;
-            const newTax = newSubtotal * 0.18;
-            const newTotal = newSubtotal + newTax;
-
-            document.getElementById("subtotal").innerText = `₹${newSubtotal.toFixed(2)}`;
-            document.getElementById("tax").innerText = `₹${newTax.toFixed(2)}`;
-            document.getElementById("total").innerText = `₹${newTotal.toFixed(2)}`;
-
-            document.getElementById("couponInput").disabled = true;
-
-            messageBox.innerText = `Coupon applied: ${data.discountPercent}% off!`;
-            messageBox.style.color = 'green';
-          } else {
-            messageBox.innerText = data.message;
-            messageBox.style.color = 'red';
+          let result;
+          try {
+            result = JSON.parse(rawResponse);
+          } catch (parseError) {
+            console.error('JSON parse error:', parseError);
+            Swal.fire({
+              icon: 'error',
+              title: 'Server Error',
+              text: 'Invalid server response. Please try again.',
+            });
+            addressMessage.textContent = "Invalid server response. Please try again.";
+            addressMessage.classList.add("error");
+            addressMessage.classList.remove("hidden", "success");
+            return;
           }
-        } catch (err) {
-          console.error('Error applying coupon:', err);
-          messageBox.innerText = "Something went wrong!";
-          messageBox.style.color = 'red';
+
+          if (response.ok) {
+            addressMessage.textContent = result.message;
+            addressMessage.classList.add("success");
+            addressMessage.classList.remove("hidden", "error");
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: result.message,
+              timer: 1500,
+              showConfirmButton: false
+            }).then(() => {
+              location.reload();
+            });
+          } else {
+            throw new Error(result.message || "Failed to add address");
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: error.message,
+          });
+          addressMessage.textContent = error.message;
+          addressMessage.classList.add("error");
+          addressMessage.classList.remove("hidden", "success");
         }
-      }
-    });
-  </script>
+      });
+    }
+
+    // Checkout button validation
+    const checkoutBtn = document.getElementById("completeCheckout");
+    if (checkoutBtn) {
+      checkoutBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        const activeMethod = document.querySelector(".payment-method.active");
+        if (!activeMethod) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Payment Method Required',
+            text: 'Please select a payment method.',
+          });
+          return;
+        }
+
+        const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
+        const addressList = document.getElementById("addressList");
+        if (!selectedAddress && addressList.children.length > 0 && !addressList.querySelector(".no-addresses")) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Address Required',
+            text: 'Please select a billing address.',
+          });
+          return;
+        }
+
+        const termsAgree = document.getElementById("termsAgree");
+        if (!termsAgree.checked) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Terms Agreement Required',
+            text: 'You must agree to the Terms & Conditions and Refund Policy.',
+          });
+          return;
+        }
+
+        const products = <%- JSON.stringify(products.map(p => p._id.toString())) %>;
+        if (!products || products.length === 0) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Empty Cart',
+            text: 'Your cart is empty. Please add items to proceed.',
+          });
+          return;
+        }
+
+        if (activeMethod.dataset.method === 'razorpay') {
+          document.getElementById('razorpayBtn').click();
+        } else if (activeMethod.dataset.method === 'wallet') {
+          document.getElementById('walletBtn').click();
+        }
+      });
+    }
+  });
+</script>
 </body>
 </html>

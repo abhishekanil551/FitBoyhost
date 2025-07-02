@@ -7,15 +7,15 @@ const cartCtrl=require('../controller/users/cartCtrl')
 const settingsCtrl=require('../controller/users/settingsCtrl')
 const checkoutCtrl=require('../controller/users/checkoutCtrl')
 const paymentCtrl=require('../controller/users/paymentCtrl')
-const systemCompareCtrl=require('../controller/users/systemCompareCtrl')
 const offerCtrl=require('../controller/users/offerCtrl')
 const passport = require('passport');
 const {userAuth} = require('../middlewares/auth');
+const {checkLoggedIn}=require('../middlewares/auth');
 
 
-route.get('/',userCtrl.loadHome);
+route.get('/',checkLoggedIn,userCtrl.loadHome);
 route.get('/pageNotFount',userCtrl.pageNotFount)
-route.post('/signup',userCtrl.signUp)
+route.post('/signup',checkLoggedIn,userCtrl.signUp)
 route.post('/verify-Otp',userCtrl.verifyOtp)
 route.post('/resend-Otp', userCtrl.resendOtp);
 route.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
@@ -38,8 +38,8 @@ route.get('/auth/google/callback', (req, res, next) => {
 });
 
   
-route.get('/login',userCtrl.loadLogin)
-route.post('/login',userCtrl.login)
+route.get('/login',checkLoggedIn,userCtrl.loadLogin)
+route.post('/login',checkLoggedIn,userCtrl.login)
 route.get('/home',userAuth,userCtrl.loadHomepage)
 route.get('/logout',userCtrl.logout)
 
@@ -97,12 +97,6 @@ route.get('/download/:id',userAuth, userCtrl.downloadGameFile);
 
 //  apply Coupon
 route.post('/apply-coupon', userAuth,checkoutCtrl.applyCoupon);
-
-
-//system-compare
-route.get('/system-compare',systemCompareCtrl.checkSystemPage);
-route.post('/check-compatibility',systemCompareCtrl.checkCompatibility);
-
 
 
 // offerPage

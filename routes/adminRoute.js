@@ -64,7 +64,6 @@ route.get('/editproductpage',adminAuth,productController.editProductPage);
 route.put('/edit-product/:id',adminAuth,productController.editProduct);
 route.get('/toggle-recommended',adminAuth,productController.toggleRecommended);
 route.get('/free-product',adminAuth, productController.FreeProduct);
-route.post('/gameFile',adminAuth,productController.uploadGameFile)
 
 
 // game requirements
@@ -87,7 +86,7 @@ route.post('/delete-offer', adminAuth, offerController.deleteOffer);
 route.get('/coupon-management',adminAuth,couponController.couponManagement)
 route.post('/add-coupon',adminAuth, couponController.addCoupon);
 route.post('/edit-coupon',adminAuth, couponController.editCoupon);
-route.post('/delete-coupon', couponController.DeleteCoupon);
+route.post('/delete-coupon',adminAuth, couponController.DeleteCoupon);
 
 
 // sales report 

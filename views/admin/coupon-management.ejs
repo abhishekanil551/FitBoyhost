@@ -92,20 +92,46 @@
     <div class="modal-content">
       <h2>Add Coupon</h2>
       <form id="addCouponForm" action="/admin/add-coupon" method="POST">
-        <input type="text" name="coupencode" placeholder="Coupon Code" required>
-        <% if (errors?.coupencode) { %><p class="error"><%= errors.coupencode %></p><% } %>
-        <input type="number" name="couponpercent" placeholder="Discount %" min="1" max="100" required>
-        <% if (errors?.couponpercent) { %><p class="error"><%= errors.couponpercent %></p><% } %>
-        <input type="number" name="minimumAmount" placeholder="Minimum Purchase Amount" min="1" required>
-        <% if (errors?.minimumAmount) { %><p class="error"><%= errors.minimumAmount %></p><% } %>
-        <input type="date" name="startingDate" required>
-        <% if (errors?.startingDate) { %><p class="error"><%= errors.startingDate %></p><% } %>
-        <input type="date" name="expiryDate" required>
-        <% if (errors?.expiryDate) { %><p class="error"><%= errors.expiryDate %></p><% } %>
-        <textarea name="description" placeholder="Description"></textarea>
-        <% if (errors?.description) { %><p class="error"><%= errors.description %></p><% } %>
-        <button type="submit">Create</button>
-        <button type="button" onclick="closeAddCouponModal()">Cancel</button>
+        <div class="form-group">
+          <label for="addCoupencode">Coupon Code *</label>
+          <input type="text" id="addCoupencode" name="coupencode" required>
+          <% if (errors?.coupencode) { %><p class="error"><%= errors.coupencode %></p><% } %>
+        </div>
+        
+        <div class="form-group">
+          <label for="addCouponpercent">Discount Percentage *</label>
+          <input type="number" id="addCouponpercent" name="couponpercent" min="1" max="100" required>
+          <% if (errors?.couponpercent) { %><p class="error"><%= errors.couponpercent %></p><% } %>
+        </div>
+        
+        <div class="form-group">
+          <label for="addMinimumAmount">Minimum Purchase Amount *</label>
+          <input type="number" id="addMinimumAmount" name="minimumAmount" min="1" required>
+          <% if (errors?.minimumAmount) { %><p class="error"><%= errors.minimumAmount %></p><% } %>
+        </div>
+        
+        <div class="form-group">
+          <label for="addStartingDate">Start Date *</label>
+          <input type="date" id="addStartingDate" name="startingDate" required>
+          <% if (errors?.startingDate) { %><p class="error"><%= errors.startingDate %></p><% } %>
+        </div>
+        
+        <div class="form-group">
+          <label for="addExpiryDate">Expiry Date *</label>
+          <input type="date" id="addExpiryDate" name="expiryDate" required>
+          <% if (errors?.expiryDate) { %><p class="error"><%= errors.expiryDate %></p><% } %>
+        </div>
+        
+        <div class="form-group">
+          <label for="addDescription">Description</label>
+          <textarea id="addDescription" name="description"></textarea>
+          <% if (errors?.description) { %><p class="error"><%= errors.description %></p><% } %>
+        </div>
+        
+        <div class="form-buttons">
+          <button type="submit">Create</button>
+          <button type="button" onclick="closeAddCouponModal()">Cancel</button>
+        </div>
       </form>
     </div>
   </div>
@@ -116,18 +142,45 @@
       <h2>Edit Coupon</h2>
       <form id="editCouponForm" method="POST" action="/admin/edit-coupon">
         <input type="hidden" name="id">
-        <input type="text" name="coupencode" placeholder="Coupon Code" required>
-        <p class="error hidden" id="editCoupencodeError">Coupon Code is required</p>
-        <input type="number" name="couponpercent" placeholder="Discount %" min="1" max="100" required>
-        <p class="error hidden" id="editCouponpercentError">Discount % must be between 1 and 100</p>
-        <input type="number" name="minimumAmount" placeholder="Minimum Purchase Amount" min="1" required>
-        <p class="error hidden" id="editMinimumAmountError">Minimum Purchase must be greater than zero</p>
-        <input type="date" name="startingDate" required>
-        <input type="date" name="expiryDate" required>
-        <p class="error hidden" id="editDateError">Start date must be before expiry date</p>
-        <textarea name="description" placeholder="Description"></textarea>
-        <button type="submit">Update</button>
-        <button type="button" onclick="closeEditCouponModal()">Cancel</button>
+        
+        <div class="form-group">
+          <label for="editCoupencode">Coupon Code *</label>
+          <input type="text" id="editCoupencode" name="coupencode" required>
+          <p class="error hidden" id="editCoupencodeError">Coupon Code is required</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="editCouponpercent">Discount Percentage *</label>
+          <input type="number" id="editCouponpercent" name="couponpercent" min="1" max="100" required>
+          <p class="error hidden" id="editCouponpercentError">Discount % must be between 1 and 100</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="editMinimumAmount">Minimum Purchase Amount *</label>
+          <input type="number" id="editMinimumAmount" name="minimumAmount" min="1" required>
+          <p class="error hidden" id="editMinimumAmountError">Minimum Purchase must be greater than zero</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="editStartingDate">Start Date *</label>
+          <input type="date" id="editStartingDate" name="startingDate" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="editExpiryDate">Expiry Date *</label>
+          <input type="date" id="editExpiryDate" name="expiryDate" required>
+          <p class="error hidden" id="editDateError">Start date must be before expiry date</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" name="description"></textarea>
+        </div>
+        
+        <div class="form-buttons">
+          <button type="submit">Update</button>
+          <button type="button" onclick="closeEditCouponModal()">Cancel</button>
+        </div>
       </form>
     </div>
   </div>
@@ -135,10 +188,20 @@
   <script>
     function openAddCouponModal() {
       document.getElementById('addCouponModal').classList.remove('hidden');
+      resetAddForm(); // Reset form when opening
     }
 
     function closeAddCouponModal() {
       document.getElementById('addCouponModal').classList.add('hidden');
+      resetAddForm(); // Reset form when closing
+    }
+
+    function resetAddForm() {
+      const form = document.getElementById('addCouponForm');
+      form.reset();
+      // Clear any existing error messages
+      const errors = form.querySelectorAll('.error');
+      errors.forEach(err => err.remove());
     }
 
     function openEditCouponModal(coupon) {
@@ -231,15 +294,28 @@
               text: 'Coupon added successfully!',
               confirmButtonColor: '#007bff',
             }).then(() => {
+              resetAddForm(); // Reset form after successful creation
+              closeAddCouponModal();
               window.location.reload();
             });
           } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: result.message || 'Failed to add coupon.',
-              confirmButtonColor: '#007bff',
-            });
+            // Check if it's a duplicate coupon error
+            if (result.message && result.message.toLowerCase().includes('already exists') || 
+                result.message && result.message.toLowerCase().includes('duplicate')) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Coupon Already Exists',
+                text: 'A coupon with this code already exists. Please use a different coupon code.',
+                confirmButtonColor: '#007bff',
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Failed to add coupon.',
+                confirmButtonColor: '#007bff',
+              });
+            }
           }
         } catch (error) {
           console.error('Add Coupon Fetch Error:', error);
@@ -319,12 +395,23 @@
               window.location.reload();
             });
           } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: result.message || 'Failed to update coupon.',
-              confirmButtonColor: '#007bff',
-            });
+            // Check if it's a duplicate coupon error
+            if (result.message && result.message.toLowerCase().includes('already exists') || 
+                result.message && result.message.toLowerCase().includes('duplicate')) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Coupon Already Exists',
+                text: 'A coupon with this code already exists. Please use a different coupon code.',
+                confirmButtonColor: '#007bff',
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Failed to update coupon.',
+                confirmButtonColor: '#007bff',
+              });
+            }
           }
         } catch (error) {
           console.error('Edit Coupon Fetch Error:', error);
@@ -412,10 +499,24 @@
       margin: 0 0 1rem; font-size: 1.5rem; color: #333;
       border-bottom: 1px solid #eee; padding-bottom: 0.5rem;
     }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .form-group label {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+    
     .modal-content form input,
     .modal-content form textarea {
       width: 100%; padding: 0.75rem; border: 1px solid #ddd;
       border-radius: 6px; font-size: 1rem; transition: border-color 0.3s;
+      box-sizing: border-box;
     }
     .modal-content form input:focus,
     .modal-content form textarea:focus {
@@ -424,9 +525,17 @@
     .modal-content form textarea {
       resize: vertical; min-height: 80px;
     }
+    
+    .form-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
     .modal-content button {
       padding: 0.75rem 1.5rem; border: none; border-radius: 6px;
       font-size: 1rem; cursor: pointer; transition: background-color 0.3s;
+      flex: 1;
     }
     .modal-content button[type="submit"] {
       background: #007bff; color: #fff;
@@ -441,7 +550,7 @@
       background: #e0e0e0;
     }
     .error {
-      color: #d32f2f; font-size: 0.875rem; margin: -0.25rem 0 0.25rem;
+      color: #d32f2f; font-size: 0.875rem; margin: 0.25rem 0 0;
     }
     .error.hidden {
       display: none;
