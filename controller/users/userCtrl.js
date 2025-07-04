@@ -807,7 +807,7 @@ const downloadGameFile = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product || !product.gameFile) {
-      return res.status(404).send('File not found');
+      return res.status(404).json({message:'File not found'});
     }
 
     const fileUrl = product.gameFile;
@@ -819,7 +819,7 @@ const downloadGameFile = async (req, res) => {
       if (fs.existsSync(filePath)) {
         return res.download(filePath);
       } else {
-        return res.status(404).send('Local file not found');
+        return res.status(404).json({message:'Local file not found'});
       }
     }
 
