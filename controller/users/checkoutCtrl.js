@@ -7,12 +7,6 @@ const Coupon=require('../../models/couponDb');
 const checkoutPage = async (req, res) => {
   try {
     const userId = req.session.userId;
-
-    // Ensure user is logged in
-    if (!userId) {
-      return res.status(401).render('error', { message: 'Please log in to proceed to checkout' });
-    }
-
     // Fetch user data
     const userData = await User.findById(userId).lean();
     if (!userData) {

@@ -7,16 +7,44 @@ const wishlistPage = async (req, res) => {
   try {
     const userId = req.session.userId;
     const user = await User.findById(userId).lean();
-    const products = await Product.find({ _id: { $in: user.wishlist }, isListed: true })
+
+    if (!user) {
+      return res.redirect('/login');
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 4;
+    const skip = (page - 1) * limit;
+
+    const totalProducts = await Product.countDocuments({
+      _id: { $in: user.wishlist },
+      isListed: true
+    });
+
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    const products = await Product.find({
+      _id: { $in: user.wishlist },
+      isListed: true
+    })
       .select('_id name poster salesPrice regularPrice isFree')
+      .skip(skip)
+      .limit(limit)
       .lean();
-    console.log('Products:', products);
+
+    // Build query string for pagination (excluding page param)
+    const query = { ...req.query };
+    delete query.page;
+    const queryString = new URLSearchParams(query).toString();
 
     res.render('wishlist', {
-      userData:user,
+      userData: user,
       user,
       products,
       userWishlist: user.wishlist.map(id => id.toString()),
+      currentPage: page,
+      totalPages,
+      queryString,
       error: null
     });
   } catch (error) {
@@ -25,10 +53,14 @@ const wishlistPage = async (req, res) => {
       user: null,
       products: [],
       userWishlist: [],
+      currentPage: 1,
+      totalPages: 1,
+      queryString: '',
       error: 'Failed to load wishlist. Please try again later.'
     });
   }
 };
+
 
 
 

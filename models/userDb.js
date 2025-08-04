@@ -17,6 +17,12 @@ const userSchema = new Schema({
     type: String,
     required: false
   },
+  username:{
+    type: String,
+    required: false,
+    unique: true, 
+    sparse: true
+  },
   isBlocked: {
     type: Boolean,
     default: false
@@ -26,9 +32,9 @@ const userSchema = new Schema({
     default: false
   },
   cart: {
-    type: [Schema.Types.ObjectId], // Change here to an array of ObjectIds
+    type: [Schema.Types.ObjectId], 
     ref: 'Product',
-    default: [] // Initialize as an empty array
+    default: [] 
   },
   wallet: [{
     type: Schema.Types.ObjectId,

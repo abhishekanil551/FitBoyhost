@@ -16,7 +16,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
 
-// Helper to generate a unique order number
+// generate a unique order number
 const generateOrderNumber = async () => {
   let orderNumber;
   let isUnique = false;
@@ -32,7 +32,6 @@ const generateOrderNumber = async () => {
   return orderNumber;
 };
 
-// Helper to escape LaTeX special characters
 const escapeLatex = (str) => {
   if (!str) return '';
   return str
@@ -240,7 +239,6 @@ const verifyPayment = async (req, res) => {
       .digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-      // Update order status to 'paid'
       await Order.findOneAndUpdate(
         { transactionId: razorpay_order_id },
         { 
@@ -250,6 +248,17 @@ const verifyPayment = async (req, res) => {
           }
         }
       );
+
+     // reward
+    const rewardAmount=order.total>=500?20:order.total>=300?10:order.total>=150?5:0;
+      if(rewardAmount>0){
+        await WalletTransaction.create({
+          userId:order.userId._id,
+          amount:rewardAmount,
+          type:'credit',
+          description:`Reward for purchase of ₹${order.total.toFixed(2)}`
+        })
+      }
 
       const latexContent = `
 % Setting up the document class and geometry
@@ -512,7 +521,7 @@ const orderSuccess = async (req, res) => {
       return res.status(404).send('User not found');
     }
 
-    const orderId = req.query.id; // Optionally use order ID from URL
+    const orderId = req.query.id; 
     let query = { userId };
     if (orderId) {
       query._id = orderId;
@@ -551,7 +560,6 @@ const walletPayment = async (req, res) => {
     const { address, products, couponCode } = req.body;
     const userId = req.session.userId;
 
-    // Validation checks (same as before)
     if (!userId) return res.status(401).json({ message: 'User not logged in' });
     if (!address) return res.status(400).json({ message: 'Address is required' });
 
@@ -563,7 +571,7 @@ const walletPayment = async (req, res) => {
     const [street, city, stateAndPostal, country] = addressParts;
     const [state, postalCode] = stateAndPostal.split(' ');
 
-    // Get user and calculate wallet balance
+    // Get wallet balance
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 

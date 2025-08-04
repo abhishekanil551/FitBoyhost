@@ -5,8 +5,10 @@ const Category = require('../../models/categoryDb');
 const Product = require('../../models/productDb');
 const Company = require('../../models/companyDb');
 const Order=require('../../models/orderDb');
-const { json } = require('body-parser');
 const WalletTransaction=require('../../models/walletDb');
+const Issues=require('../../models/issuesDB');
+const Solution = require('../../models/solutionDb');
+const { json } = require('body-parser');
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
@@ -419,7 +421,7 @@ const gamesPage = async (req, res) => {
     const companys = await Company.find({ isBlocked: false });
 
     const page = parseInt(req.query.page) || 1;
-    const limit = 9;
+    const limit =6;
     const skip = (page - 1) * limit;
 
     // Build filter query
@@ -641,57 +643,69 @@ const libraryPage = async (req, res) => {
   try {
     const userId = req.session.userId;
 
-    // Redirect to login if user is not authenticated
     if (!userId) {
       return res.redirect('/login');
     }
 
-    // Fetch user data
     const userData = await User.findById(userId).lean();
     if (!userData) {
       return res.redirect('/login');
     }
 
-    // Fetch orders with status 'paid' for the user
-    const userOrders = await Order.find({ 
+    const userOrders = await Order.find({
       userId,
       status: 'paid'
-    })
-    .populate({
+    }).populate({
       path: 'order_items',
       populate: {
         path: 'productId',
         model: 'Product',
         select: 'name poster _id isListed'
       }
-    })
-    .lean();
+    }).lean();
 
-    // Extract unique paid games from orders
     const paidGames = [];
-    const gameIds = new Set(); // To avoid duplicates
+    const gameIds = new Set();
 
     for (const order of userOrders) {
       if (order.order_items && order.order_items.length > 0) {
         for (const item of order.order_items) {
-          if (item.productId && item.productId.isListed && !gameIds.has(item.productId._id.toString())) {
+          const product = item.productId;
+          if (product && product.isListed && !gameIds.has(product._id.toString())) {
             paidGames.push({
-              _id: item.productId._id,
-              name: item.productId.name,
-              poster: item.productId.poster
+              _id: product._id,
+              name: product.name,
+              poster: product.poster
             });
-            gameIds.add(item.productId._id.toString());
+            gameIds.add(product._id.toString());
           }
         }
       }
     }
 
-    // Render the library page with user data and paid games
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+    const totalGames = paidGames.length;
+    const totalPages = Math.ceil(totalGames / limit);
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const paginatedGames = paidGames.slice(startIndex, endIndex);
+
+    // Query string builder (for reuse in pagination links)
+    const queryString = Object.entries(req.query)
+      .filter(([key]) => key !== 'page')
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
+
     res.render('library', {
       userData,
       user: userData,
-      games: paidGames,
-      error: null
+      games: paginatedGames,
+      error: null,
+      totalPages,
+      currentPage: page,
+      queryString
     });
 
   } catch (error) {
@@ -700,7 +714,10 @@ const libraryPage = async (req, res) => {
       userData: null,
       user: null,
       games: [],
-      error: 'Failed to load library. Please try again later.'
+      error: 'Failed to load library. Please try again later.',
+      totalPages: 0,
+      currentPage: 1,
+      queryString: ''
     });
   }
 };
@@ -823,7 +840,6 @@ const downloadGameFile = async (req, res) => {
       }
     }
 
-    // 2️⃣ External (S3/Cloudinary) — download as attachment via proxy
     const filename = path.basename(fileUrl);
 
     https.get(fileUrl, (fileRes) => {
@@ -840,6 +856,98 @@ const downloadGameFile = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+
+const havingIssues = async (req, res) => {
+  try {
+    const productId = req.params.gameId;
+    const { issueTitle, description, videoUpload } = req.body;
+    if (!productId || !issueTitle || !description || !videoUpload) {
+      return res.status(400).json({
+        success: false,
+        message: 'All fields are required: issueTitle, description, and videoUpload URL',
+      });
+    }
+
+    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    if (!urlRegex.test(videoUpload)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid video URL provided',
+      });
+    }
+
+    const newIssue = new Issues({
+      productId,
+      issueTitle,
+      description,
+      videoUrl: videoUpload, 
+      userId: req.session.userId,
+      createdAt: new Date(),
+      status: 'pending',
+    });
+
+    await newIssue.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Issue reported successfully',
+    });
+  } catch (error) {
+    console.error('Error in havingIssues:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while processing issue report',
+    });
+  }
+};
+
+
+
+
+const reportedIssues=async(req,res)=>{
+  try {
+    const userId= req.session.userId;
+    const userData = await User.findById(userId).lean();
+    const issues= await Issues.find({userId})
+    .sort({createdAt:-1})
+    .lean();
+
+    const issueWithResponses=await Promise.all(issues.map(async(issue)=>{
+      const response={};
+
+      if(issue.status==='solution'){
+        const solution=await Solution.findOne({issueId: issue._id}).lean();
+        if(solution){
+          response.adminRes= {
+            message: solution.description,
+            videoUrl: solution.videoUrl || '',
+            respondedAt: solution.createdAt,
+          };
+        }
+      }
+
+      if (issue.status === 'refund') {
+        response.adminResponse = {
+          message: 'Refund has been processed. Please check your wallet.',
+          respondedAt: issue.updatedAt || issue.createdAt,
+        };
+      }
+
+      return {
+        ...issue,
+        ...response,
+      };
+    }));
+
+    res.render('reportedIssues', { issues: issueWithResponses,userData });
+    } catch (error) {
+    console.error('Error fetching user issues:', error);
+    res.status(500).json({ error: 'Failed to fetch issues' });
+  }
+}
+
+
 
 
 
@@ -863,5 +971,7 @@ module.exports = {
   forgotPassword,
   verifyOtpForgotPassword,
   resetPassword,
-  downloadGameFile
+  downloadGameFile,
+  havingIssues,
+  reportedIssues,
 };

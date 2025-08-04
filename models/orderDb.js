@@ -7,7 +7,7 @@ const orderSchema = new Schema({
     ref: 'User',
     required: true
   },
-  orderNumber: { // Add unique order number
+  orderNumber: { 
     type: String,
     required: true,
     unique: true

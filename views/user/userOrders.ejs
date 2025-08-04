@@ -151,6 +151,7 @@
     .order-actions {
       display: flex;
       gap: 0.5rem;
+      flex-shrink: 0;
     }
 
     .order-actions .btn {
@@ -174,6 +175,17 @@
 
     .order-actions .details-btn:hover {
       background-color: #4b5563;
+    }
+
+    .order-actions .retry-btn {
+      background:transparent;
+      color: #111827;
+      padding: 0.625rem 1rem;
+    }
+
+    .order-actions .retry-btn:hover {
+      background:transparent;
+      color: black;
     }
 
     .no-orders {
@@ -254,6 +266,7 @@
         <div class="section-header">
           <div class="section-title">Your Orders</div>
           <div class="search-bar">
+            <!-- optional future search -->
           </div>
         </div>
         <p class="card-description">View and manage your order history.</p>
@@ -272,15 +285,23 @@
                 </div>
               </div>
               <div class="order-actions">
-                <a href="/orders/invoice/<%= order._id %>" class="btn">Download Invoice</a>
+                <% if (order.status === 'failed' || order.status === 'pending') { %>
+                  <button class="btn retry-btn" title="Retry Payment" onclick="buyNow('<%= order.order_items[0].productId?._id %>')">
+                    <i class="fas fa-sync-alt"></i>
+                  </button>
+                <% } else { %>
+                  <a href="/orders/invoice/<%= order._id %>" class="btn">Download Invoice</a>
+                <% } %>
                 <button class="btn details-btn" onclick='showOrderDetails(<%- JSON.stringify(order) %>)'>View Details</button>
               </div>
             </div>
           <% }) %>
+          <div style="margin-bottom: 30px;"><%- include('partials/userPagination') %></div>
+          
+
         <% } else { %>
           <p class="no-orders">You haven't placed any orders yet.</p>
         <% } %>
-
         <a href="/games" class="continue-shopping-btn">Continue Shopping</a>
       </div>
     </div>
@@ -290,6 +311,14 @@
     document.addEventListener("DOMContentLoaded", () => {
       console.log('Orders page loaded successfully');
     });
+
+    function buyNow(productId) {
+      if (productId) {
+        window.location.href = `/checkout?buyNow=${productId}`;
+      } else {
+        alert('Invalid product. Cannot retry payment.');
+      }
+    }
 
     function showOrderDetails(order) {
       const itemsHtml = order.order_items.map(item => {

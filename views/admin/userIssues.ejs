@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FITBOY Admin - Issue Management</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<style>
+  .issue-video-container {
+    position: relative;
+    display: inline-block;
+  }
+  .issue-video-link {
+    display: block;
+    max-width: 100px;
+    text-align: center;
+    color: #007bff;
+    text-decoration: none;
+  }
+  .issue-video-link:hover {
+    text-decoration: underline;
+  }
+  .status-badge {
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .status-pending {
+    background-color: #ffc107;
+    color: white;
+  }
+  .status-refunded {
+    background-color: #dc3545;
+    color: white;
+  }
+  .status-solved {
+    background-color: #28a745;
+    color: white;
+  }
+  .action-btn {
+    margin-right: 5px;
+    padding: 5px 10px;
+    text-decoration: none;
+    color: #007bff;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    font-size: 14px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .action-btn:hover {
+    background-color: #007bff;
+    color: white;
+  }
+  .status-select {
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  .form-group {
+    margin-bottom: 15px;
+  }
+  .error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 5px;
+  }
+  .file-info {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+  }
+</style>
+<body>
+  <div class="admin-container">
+    <%- include('partials/sidebar', {page: 'issue-management'}) %>
+
+    <div class="main-content">
+      <%- include('partials/header') %>
+
+      <div class="dashboard-content">
+        <div class="page-header">
+          <h1 class="page-title">Issue Management</h1>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-box">
+            <form id="search-form" action="/admin/issue-management" method="GET">
+              <input type="text" name="search" placeholder="Search issues..." value="<%= search || '' %>" />
+              <button type="submit" class="search-button" style="width: 100px; height: 45px;">Search</button>
+            </form>
+          </div>
+          <div class="filter-options">
+            <form id="filter-form" action="/admin/issue-management" method="GET">
+              <select name="status" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                <option value="pending" <%= selectedStatus === 'pending' ? 'selected' : '' %>>Pending</option>
+                <option value="refund" <%= selectedStatus === 'refund' ? 'selected' : '' %>>Refunded</option>
+                <option value="solution" <%= selectedStatus === 'solution' ? 'selected' : '' %>>Solved</option>
+              </select>
+            </form>
+          </div>
+        </div>
+
+        <div class="data-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Game</th>
+                <th>Issue Title</th>
+                <th>Description</th>
+                <th>Video</th>
+                <th>User</th>
+                <th>Created At</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (issues && issues.length > 0) { %>
+                <% issues.forEach(issue => { %>
+                <tr>
+                  <td><%= issue.productId ? issue.productId.name : 'N/A' %></td>
+                  <td><%= issue.issueTitle %></td>
+                  <td><%= issue.description %></td>
+                  <td>
+                    <div class="issue-video-container">
+                      <a href="<%= issue.videoUrl %>" target="_blank" class="issue-video-link">View Video</a>
+                    </div>
+                  </td>
+                  <td><%= issue.userId ? issue.userId.email : 'N/A' %></td>
+                  <td><%= new Date(issue.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
+                  <td>
+                    <span class="status-badge status-<%= issue.status === 'refund' ? 'refunded' : issue.status === 'solution' ? 'solved' : 'pending' %>">
+                      <%= issue.status.charAt(0).toUpperCase() + issue.status.slice(1) %>
+                    </span>
+                  </td>
+                  <td>
+                    <button
+                      class="action-btn btn-update-status"
+                      data-issue-id="<%= issue._id %>"
+                      data-current-status="<%= issue.status %>"
+                      data-bs-toggle="modal"
+                      data-bs-target="#updateStatusModal"
+                    >
+                      Update Status
+                    </button>
+                    <% if (issue.status === 'solution' && issue.solution) { %>
+                      <button
+                        class="action-btn btn-view-solution"
+                        data-solution='<%= JSON.stringify(issue.solution) %>'
+                        data-bs-toggle="modal"
+                        data-bs-target="#viewSolutionModal"
+                      >
+                        View Solution
+                      </button>
+                    <% } %>
+                  </td>
+                </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="8" style="text-align: center;">No issues found.</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+          <%- include('partials/pagination', {currentPage: currentPage, totalPages: totalPages}) %>
+        </div>
+
+        <!-- Update Status Modal -->
+        <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <form class="modal-content" id="updateStatusForm">
+              <input type="hidden" name="issueId" id="issueId" />
+              <div class="modal-header">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Issue Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                  style="background: #dc3545; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"
+                  onmouseover="this.style.background='#b02a37'" onmouseout="this.style.background='#dc3545'">×</button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <label for="status">Status</label>
+                  <select name="status" id="status" class="form-control status-select" required>
+                    <option value="pending">Pending</option>
+                    <option value="refund">Refund</option>
+                    <option value="solution">Solution</option>
+                  </select>
+                  <div class="error-message" id="status-error"></div>
+                </div>
+                <div id="refundInfo" style="display: none; margin-top: 15px;">
+                  <p>Selecting "Refund" will credit the purchase amount to the user's wallet.</p>
+                </div>
+                <div id="solutionForm" style="display: none; margin-top: 15px;">
+                  <div class="form-group">
+                    <label for="solutionDescription">Solution Description</label>
+                    <textarea name="solutionDescription" id="solutionDescription" class="form-control" placeholder="Describe the solution..."></textarea>
+                    <div class="error-message" id="solutionDescription-error"></div>
+                  </div>
+                  <div class="form-group">
+                    <label for="solutionVideo">Solution Video (Optional)</label>
+                    <input type="file" name="solutionVideo" id="solutionVideo" class="form-control" accept="video/*" />
+                    <div class="file-info">Max 50MB</div>
+                    <div class="error-message" id="solutionVideo-error"></div>
+                    <div class="video-preview" id="solutionVideoPreview" style="display: none;">
+                      <video controls id="solutionPreviewVideo" style="max-width: 400px; height: auto; border: 1px solid #ccc; border-radius: 4px;"></video>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Update Status</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- View Solution Modal -->
+        <div class="modal fade" id="viewSolutionModal" tabindex="-1" aria-labelledby="viewSolutionModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="viewSolutionModalLabel">View Solution</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+                  style="background: #dc3545; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1rem;"
+                  onmouseover="this.style.background='#b02a37'" onmouseout="this.style.background='#dc3545'">×</button>
+              </div>
+              <div class="modal-body">
+                <div class="form-group">
+                  <label>Solution Description</label>
+                  <p id="viewSolutionDescription"></p>
+                </div>
+                <div class="form-group" id="viewSolutionVideoContainer" style="display: none;">
+                  <label>Solution Video</label>
+                  <a href="#" id="viewSolutionVideoLink" target="_blank" class="issue-video-link">View Video</a>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+<div style="margin-bottom: 60px;">
+        <%- include('partials/footer') %>
+
+</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM loaded, initializing event listeners');
+    
+    const CLOUD_NAME = 'duxe6ofu7';
+    const UPLOAD_PRESET = 'fitboy_products';
+
+    // Cloudinary upload function
+    async function uploadToCloudinary(file, folder) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', UPLOAD_PRESET);
+      formData.append('folder', `products/${folder}`);
+
+      try {
+        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || 'Upload failed');
+        }
+        
+        const result = await response.json();
+        return result.secure_url;
+      } catch (error) {
+        console.error('Cloudinary upload error:', error);
+        throw error;
+      }
+    }
+
+    // Initialize modal with issue data
+    document.querySelectorAll('.btn-update-status').forEach(btn => {
+      btn.addEventListener('click', function () {
+        console.log('Update status button clicked');
+        const issueId = this.dataset.issueId;
+        const currentStatus = this.dataset.currentStatus;
+        console.log('Issue ID:', issueId, 'Current Status:', currentStatus);
+
+        document.getElementById('issueId').value = issueId;
+        document.getElementById('status').value = currentStatus;
+        resetModalForm();
+        toggleStatusFields(currentStatus);
+      });
+    });
+
+    // View solution handler
+    document.querySelectorAll('.btn-view-solution').forEach(btn => {
+      btn.addEventListener('click', function () {
+        let solution;
+        try {
+          solution = JSON.parse(this.dataset.solution || '{}');
+        } catch (e) {
+          console.error('Failed to parse solution data:', e);
+          solution = {};
+        }
+
+        document.getElementById('viewSolutionDescription').textContent = 
+          solution.description || 'No description provided';
+        
+        const videoContainer = document.getElementById('viewSolutionVideoContainer');
+        const videoLink = document.getElementById('viewSolutionVideoLink');
+        
+        if (solution.videoUrl) {
+          videoContainer.style.display = 'block';
+          videoLink.href = solution.videoUrl;
+        } else {
+          videoContainer.style.display = 'none';
+        }
+      });
+    });
+
+    // Status change handler
+    document.getElementById('status').addEventListener('change', function () {
+      console.log('Status changed to:', this.value);
+      toggleStatusFields(this.value);
+    });
+
+    // Video preview handler
+    document.getElementById('solutionVideo').addEventListener('change', function () {
+      const file = this.files[0];
+      const videoPreview = document.getElementById('solutionVideoPreview');
+      const previewVideo = document.getElementById('solutionPreviewVideo');
+      const errorDiv = document.getElementById('solutionVideo-error');
+
+      // Clear previous errors and preview
+      errorDiv.textContent = '';
+      videoPreview.style.display = 'none';
+      if (previewVideo) {
+        previewVideo.src = '';
+        previewVideo.load();
+      }
+
+      if (!file) return;
+
+      // Validate file type and size
+      if (!file.type.startsWith('video/')) {
+        errorDiv.textContent = 'Please upload a valid video file';
+        this.value = '';
+        return;
+      }
+
+      if (file.size > 50 * 1024 * 1024) {
+        errorDiv.textContent = 'Video file size must be less than 50MB';
+        this.value = '';
+        return;
+      }
+
+      // Show preview
+      const urlObject = URL.createObjectURL(file);
+      if (previewVideo) {
+        previewVideo.src = urlObject;
+        videoPreview.style.display = 'block';
+        previewVideo.addEventListener('loadeddata', () => {
+          URL.revokeObjectURL(urlObject);
+        }, { once: true });
+      }
+    });
+
+    // Form submission handler
+    document.getElementById('updateStatusForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      console.log('Form submitted');
+      
+      const submitBtn = this.querySelector('.btn-primary');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+
+      try {
+        if (!validateForm()) {
+          console.log('Form validation failed');
+          return;
+        }
+
+        const issueId = document.getElementById('issueId').value;
+        const status = document.getElementById('status').value;
+        
+        console.log('Processing status update:', { issueId, status });
+
+        if (status === 'solution') {
+          await handleSolutionUpdate(issueId);
+        } 
+        else if (status === 'refund') {
+          await handleRefundUpdate(issueId);
+        }
+        else if (status === 'pending') {
+          await handlePendingUpdate(issueId);
+        }
+
+      } catch (error) {
+        console.error('Form submission error:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message || 'An error occurred while processing your request',
+          confirmButtonColor: '#dc3545'
+        });
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+
+    // Handle solution update
+    async function handleSolutionUpdate(issueId) {
+      console.log('Handling solution update for issue:', issueId);
+      
+      const solutionData = {
+        status: 'solution',
+        solution: {
+          description: document.getElementById('solutionDescription').value.trim(),
+          videoUrl: await handleVideoUpload()
+        }
+      };
+
+      console.log('Solution data:', solutionData);
+
+      const response = await fetch(`/admin/fixIssues/${issueId}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(solutionData)
+      });
+
+      console.log('Solution response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update solution');
+      }
+
+      const data = await response.json();
+      console.log('Solution response data:', data);
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Solution Updated',
+        text: data.message || 'Solution has been successfully updated',
+        confirmButtonColor: '#007bff'
+      });
+      
+      // Close modal and reload
+      const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
+      modal?.hide();
+      window.location.reload();
+    }
+
+    // Handle refund update
+    async function handleRefundUpdate(issueId) {
+      console.log('Handling refund update for issue:', issueId);
+      
+      try {
+        const response = await fetch(`/admin/refund/${issueId}`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({})
+        });
+
+        console.log('Refund response status:', response.status);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to process refund');
+        }
+
+        const data = await response.json();
+        console.log('Refund response data:', data);
+        
+        await Swal.fire({
+          icon: 'success',
+          title: 'Refund Processed',
+          html: `<strong>Amount: ${data.refundAmount || 'N/A'}</strong><br>${data.message || 'Refund processed successfully'}`,
+          confirmButtonColor: '#007bff'
+        });
+        
+        // Close modal and reload
+        const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
+        modal?.hide();
+        window.location.reload();
+        
+      } catch (error) {
+        console.error('Refund processing error:', error);
+        throw error;
+      }
+    }
+
+    // Handle pending update
+    async function handlePendingUpdate(issueId) {
+      console.log('Handling pending update for issue:', issueId);
+      
+      const response = await fetch(`/admin/updateIssueStatus/${issueId}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ status: 'pending' })
+      });
+
+      console.log('Pending response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update status to pending');
+      }
+
+      const data = await response.json();
+      console.log('Pending response data:', data);
+      
+      await Swal.fire({
+        icon: 'success',
+        title: 'Status Updated',
+        text: 'Issue status has been updated to pending',
+        confirmButtonColor: '#007bff'
+      });
+      
+      // Close modal and reload
+      const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
+      modal?.hide();
+      window.location.reload();
+    }
+
+    // Helper functions
+    function resetModalForm() {
+      document.getElementById('refundInfo').style.display = 'none';
+      document.getElementById('solutionForm').style.display = 'none';
+      document.getElementById('solutionDescription').value = '';
+      document.getElementById('solutionVideo').value = '';
+      document.getElementById('solutionVideoPreview').style.display = 'none';
+      document.getElementById('solutionPreviewVideo').src = '';
+      
+      // Clear all error messages
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.textContent = '';
+      });
+    }
+
+    function toggleStatusFields(status) {
+      console.log('Toggling fields for status:', status);
+      const refundInfo = document.getElementById('refundInfo');
+      const solutionForm = document.getElementById('solutionForm');
+      const solutionDescription = document.getElementById('solutionDescription');
+      
+      refundInfo.style.display = status === 'refund' ? 'block' : 'none';
+      solutionForm.style.display = status === 'solution' ? 'block' : 'none';
+      
+      // Update required attribute based on status
+      solutionDescription.required = status === 'solution';
+    }
+
+    function validateForm() {
+      let isValid = true;
+      const status = document.getElementById('status').value;
+      const statusError = document.getElementById('status-error');
+      
+      console.log('Validating form for status:', status);
+      
+      // Clear previous errors
+      statusError.textContent = '';
+      document.getElementById('solutionDescription-error').textContent = '';
+      
+      if (!status) {
+        statusError.textContent = 'Status is required';
+        isValid = false;
+      }
+
+      // Only validate solution fields if solution is selected
+      if (status === 'solution') {
+        const description = document.getElementById('solutionDescription').value.trim();
+        const descriptionError = document.getElementById('solutionDescription-error');
+        
+        if (!description || description.length < 20) {
+          descriptionError.textContent = 'Solution description must be at least 20 characters';
+          isValid = false;
+        }
+      }
+
+      console.log('Form validation result:', isValid);
+      return isValid;
+    }
+
+    async function handleVideoUpload() {
+      const solutionVideoFile = document.getElementById('solutionVideo').files[0];
+      if (solutionVideoFile) {
+        console.log('Uploading video file:', solutionVideoFile.name);
+        return await uploadToCloudinary(solutionVideoFile, 'solution_videos');
+      }
+      return '';
+    }
+
+    // Handle URL success/error messages
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+    const error = urlParams.get('error');
+    
+    if (success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: success,
+        confirmButtonColor: '#007bff'
+      }).then(() => {
+        window.history.replaceState({}, document.title, '/admin/issue-management');
+      });
+    } 
+    else if (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error,
+        confirmButtonColor: '#dc3545'
+      }).then(() => {
+        window.history.replaceState({}, document.title, '/admin/issue-management');
+      });
+    }
+
+    console.log('All event listeners initialized');
+  });
+</script>
+</body>
+</html>

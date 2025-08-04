@@ -18,7 +18,7 @@ const cartPage = async (req, res) => {
       });
     }
 
-    // Fetch user's orders with paid status
+    // Fetch user's paid orders
     const paidOrders = await Order.find({ userId, status: 'paid' })
       .populate({
         path: 'order_items',
@@ -28,7 +28,7 @@ const cartPage = async (req, res) => {
         }
       });
 
-    // Extract product IDs of already purchased items
+    // Extract purchased product IDs
     const purchasedProductIds = new Set();
     for (const order of paidOrders) {
       for (const item of order.order_items) {
@@ -38,47 +38,69 @@ const cartPage = async (req, res) => {
       }
     }
 
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = 4;
+    const skip = (page - 1) * limit;
+
     // Fetch user's cart
     const cart = await Cart.findOne({ userId }).populate('items.productId').lean();
-    let products = [];
-    let userCart = [];
 
+    let filteredItems = [];
     if (cart && cart.items.length > 0) {
-      products = cart.items
-        .filter(item =>
-          item.productId &&
-          item.productId.isListed &&
-          !purchasedProductIds.has(item.productId._id.toString())
-        )
-        .map(item => ({
-          _id: item.productId._id,
-          name: item.productId.name,
-          poster: item.productId.poster,
-          salesPrice: item.price,
-          regularPrice: item.productId.regularPrice,
-          isFree: item.productId.isFree
-        }));
-
-      userCart = products.map(item => item._id.toString());
+      filteredItems = cart.items.filter(item =>
+        item.productId &&
+        item.productId.isListed &&
+        !purchasedProductIds.has(item.productId._id.toString())
+      );
     }
+
+    const totalItems = filteredItems.length;
+    const totalPages = Math.ceil(totalItems / limit);
+    const paginatedItems = filteredItems.slice(skip, skip + limit);
+
+    const products = paginatedItems.map(item => ({
+      _id: item.productId._id,
+      name: item.productId.name,
+      poster: item.productId.poster,
+      salesPrice: item.price,
+      regularPrice: item.productId.regularPrice,
+      isFree: item.productId.isFree
+    }));
+
+    const userCart = products.map(item => item._id.toString());
+
+    // Build query string for pagination links (if needed)
+    const queryString = Object.entries(req.query)
+      .filter(([key]) => key !== 'page')
+      .map(([key, val]) => `${key}=${val}`)
+      .join('&');
 
     res.render('cart', {
       userData: user,
       user,
       product: products,
       userCart,
-      error: null
+      error: null,
+      currentPage: page,
+      totalPages,
+      queryString
     });
+
   } catch (error) {
     console.error('Error loading cart:', error);
     res.render('cart', {
       user: null,
       product: [],
       userCart: [],
-      error: 'Failed to load cart. Please try again later.'
+      error: 'Failed to load cart. Please try again later.',
+      currentPage: 1,
+      totalPages: 1,
+      queryString: ''
     });
   }
 };
+
 
 
 

@@ -212,8 +212,9 @@
                         <div id="modalContent"></div>
                     </div>
                 </div>
-
+        <div style="margin-bottom: 70px;">
                 <%- include('partials/pagination', {currentPage: currentPage || 1, totalPages: totalPages || 1, baseUrl: `/admin/orders?search=${encodeURIComponent(search)}&status=${status}&sort=${sort}&startDate=${startDate}&endDate=${endDate}`}) %>
+        </div>
             </div>
             
             <%- include('partials/footer') %>

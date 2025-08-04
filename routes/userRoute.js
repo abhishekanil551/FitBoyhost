@@ -1,21 +1,21 @@
 const express=require('express');
 const route=express.Router();
 const userCtrl=require('../controller/users/userCtrl');
-const profileCtrl=require('../controller/users/profileCtrl')
-const wishlistCtrl=require('../controller/users/wishlistCtrl')
-const cartCtrl=require('../controller/users/cartCtrl')
-const settingsCtrl=require('../controller/users/settingsCtrl')
-const checkoutCtrl=require('../controller/users/checkoutCtrl')
-const paymentCtrl=require('../controller/users/paymentCtrl')
-const offerCtrl=require('../controller/users/offerCtrl')
+const profileCtrl=require('../controller/users/profileCtrl');
+const wishlistCtrl=require('../controller/users/wishlistCtrl');
+const cartCtrl=require('../controller/users/cartCtrl');
+const settingsCtrl=require('../controller/users/settingsCtrl');
+const checkoutCtrl=require('../controller/users/checkoutCtrl');
+const paymentCtrl=require('../controller/users/paymentCtrl');
+const offerCtrl=require('../controller/users/offerCtrl');
 const passport = require('passport');
 const {userAuth} = require('../middlewares/auth');
 const {checkLoggedIn}=require('../middlewares/auth');
 
 
 route.get('/',checkLoggedIn,userCtrl.loadHome);
-route.get('/pageNotFount',userCtrl.pageNotFount)
-route.post('/signup',checkLoggedIn,userCtrl.signUp)
+route.get('/pageNotFount',userCtrl.pageNotFount);
+route.post('/signup',checkLoggedIn,userCtrl.signUp);
 route.post('/verify-Otp',userCtrl.verifyOtp)
 route.post('/resend-Otp', userCtrl.resendOtp);
 route.get('/auth/google',passport.authenticate('google',{scope:['profile','email']}))
@@ -83,8 +83,8 @@ route.get('/wallet',userAuth,settingsCtrl.walletPage);
 route.get('/refer',userAuth,settingsCtrl.referAndEarn)
 
 
-// checkOut
-route.get('/checkout',userAuth,checkoutCtrl.checkoutPage)
+// checkOut and payment
+route.get('/checkout',userAuth,checkoutCtrl.checkoutPage);
 route.post('/create-order',userAuth,paymentCtrl.createOrder);
 route.post('/verify-payment',userAuth,paymentCtrl.verifyPayment);
 route.get('/order-success',userAuth,paymentCtrl.orderSuccess);
@@ -101,6 +101,14 @@ route.post('/apply-coupon', userAuth,checkoutCtrl.applyCoupon);
 
 // offerPage
 route.get('/offer',userAuth,offerCtrl.offerPage);
+
+
+// having Issues
+route.post('/havingIssues/:gameId',userAuth,userCtrl.havingIssues);
+route.get('/reportedIssues',userAuth,userCtrl.reportedIssues);
+
+
+
 
 
 module.exports=route;

@@ -70,39 +70,50 @@ const settingsPage = async (req, res) => {
 
 
 
-const addressPage=async(req,res)=>{
+const addressPage = async (req, res) => {
   try {
     const userId = req.session.userId;
     if (!userId) {
       return res.redirect('/login');
     }
 
-    // Fetch user data
     const userData = await User.findById(userId).lean();
     if (!userData) {
       return res.redirect('/pageNotFound');
     }
 
-    // Handle edit address modal data
+    // Pagination setup
+    const page = parseInt(req.query.page) || 1;
+    const limit =   3;
+    const skip = (page - 1) * limit;
+
+    const totalAddresses = userData.addresses.length;
+    const totalPages = Math.ceil(totalAddresses / limit);
+    const paginatedAddresses = userData.addresses.slice(skip, skip + limit);
+
+    // Edit address modal setup
     const editAddressId = req.query.editAddressId;
     let editModalData = null;
-
     if (editAddressId) {
       editModalData = userData.addresses.find(addr => addr._id.toString() === editAddressId);
-      console.log('Found editModalData:', editModalData); // Debug
     }
 
-    // Render the settings page with user data, orders, and search query
     res.render('AddressBook', {
       user: userData,
       csrfToken: req.csrfToken ? req.csrfToken() : '',
       editModalData,
+      addresses: paginatedAddresses,
+      currentPage: page,
+      totalPages,
+      queryString: '' // Optional, e.g. for search filters
     });
+
   } catch (error) {
     console.error('Error loading settings page:', error);
     res.redirect('/pageNotFound');
   }
-}
+};
+
 
 const addAddress = async (req, res) => {
   try {
@@ -364,21 +375,27 @@ const confirmEmailChange = async (req, res) => {
 
 
 
-  const OrdersDetailsPage=async(req,res)=>{
+ const OrdersDetailsPage = async (req, res) => {
   try {
     const userId = req.session.userId;
     if (!userId) {
       return res.redirect('/login');
     }
 
-    // Fetch user data
     const userData = await User.findById(userId).lean();
     if (!userData) {
       return res.redirect('/pageNotFount');
     }
 
-    // Fetch orders for the user
-    let orders = await Order.find({ userId })
+    // Pagination setup
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5; // or whatever you want
+    const skip = (page - 1) * limit;
+
+    const totalOrders = await Order.countDocuments({ userId });
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    const orders = await Order.find({ userId })
       .populate({
         path: 'order_items',
         populate: {
@@ -386,18 +403,30 @@ const confirmEmailChange = async (req, res) => {
           model: 'Product'
         }
       })
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
 
-    // Render the settings page with user data, orders, and search query
+    // Build query string for filters (optional)
+    const query = { ...req.query };
+    delete query.page;
+    const queryString = new URLSearchParams(query).toString();
+
     res.render('userOrders', {
       orders,
       user: userData,
       csrfToken: req.csrfToken ? req.csrfToken() : '',
+      totalPages,
+      currentPage: page,
+      queryString,
     });
   } catch (error) {
     console.error('Error loading settings page:', error);
     res.redirect('/pageNotFount');
-  }}
+  }
+};
+
 
 
 
@@ -444,6 +473,7 @@ const walletPage = async (req, res) => {
     res.redirect('/pageNotFound');
   }
 };
+
 
 const referAndEarn = async (req, res) => {
   try {

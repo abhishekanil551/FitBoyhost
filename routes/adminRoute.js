@@ -15,6 +15,7 @@ const gameRequirement=require('../controller/admin/gameRequirementCtrl');
 const offerController=require('../controller/admin/offerController');
 const couponController=require('../controller/admin/couponController');
 const salesReportController=require('../controller/admin/salesReportController');
+const userIssuesController=require('../controller/admin/user-IssuesCtrl');
 
 
 
@@ -90,7 +91,7 @@ route.post('/delete-coupon',adminAuth, couponController.DeleteCoupon);
 
 
 // sales report 
-route.get('/sales-report', async (req, res) => {
+route.get('/sales-report',adminAuth ,async (req, res) => {
   try {
     const initialData = {
       ba: {
@@ -113,6 +114,12 @@ route.get('/sales-report', async (req, res) => {
 });
 route.get('/api/sales-report', salesReportController.getSalesReport);
 route.get('/api/sales-report/download/excel', salesReportController.downloadExcelReport);
+
+// user-Issues
+route.get('/issue-management',adminAuth,userIssuesController.getUserIssues);
+route.post('/fixIssues/:issueId', adminAuth, userIssuesController.solution);
+route.post('/refund/:issueId',adminAuth,userIssuesController.refund);
+
 
 
 module.exports = route;

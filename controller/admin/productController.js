@@ -335,7 +335,7 @@ const editProduct = async (req, res) => {
       systemRequirements,
       trailer,
       posterUrl,
-      banners, // Correctly destructure banners
+      banners, 
       company,
       categoryId,
       regularPrice,
