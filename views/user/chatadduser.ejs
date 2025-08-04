@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App - Enter Username</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+        }
+
+        .login-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .chat-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .enter-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .enter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .enter-btn:active {
+            transform: translateY(0);
+        }
+
+        .enter-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .fade-out {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.5s ease;
+        }
+
+        /* Responsive design */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .chat-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="login-container" id="loginContainer">
+    <div class="chat-icon">💬</div>
+    <h1>Welcome to ChatApp</h1>
+    <p class="subtitle">Enter your username to start chatting</p>
+    
+    <form id="usernameForm" method="POST" action="/join-chat">
+        <div class="input-group">
+            <label for="username">Username</label>
+            <input 
+                type="text" 
+                id="username" 
+                name="username"
+                placeholder="Enter your username..."
+                maxlength="20"
+                required
+            >
+        </div>
+        
+        <button type="submit" class="enter-btn" id="enterBtn">
+            Enter Chat
+        </button>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="loading" id="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 10px; color: #666;">Joining chat...</p>
+        </div>
+    </form>
+</div>
+
+
+    <script>
+        // DOM elements
+        const usernameForm = document.getElementById('usernameForm');
+        const usernameInput = document.getElementById('username');
+        const enterBtn = document.getElementById('enterBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const loading = document.getElementById('loading');
+        const loginContainer = document.getElementById('loginContainer');
+
+        // Check if user already has a username stored
+        window.addEventListener('load', () => {
+            const storedUsername = sessionStorage.getItem('chatUsername');
+            if (storedUsername) {
+                usernameInput.value = storedUsername;
+            }
+            usernameInput.focus();
+        });
+
+        // Form validation
+        function validateUsername(username) {
+            if (!username || username.trim().length === 0) {
+                return 'Username cannot be empty';
+            }
+            
+            if (username.trim().length < 2) {
+                return 'Username must be at least 2 characters long';
+            }
+            
+            if (username.trim().length > 20) {
+                return 'Username must be less than 20 characters';
+            }
+            
+            // Check for valid characters (letters, numbers, spaces, basic punctuation)
+            const validPattern = /^[a-zA-Z0-9\s\-_\.]+$/;
+            if (!validPattern.test(username.trim())) {
+                return 'Username can only contain letters, numbers, spaces, hyphens, underscores, and periods';
+            }
+            
+            return null;
+        }
+
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            usernameInput.style.borderColor = '#e74c3c';
+        }
+
+        // Hide error message
+        function hideError() {
+            errorMessage.style.display = 'none';
+            usernameInput.style.borderColor = '#e1e5e9';
+        }
+
+        // Real-time validation as user types
+        usernameInput.addEventListener('input', () => {
+            hideError();
+            const username = usernameInput.value;
+            
+            if (username.length > 0) {
+                const error = validateUsername(username);
+                if (error) {
+                    showError(error);
+                }
+            }
+        });
+
+        // Handle form submission
+        usernameForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const username = usernameInput.value.trim();
+            const error = validateUsername(username);
+            
+            if (error) {
+                showError(error);
+                usernameInput.focus();
+                return;
+            }
+            
+            // Hide error and show loading
+            hideError();
+            enterBtn.disabled = true;
+            loading.style.display = 'block';
+            
+            // Store username in session storage
+            sessionStorage.setItem('chatUsername', username);
+            
+            // Simulate loading and redirect to chat
+fetch('/join-chat', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username })
+})
+.then(res => res.json())
+.then(data => {
+    if (data.success) {
+        window.location.href = '/chat';
+    } else {
+        showError(data.message || 'Something went wrong');
+        enterBtn.disabled = false;
+        loading.style.display = 'none';
+    }
+})
+.catch(err => {
+    console.error('Fetch error:', err);
+    showError('Failed to join chat');
+    enterBtn.disabled = false;
+    loading.style.display = 'none';
+});
+
+
+        // Enter key support
+        usernameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                usernameForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+    </script>
+</body>
+</html>

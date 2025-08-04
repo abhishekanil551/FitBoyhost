@@ -484,7 +484,7 @@ const referAndEarn = async (req, res) => {
       return res.status(404).send('User not found');
     }
     // Build referral link using the user's referalCode (note: single 'r')
-    const referralLink = `http://localhost:5252/?ref=${user.referalCode}`;
+    const referralLink = `http://fitboy.xyz/?ref=${user.referalCode}`;
     
     // Send both referralLink and referalCode to the template
     res.render('referAndEarn', { 
