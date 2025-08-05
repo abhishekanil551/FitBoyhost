@@ -450,7 +450,9 @@ const walletPage = async (req, res) => {
     }
 
     // Fetch wallet transactions
-    const transactions = await WalletTransaction.find({ userId }).lean();
+    const transactions = await WalletTransaction.find({ userId })
+      .sort({ createdAt: -1 })
+      .lean();
 
     // Calculate wallet balance
     const walletBalance = transactions.reduce((sum, tx) => {
