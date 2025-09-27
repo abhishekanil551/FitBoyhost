@@ -431,8 +431,10 @@ const walletPage = async (req, res) => {
       return res.redirect("/pageNotFound");
     }
 
-
-    const transactions = await WalletTransaction.find({ userId }).lean();
+    // Fetch wallet transactions
+    const transactions = await WalletTransaction.find({ userId })
+      .sort({ createdAt: -1 })
+      .lean();
 
 
     const walletBalance = transactions.reduce((sum, tx) => {
