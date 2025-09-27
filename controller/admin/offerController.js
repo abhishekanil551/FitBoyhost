@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Offer = require('../../models/offerDb');
 const Category = require('../../models/categoryDb');
 const Product = require('../../models/productDb');
+const StatusCodes=require('../../statusCodes')
 
 const offerManagement = async (req, res) => {
   try {

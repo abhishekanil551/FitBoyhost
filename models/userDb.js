@@ -65,6 +65,42 @@ const userSchema = new Schema({
       isDefault: Boolean,
     }
   ],
+  points: { type: Number, default: 0 },
+  reasonForGetPoints: { type: String },
+  vouchers: {
+    available: { type: Number, default: 0 },   
+    used: { type: Number, default: 0 },        
+  },
+    missions: [{
+    missionId: { type: mongoose.Schema.Types.ObjectId, ref: "Mission" }, 
+    progress: { type: Number, default: 0 },
+    completed: { type: Boolean, default: false },
+    claimed: { type: Boolean, default: false }
+  }],
+  loginStreak: { type: Number, default: 0 },
+  lastLoginDate: { type: Date, default: null },
+
+  streakRewardsClaimed: [{
+    milestone: Number,
+    claimedAt: { type: Date }
+  }],
+  spins: {
+    available: { type: Number, default: 0 },
+    history: [
+      {
+        prizeType: { 
+          type: String, 
+          enum: ['points', 'wallet', 'game', 'tryAgain'], 
+          required: true 
+        },
+        prizeValue: { type: Number, default: 0 },  
+        gameId: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' }, 
+        usedVoucher: { type: Boolean, default: true },
+        missionSource: { type: mongoose.Schema.Types.ObjectId, ref: 'Mission' },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ]
+  },
   wishlist: [
     {
       type: Schema.Types.ObjectId,

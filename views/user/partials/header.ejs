@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FitBoy</title>
-  <link rel="icon" type="image/svg+xml" href="image/logo.svg" />
+<title>Fitboy</title>
+ <link rel="  <title>FitBoy</title>
+  <link rel="icon" type="image/svg+xml" href="image/logo.svg" />icon" type="image/png" href="https://sdmntprwestus.oaiusercontent.com/files/00000000-c55c-5230-a6d3-57d94542e9ce/raw?se=2025-09-26T13%3A21%3A02Z&sp=r&sv=2024-08-04&sr=b&scid=50bc2cad-81b4-51b0-9319-9c4a05e0d387&skoid=e9d2f8b1-028a-4cff-8eb1-d0e66fbefcca&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-26T00%3A00%3A31Z&ske=2025-09-27T00%3A00%3A31Z&sks=b&skv=2024-08-04&sig=dI9OiC4Yadh6f%2B6Ni5bLRwAxrVWqRiKA2VC9SVPY95g%3D"> 
+    
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <style>
     /* Reset and Base Styles */
@@ -190,6 +192,8 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);           
+      -webkit-backdrop-filter: blur(5px);
       z-index: 1001;
       align-items: center;
       justify-content: center;
@@ -328,6 +332,24 @@
       <a href="/offer" class="nav-link">OFFERS</a>
       <a href='/wishlistPage' class="nav-link">WISHLIST</a>
       <a href="/cart" class="nav-link">CART</a>
+      <a href="/myPoints" class="nav-link">POINTS SHOP</a>
+      <a href="/missions"  class="nav-link">Missions🎟️</a>
+      <!-- Add this to your navigation menu -->
+      <a href="/spin-wheel" class="nav-link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="margin-right: 8px; vertical-align: middle;">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+            <circle cx="12" cy="12" r="2" fill="currentColor"/>
+            <path d="M12 2L12 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M12 18L12 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M2 12L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M18 12L22 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M4.92893 4.92893L7.75736 7.75736" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M16.2426 16.2426L19.0711 19.0711" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M4.92893 19.0711L7.75736 16.2426" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M16.2426 7.75736L19.0711 4.92893" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        Spin Wheel
+      </a>
       
       
 
@@ -363,8 +385,12 @@
     <a href="/aboutas"><button class="profile-button">ABOUT US</button></a>
     <a href="/logout"><button class="profile-button">LOGOUT</button></a>
     
+    
   </div>
 </div>
+
+
+
 <script>
   // Menu toggle functionality
   const menuToggle = document.getElementById('menuToggle');
@@ -440,4 +466,5 @@
 </script>
 
 </body>
+
 </html>

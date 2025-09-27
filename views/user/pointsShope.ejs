@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitboy</title>
+    <link rel="icon" type="image/png" href="https://sdmntprwestus.oaiusercontent.com/files/00000000-c55c-5230-a6d3-57d94542e9ce/raw?se=2025-09-26T13%3A21%3A02Z&sp=r&sv=2024-08-04&sr=b&scid=50bc2cad-81b4-51b0-9319-9c4a05e0d387&skoid=e9d2f8b1-028a-4cff-8eb1-d0e66fbefcca&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-26T00%3A00%3A31Z&ske=2025-09-27T00%3A00%3A31Z&sks=b&skv=2024-08-04&sig=dI9OiC4Yadh6f%2B6Ni5bLRwAxrVWqRiKA2VC9SVPY95g%3D"> 
+        <!-- Include SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: white;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 80px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .points-display {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 40px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .points-display:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(245, 158, 11, 0.3);
+        }
+
+        .points-number {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .thunder-animation {
+            position: absolute;
+            font-size: 3rem;
+            pointer-events: none;
+            animation: thunderEffect 1s ease-out forwards;
+            z-index: 10;
+        }
+
+        @keyframes thunderEffect {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(2) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .game-card {
+            max-width: 350px;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 2px solid #f3f4f6;
+        }
+
+        .game-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: #fbbf24;
+        }
+
+        .game-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+        }
+
+        .game-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .game-category {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .game-points {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #fef3c7, #fbbf24);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: #92400e;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .game-points:hover {
+            background: linear-gradient(135deg, #fde68a, #f59e0b);
+        }
+
+        .points-value {
+            font-size: 1.2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .points-number {
+                font-size: 2.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+      <%- include('partials/header') %>
+      <div class="header">
+      </div>
+
+      <div class="points-display" id="pointsDisplay">
+        <h1>My Points</h1>
+        <div class="points-number">⚡<%= totalPoints %></div>
+      </div>
+
+      <div class="games-grid">
+        <% if (userPointsGames && userPointsGames.length > 0) { %>
+          <% userPointsGames.forEach(function(game) { %>
+          <a href="/product-details/<%= game._id %>" class="game-card-link" style="text-decoration:none;">
+            <div class="game-card">
+              <div class="game-image">
+                <% if (game.poster) { %>
+                  <img src="<%= game.poster %>" alt="<%= game.name %>" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">
+                <% } else { %>
+                  🎮
+                <% } %>
+              </div>
+              <div class="game-title"><%= game.name %></div>
+              <div class="game-points" data-game-id="<%= game._id %>">
+                <span class="points-value"> ⚡<%= game.pointsRequired %></span>
+              </div>
+            </div>
+          </a>
+          <% }); %>
+        <% } else { %>
+          <p style="grid-column: 1/-1; text-align:center; font-size:1.2rem; color:#6b7280;">No games added yet. Play games to earn points!</p>
+        <% } %>
+      </div>
+      <div style="margin-top: 50px; text-align: center;">
+        <%- include('partials/footer') %>
+      </div>
+    </div>
+
+<script>
+  // Check for success query parameter and show Swal success message
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('success')) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: urlParams.get('success'),
+      confirmButtonColor: '#10b981',
+      timer: 3000,
+      timerProgressBar: true,
+    });
+  }
+
+  // Add click event for game-points
+  const gamePoints = document.querySelectorAll('.game-points');
+  gamePoints.forEach(pointsDiv => {
+    pointsDiv.addEventListener('click', function(event) {
+      event.preventDefault(); // Prevent the parent <a> link from triggering
+      event.stopPropagation(); // Stop event bubbling to parent elements
+      const gameId = this.getAttribute('data-game-id');
+      if (gameId) {
+        // Show Swal confirmation dialog
+        Swal.fire({
+          title: 'Redeem Points',
+          text: 'Are you sure you want to redeem points for this game?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#10b981',
+          cancelButtonColor: '#ef4444',
+          confirmButtonText: 'Yes, Redeem!',
+          cancelButtonText: 'Cancel',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Disable further clicks and show loading state
+            this.style.pointerEvents = 'none';
+            this.innerHTML += '<span> Processing...</span>';
+
+            // Make POST request to points-payment endpoint
+            fetch('/points-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ gameId }), // Send gameId in request body
+            })
+              .then(response => response.json()) // Parse JSON regardless of status
+              .then(data => {
+                if (data.success) {
+                  window.location.href = data.redirectUrl; // Redirect to order success page
+                } else if (data.message === 'You have this game, check your library') {
+                  Swal.fire({
+                    icon: 'info',
+                    title: 'Already Owned',
+                    text: data.message,
+                    confirmButtonColor: '#10b981',
+                    confirmButtonText: 'Go to Library',
+                  }).then(() => {
+                    window.location.href = data.redirectUrl; // Redirect to /library
+                  });
+                } else {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Payment failed. Please try again.',
+                    confirmButtonColor: '#ef4444',
+                  });
+                }
+                this.style.pointerEvents = 'auto'; // Re-enable clicks
+                this.querySelector('span')?.remove(); // Remove processing text
+              })
+              .catch(error => {
+                console.error('Error during points payment:', error);
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: 'An error occurred. Please try again.',
+                  confirmButtonColor: '#ef4444',
+                });
+                this.style.pointerEvents = 'auto'; // Re-enable clicks
+                this.querySelector('span')?.remove(); // Remove processing text
+              });
+          }
+        });
+      } else {
+        console.error('Game ID not found');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Game ID not found. Please try again.',
+          confirmButtonColor: '#ef4444',
+        });
+      }
+    });
+  });
+
+  // Thunder click effect
+  const pointsDisplay = document.getElementById('pointsDisplay');
+  pointsDisplay?.addEventListener('click', function(e) {
+    const thunder = document.createElement('div');
+    thunder.className = 'thunder-animation';
+    thunder.textContent = '⚡';
+    const rect = pointsDisplay.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    thunder.style.left = x + 'px';
+    thunder.style.top = y + 'px';
+    pointsDisplay.appendChild(thunder);
+    setTimeout(() => {
+      if (thunder.parentNode) {
+        thunder.parentNode.removeChild(thunder);
+      }
+    }, 1000);
+    pointsDisplay.style.animation = 'none';
+    setTimeout(() => {
+      pointsDisplay.style.animation = '';
+    }, 10);
+  });
+
+  // Add hover effects to game cards
+  const gameCards = document.querySelectorAll('.game-card');
+  gameCards.forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-8px) scale(1.02)';
+    });
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0) scale(1)';
+    });
+  });
+
+  // Add loading animation
+  window.addEventListener('load', function() {
+    const cards = document.querySelectorAll('.game-card');
+    cards.forEach((card, index) => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(50px)';
+      setTimeout(() => {
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+      }, index * 100);
+    });
+  });
+</script>
+</body>
+</html>

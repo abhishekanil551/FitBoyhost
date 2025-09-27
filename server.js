@@ -15,7 +15,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5252',
+  origin: 'http://fitboy.xyz',
   credentials: true
 }));
 

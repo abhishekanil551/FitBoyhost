@@ -6,6 +6,7 @@ const Order = require('../../models/orderDb');
 const OrderItem = require('../../models/OrderItemDB');
 const WalletTransaction = require('../../models/walletDb');
 const Solution = require('../../models/solutionDb');
+const StatusCodes=require('../../statusCodes');
 
 const getUserIssues = async (req, res) => {
   try {
@@ -81,7 +82,7 @@ const solution = async (req, res) => {
         const orderitemsIds = orderitems.map(item => item._id);
 
         if (orderitemsIds.length == 0) {
-            return res.status(404).json({ success: false, message: 'Product not found in any order item' });
+            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Product not found in any order item' });
         }
         
         const order = await Order.findOne({
@@ -91,7 +92,7 @@ const solution = async (req, res) => {
         });
         
         if (!order) {
-            return res.status(403).json({ success: false, message: 'User has not purchased this product' });
+            return res.status(StatusCodes.FORBIDDEN).json({ success: false, message: 'User has not purchased this product' });
         }        
         
         const savedSolution = await Solution.create({
@@ -105,7 +106,7 @@ const solution = async (req, res) => {
         await issue.save();
         
         // Return success response with the solution data
-        res.status(200).json({ 
+        res.status(StatusCodes.OK).json({ 
             success: true,
             message: 'Solution saved successfully', 
             solution: savedSolution 
@@ -113,7 +114,7 @@ const solution = async (req, res) => {
 
     } catch (error) {
         console.error("Error saving solution:", error);
-        res.status(500).json({ 
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ 
             success: false,
             message: 'Server error', 
             error: error.message 
@@ -131,7 +132,7 @@ const refund=async (req,res)=>{
       const issue = await UserIssues.findById(issueId);
         
       if (!issue) {
-          return res.status(404).json({ success: false, message: 'Issue not found' });
+          return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Issue not found' });
       }
         
         const userId = issue.userId;
@@ -141,7 +142,7 @@ const refund=async (req,res)=>{
         const orderitemsIds = orderitems.map(item => item._id);
 
         if (orderitemsIds.length == 0) {
-            return res.status(404).json({ success: false, message: 'Product not found in any order item' });
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Product not found in any order item' });
         }
         
         const order = await Order.findOne({
@@ -151,7 +152,7 @@ const refund=async (req,res)=>{
         });
 
         if (!order) {
-            return res.status(403).json({ success: false, message: 'User has not purchased this product' });
+            return res.status(StatusCodes.FORBIDDEN).json({ success: false, message: 'User has not purchased this product' });
         }
 
         const matchedOrderItemId = order.order_items.find(id =>
@@ -161,7 +162,7 @@ const refund=async (req,res)=>{
         const matchedOrderItem = await OrderItem.findById(matchedOrderItemId);
 
         if (!matchedOrderItem) {
-        return res.status(404).json({ success: false, message: 'Order item not found for refund' });
+        return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Order item not found for refund' });
         } 
 
         const totalPrice = matchedOrderItem.price;
@@ -187,7 +188,7 @@ const refund=async (req,res)=>{
 
       } catch (error) {
         console.log('Refund Error:',error);
-       return res.status(500).json({ success: false, message: 'Internal server error' });
+       return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: 'Internal server error' });
   }
 }
 

@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const Requirement = require('../../models/GameRequirementDb');
 const Product = require('../../models/productDb');
 
-// Utility function to validate requirement structure
 const validateRequirements = (reqBody, type = 'add') => {
   const { productId, minimum, recommended } = reqBody;
   const errors = [];

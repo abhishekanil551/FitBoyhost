@@ -8,6 +8,9 @@ const settingsCtrl=require('../controller/users/settingsCtrl');
 const checkoutCtrl=require('../controller/users/checkoutCtrl');
 const paymentCtrl=require('../controller/users/paymentCtrl');
 const offerCtrl=require('../controller/users/offerCtrl');
+const pointsShop=require('../controller/users/pointsShopCtrl');
+const missionsCtrl=require('../controller/users/missionsCtrl');
+const spinCtrl=require('../controller/users/spinController');
 const passport = require('passport');
 const {userAuth} = require('../middlewares/auth');
 const {checkLoggedIn}=require('../middlewares/auth');
@@ -107,8 +110,19 @@ route.get('/offer',userAuth,offerCtrl.offerPage);
 route.post('/havingIssues/:gameId',userAuth,userCtrl.havingIssues);
 route.get('/reportedIssues',userAuth,userCtrl.reportedIssues);
 
+// points Shop
+route.get('/myPoints',userAuth,pointsShop.myPoints);
+route.post('/points-payment',userAuth,pointsShop.pointsPayment);
 
 
+//Missions
+route.get('/missions',userAuth, missionsCtrl.getMissions);
+route.post('/claimMission/:missionId',userAuth, missionsCtrl.claimMission);
 
+
+// Spin wheel routes
+route.get('/spin-wheel', userAuth, spinCtrl.getSpinWheel);
+route.post('/api/spin/process', userAuth, spinCtrl.processSpin);
+route.post('/api/spin/add-voucher', userAuth, spinCtrl.addTestVoucher);
 
 module.exports=route;

@@ -5,6 +5,7 @@ const OrderItem=require('../../models/OrderItemDB');
 const Company=require('../../models/companyDb');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const statusCode=require('../../statusCodes');
 
 
 
@@ -35,7 +36,7 @@ const login = async (req, res) => {
             
             if (passwordMatch) {
                 req.session.admin = true;
-                req.session.adminId = admin._id; // Store admin ID in session
+                req.session.adminId = admin._id; 
                 return res.redirect('/admin/dashboard');
             }
         }
@@ -77,7 +78,6 @@ const loadDashboard = async (req, res) => {
             }
 
         } else {
-            // Default to 1 year range
             chartStartDate = new Date(today.getFullYear() - 1, today.getMonth() + 1, 1);
             chartEndDate = today;
         }

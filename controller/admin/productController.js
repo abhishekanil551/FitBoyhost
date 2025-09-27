@@ -2,7 +2,8 @@ const Product = require('../../models/productDb');
 const Category = require('../../models/categoryDb');
 const Company = require('../../models/companyDb');
 const Requirement = require('../../models/GameRequirementDb');
-const mongoose=require('mongoose')
+const mongoose=require('mongoose');
+const StatusCodes=require('../../statusCodes');
 
 const productpage = async (req, res) => {
   try {
@@ -27,7 +28,6 @@ const productpage = async (req, res) => {
       query.company = selectedCompany;
     }
 
-    // Fetch products
     const products = await Product.find(query)
       .populate('categoryId')
       .populate('company')
@@ -35,11 +35,9 @@ const productpage = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    // Fetch requirements for all products in the current page
     const productIds = products.map(product => product._id);
     const requirements = await Requirement.find({ productId: { $in: productIds } }).lean();
     
-    // Map requirements to products
     const productsWithRequirements = products.map(product => {
       const requirement = requirements.find(req => req.productId.toString() === product._id.toString());
       return {
@@ -105,7 +103,6 @@ const addProduct = async (req, res) => {
   try {
     console.log('Request body:', req.body);
 
-    // Validate input
     const { errors, isValid } = validateProductInput(req.body);
 
     function validateProductInput(body) {
@@ -151,20 +148,20 @@ const addProduct = async (req, res) => {
 
     if (!isValid) {
       console.log('Validation errors:', errors);
-      return res.status(400).json({ success: false, errors });
+      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, errors });
     }
 
     // Find company
     const company = await Company.findById(req.body.company);
     if (!company) {
-      return res.status(404).json({ success: false, message: 'Company not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'Company not found' });
     }
 
     // Handle categoryId as string or array
     const categoryId = Array.isArray(req.body.categoryId) ? req.body.categoryId : [req.body.categoryId];
     const categories = await Category.find({ _id: { $in: categoryId } });
     if (categories.length !== categoryId.length) {
-      return res.status(404).json({ success: false, message: 'One or more categories not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: 'One or more categories not found' });
     }
 
 
@@ -195,14 +192,14 @@ const addProduct = async (req, res) => {
       { $push: { products: savedProduct._id } }
     );
 
-    res.status(201).json({
+    res.status(StatusCodes.CREATED).json({
       success: true,
       message: 'Product added successfully',
       product: savedProduct,
     });
   } catch (error) {
     console.error('Error adding product:', error);
-    res.status(500).json({
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'An error occurred while adding the product',
       error: error.message,
@@ -228,7 +225,7 @@ const listProducts=async(req,res)=>{
     return res.redirect('/admin/product-management')
   } catch (error) {
     console.log(error)
-    return res.status(500).send('server error')
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('server error')
   }
 }
 
@@ -318,7 +315,7 @@ const editProductPage = async (req, res) => {
     });
   } catch (error) {
     console.error('Error rendering edit product page:', error);
-    res.status(500).send('Server error');
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Server error');
   }
 };
 
@@ -359,28 +356,28 @@ const editProduct = async (req, res) => {
 
     if (missingFields.length > 0) {
       console.log('Validation failed: Missing fields:', missingFields);
-      return res.status(400).json({ error: `All required fields must be filled: ${missingFields.join(', ')}` });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: `All required fields must be filled: ${missingFields.join(', ')}` });
     }
 
     // Validate ObjectIDs
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       console.log('Invalid product ID:', productId);
-      return res.status(400).json({ error: 'Invalid product ID' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid product ID' });
     }
     if (!mongoose.Types.ObjectId.isValid(company)) {
       console.log('Invalid company ID:', company);
-      return res.status(400).json({ error: 'Invalid company ID' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid company ID' });
     }
     const categoriesArray = Array.isArray(categoryId) ? categoryId : [categoryId];
     if (!categoriesArray.every((id) => mongoose.Types.ObjectId.isValid(id))) {
       console.log('Invalid category ID(s):', categoriesArray);
-      return res.status(400).json({ error: 'Invalid category ID(s)' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid category ID(s)' });
     }
 
     // Validate trailer URL if provided
     if (trailer && !trailer.match(/^(http|https):\/\//)) {
       console.log('Invalid trailer URL:', trailer);
-      return res.status(400).json({ error: 'Trailer URL must start with http:// or https://' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Trailer URL must start with http:// or https://' });
     }
 
     // Validate banners
@@ -388,13 +385,13 @@ const editProduct = async (req, res) => {
     if (banners) {
       if (!Array.isArray(banners)) {
         console.log('Invalid banners format:', banners);
-        return res.status(400).json({ error: 'banners must be an array of URLs' });
+        return res.status(StatusCodes.BAD_REQUEST).json({ error: 'banners must be an array of URLs' });
       }
       // Validate each URL
       const invalidUrls = banners.filter((url) => typeof url !== 'string' || !url.match(/^(http|https):\/\//));
       if (invalidUrls.length > 0) {
         console.log('Invalid banner URLs:', invalidUrls);
-        return res.status(400).json({ error: 'All banner URLs must start with http:// or https://' });
+        return res.status(StatusCodes.BAD_REQUEST).json({ error: 'All banner URLs must start with http:// or https://' });
       }
       validatedBanners = banners;
     }
@@ -432,7 +429,7 @@ const editProduct = async (req, res) => {
 
     if (!updatedProduct) {
       console.log('Product not found:', productId);
-      return res.status(404).json({ error: 'Product not found' });
+      return res.status(StatusCodes.NOT_FOUND).json({ error: 'Product not found' });
     }
 
     console.log('Updated product banners:', updatedProduct.banners); // Debug log
@@ -446,15 +443,15 @@ const editProduct = async (req, res) => {
     console.error('Error updating product:', error.message, error.stack);
     if (error.name === 'ValidationError') {
       const errors = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({ error: errors.join(', ') });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: errors.join(', ') });
     }
     if (error.name === 'CastError') {
-      return res.status(400).json({ error: 'Invalid ID format' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid ID format' });
     }
     if (error.code === 11000) {
-      return res.status(400).json({ error: 'Product name must be unique' });
+      return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Product name must be unique' });
     }
-    res.status(500).json({ error: `Server error: ${error.message}` });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: `Server error: ${error.message}` });
   }
 };
 

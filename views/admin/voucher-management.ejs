@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fitboy</title>
+    <link rel="icon" type="image/png" href="https://sdmntprwestus.oaiusercontent.com/files/00000000-c55c-5230-a6d3-57d94542e9ce/raw?se=2025-09-26T13%3A21%3A02Z&sp=r&sv=2024-08-04&sr=b&scid=50bc2cad-81b4-51b0-9319-9c4a05e0d387&skoid=e9d2f8b1-028a-4cff-8eb1-d0e66fbefcca&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-26T00%3A00%3A31Z&ske=2025-09-27T00%3A00%3A31Z&sks=b&skv=2024-08-04&sig=dI9OiC4Yadh6f%2B6Ni5bLRwAxrVWqRiKA2VC9SVPY95g%3D"> 
+      <link rel="stylesheet" href="/css/style.css"/>
+  <!-- Add SweetAlert2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="admin-container">
+    <%- include('partials/sidebar', {page: 'voucher-management'}) %>
+
+    <div class="main-content">
+      <%- include('partials/header') %>
+
+      <div class="dashboard-content">
+        <div class="page-header">
+          <h1 class="page-title">Voucher Management</h1>
+          <button class="add-button" onclick="openAddVoucherModal()">Create New Voucher Rule</button>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-box">
+            <input type="text" placeholder="Search voucher rules...">
+            <button class="search-button">Search</button>
+          </div>
+          <div class="filter-options">
+            <select>
+              <option value="">All Sources</option>
+              <option value="mission">Mission</option>
+              <option value="event">Event</option>
+              <option value="manual">Manual</option>
+            </select>
+            <select>
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="data-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Reward Value</th>
+                <th>Expiry Days</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% vouchers.forEach(voucher => { %>
+                <tr>
+                  <td><%= voucher.source.charAt(0).toUpperCase() + voucher.source.slice(1) %></td>
+                  <td><%= voucher.rewardValue %> <%= voucher.source === 'mission' ? 'tickets' : 'units' %></td>
+                  <td><%= voucher.expiryDays %> days</td>
+                  <td>
+                    <span class="status-badge status-<%= voucher.isActive ? 'active' : 'inactive' %>">
+                      <%= voucher.isActive ? 'Active' : 'Inactive' %>
+                    </span>
+                  </td>
+                  <td class="actions">
+                    <button class="action-button edit" onclick='openEditVoucherModal(<%- JSON.stringify(voucher) %>)'>Edit</button>
+                    <button class="action-button delete" onclick="deleteVoucher('<%= voucher._id %>')">Delete</button>
+                    <button class="action-button toggle" onclick="toggleVoucherStatus('<%= voucher._id %>', <%= voucher.isActive %>)">
+                      <%= voucher.isActive ? 'Deactivate' : 'Activate' %>
+                    </button>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom: 70px;">
+          <%- include('partials/pagination', {currentPage: 1, totalPages: 2}) %>
+        </div>
+      </div>
+      <%- include('partials/footer') %>
+    </div>
+  </div>
+
+  <!-- Add Voucher Modal -->
+  <div id="addVoucherModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Add Voucher Rule</h2>
+      <form id="addVoucherForm" action="/admin/add-voucher" method="POST">
+        <div class="form-group">
+          <label for="addSource">Source *</label>
+          <select id="addSource" name="source" required>
+            <option value="" disabled selected>Select Source</option>
+            <option value="mission">Mission</option>
+            <option value="manual">spin</option>
+          </select>
+          <p class="error hidden" id="addSourceError">Source is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addRewardValue">Reward Value *</label>
+          <input type="number" id="addRewardValue" name="rewardValue" min="1" required>
+          <p class="error hidden" id="addRewardValueError">Reward Value must be greater than zero</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addExpiryDays">Expiry Days *</label>
+          <input type="number" id="addExpiryDays" name="expiryDays" min="1" required>
+          <p class="error hidden" id="addExpiryDaysError">Expiry Days must be greater than zero</p>
+        </div>
+
+        <div class="form-buttons">
+          <button type="submit">Create</button>
+          <button type="button" onclick="closeAddVoucherModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Voucher Modal -->
+  <div id="editVoucherModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Edit Voucher Rule</h2>
+      <form id="editVoucherForm" method="POST" action="/admin/edit-voucher">
+        <input type="hidden" name="id">
+
+        <div class="form-group">
+          <label for="editSource">Source *</label>
+          <select id="editSource" name="source" required>
+            <option value="mission">Mission</option>
+            <option value="event">Event</option>
+            <option value="manual">Manual</option>
+          </select>
+          <p class="error hidden" id="editSourceError">Source is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editRewardValue">Reward Value *</label>
+          <input type="number" id="editRewardValue" name="rewardValue" min="1" required>
+          <p class="error hidden" id="editRewardValueError">Reward Value must be greater than zero</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editExpiryDays">Expiry Days *</label>
+          <input type="number" id="editExpiryDays" name="expiryDays" min="1" required>
+          <p class="error hidden" id="editExpiryDaysError">Expiry Days must be greater than zero</p>
+        </div>
+
+        <div class="form-buttons">
+          <button type="submit">Update</button>
+          <button type="button" onclick="closeEditVoucherModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openAddVoucherModal() {
+      document.getElementById('addVoucherModal').classList.remove('hidden');
+      resetAddForm();
+    }
+
+    function closeAddVoucherModal() {
+      document.getElementById('addVoucherModal').classList.add('hidden');
+      resetAddForm();
+    }
+
+    function resetAddForm() {
+      const form = document.getElementById('addVoucherForm');
+      form.reset();
+      const errors = form.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+    }
+
+    function openEditVoucherModal(voucher) {
+      const form = document.getElementById('editVoucherForm');
+      form.id.value = voucher._id;
+      form.source.value = voucher.source;
+      form.rewardValue.value = voucher.rewardValue;
+      form.expiryDays.value = voucher.expiryDays;
+      document.getElementById('editVoucherModal').classList.remove('hidden');
+    }
+
+    function closeEditVoucherModal() {
+      document.getElementById('editVoucherModal').classList.add('hidden');
+    }
+
+    // Client-side validation and submission for Add Voucher Form
+    document.getElementById('addVoucherForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const errors = this.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+
+      let hasError = false;
+
+      if (!this.source.value) {
+        document.getElementById('addSourceError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const rewardValue = Number(this.rewardValue.value);
+      if (isNaN(rewardValue) || rewardValue <= 0) {
+        document.getElementById('addRewardValueError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const expiryDays = Number(this.expiryDays.value);
+      if (isNaN(expiryDays) || expiryDays <= 0) {
+        document.getElementById('addExpiryDaysError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const formData = new URLSearchParams();
+      formData.append('source', this.source.value);
+      formData.append('rewardValue', this.rewardValue.value);
+      formData.append('expiryDays', this.expiryDays.value);
+
+      if (!hasError) {
+        try {
+          const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+          });
+          const result = await response.json();
+
+          if (response.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Voucher rule added successfully!',
+              confirmButtonColor: '#007bff',
+            }).then(() => {
+              resetAddForm();
+              closeAddVoucherModal();
+              window.location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: result.message || 'Failed to add voucher rule.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        } catch (error) {
+          console.error('Add Voucher Fetch Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while adding the voucher rule.',
+            confirmButtonColor: '#007bff',
+          });
+        }
+      }
+    });
+
+    // Client-side validation and submission for Edit Voucher Form
+    document.getElementById('editVoucherForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const errors = this.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+
+      let hasError = false;
+
+      if (!this.source.value) {
+        document.getElementById('editSourceError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const rewardValue = Number(this.rewardValue.value);
+      if (isNaN(rewardValue) || rewardValue <= 0) {
+        document.getElementById('editRewardValueError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const expiryDays = Number(this.expiryDays.value);
+      if (isNaN(expiryDays) || expiryDays <= 0) {
+        document.getElementById('editExpiryDaysError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const formData = new URLSearchParams();
+      formData.append('id', this.id.value);
+      formData.append('source', this.source.value);
+      formData.append('rewardValue', this.rewardValue.value);
+      formData.append('expiryDays', this.expiryDays.value);
+
+      if (!hasError) {
+        try {
+          const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+          });
+          const result = await response.json();
+
+          if (response.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Voucher rule updated successfully!',
+              confirmButtonColor: '#007bff',
+            }).then(() => {
+              window.location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: result.message || 'Failed to update voucher rule.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        } catch (error) {
+          console.error('Edit Voucher Fetch Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while updating the voucher rule.',
+            confirmButtonColor: '#007bff',
+          });
+        }
+      }
+    });
+
+    // Delete Voucher Function
+    async function deleteVoucher(id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await fetch('/admin/delete-voucher', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({ id }),
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Voucher rule has been deleted.',
+                confirmButtonColor: '#007bff',
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Failed to delete voucher rule.',
+                confirmButtonColor: '#007bff',
+              });
+            }
+          } catch (error) {
+            console.error('Delete Voucher Fetch Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred while deleting the voucher rule.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        }
+      });
+    }
+
+    // Toggle Voucher Status Function
+    async function toggleVoucherStatus(id, currentStatus) {
+      const action = currentStatus ? 'deactivate' : 'activate';
+      Swal.fire({
+        title: `Are you sure you want to ${action} this voucher rule?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: `Yes, ${action} it!`,
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await fetch('/admin/toggle-voucher-status', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({ id, isActive: !currentStatus }),
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: `Voucher rule has been ${action}d.`,
+                confirmButtonColor: '#007bff',
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || `Failed to ${action} voucher rule.`,
+                confirmButtonColor: '#007bff',
+              });
+            }
+          } catch (error) {
+            console.error('Toggle Voucher Status Fetch Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: `An error occurred while ${action}ing the voucher rule.`,
+              confirmButtonColor: '#007bff',
+            });
+          }
+        }
+      });
+    }
+  </script>
+
+  <style>
+    .modal.hidden { display: none; }
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex;
+      align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #ffffff; padding: 2rem; border-radius: 12px; width: 450px;
+      display: flex; flex-direction: column; gap: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal-content h2 {
+      margin: 0 0 1rem; font-size: 1.5rem; color: #333;
+      border-bottom: 1px solid #eee; padding-bottom: 0.5rem;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .form-group label {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+    
+    .modal-content form input,
+    .modal-content form select {
+      width: 100%; padding: 0.75rem; border: 1px solid #ddd;
+      border-radius: 6px; font-size: 1rem; transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    .modal-content form input:focus,
+    .modal-content form select:focus {
+      border-color: #007bff; outline: none;
+    }
+    
+    .form-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .modal-content button {
+      padding: 0.75rem 1.5rem; border: none; border-radius: 6px;
+      font-size: 1rem; cursor: pointer; transition: background-color 0.3s;
+      flex: 1;
+    }
+    .modal-content button[type="submit"] {
+      background: #007bff; color: #fff;
+    }
+    .modal-content button[type="submit"]:hover {
+      background: #0056b3;
+    }
+    .modal-content button[type="button"] {
+      background: #f1f1f1; color: #333;
+    }
+    .modal-content button[type="button"]:hover {
+      background: #e0e0e0;
+    }
+    .error {
+      color: #d32f2f; font-size: 0.875rem; margin: 0.25rem 0 0;
+    }
+    .error.hidden {
+      display: none;
+    }
+    .action-button.toggle {
+      background: #ffc107; color: #fff;
+    }
+    .action-button.toggle:hover {
+      background: #e0a800;
+    }
+  </style>
+</body>
+</html>

@@ -1,5 +1,6 @@
 const category=require('../../models/categoryDb');
 const products=require('../../models/productDb');
+const statusCodes=require('../../statusCodes');
 
 
 
@@ -62,7 +63,7 @@ const addCategory = async (req, res) => {
 
     } catch (error) {
         console.error('Error in addCategory:', error); 
-        return res.status(500).json({ error: error.message || 'internal server error' });
+        return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message || 'internal server error' });
     }
 };
 
@@ -122,7 +123,7 @@ const editCategory = async (req, res) => {
       );
   
       if (!updatedCategory) {
-        return res.status(404).json({ error: 'Category not found' });
+        return res.status(statusCodes.NOT_FOUND).json({ error: 'Category not found' });
       }
   
       return res.json({ 
@@ -131,7 +132,7 @@ const editCategory = async (req, res) => {
       });
     } catch (error) {
       console.error('Error editing category:', error);
-      return res.status(500).json({ error: 'Internal server error' });
+      return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
     }
   };
 

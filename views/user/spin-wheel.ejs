@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fitboy</title>
+    <link rel="icon" type="image/png" href="https://sdmntprwestus.oaiusercontent.com/files/00000000-c55c-5230-a6d3-57d94542e9ce/raw?se=2025-09-26T13%3A21%3A02Z&sp=r&sv=2024-08-04&sr=b&scid=50bc2cad-81b4-51b0-9319-9c4a05e0d387&skoid=e9d2f8b1-028a-4cff-8eb1-d0e66fbefcca&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-26T00%3A00%3A31Z&ske=2025-09-27T00%3A00%3A31Z&sks=b&skv=2024-08-04&sig=dI9OiC4Yadh6f%2B6Ni5bLRwAxrVWqRiKA2VC9SVPY95g%3D"> 
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --accent: #f59e0b;
+            --bg: #f8fafc;
+            --fg: #0f172a;
+            --muted: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * { 
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .spin-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 768px) {
+            .spin-grid {
+                grid-template-columns: 1.5fr 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--muted);
+        }
+
+        .wheel-container {
+            text-align: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        #wheelCanvas {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            border: 10px solid var(--muted);
+            border-radius: 50%;
+            background: white;
+        }
+
+        .balances {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+
+        .balance-item {
+            text-align: center;
+            padding: 15px;
+            background: var(--bg);
+            border-radius: 8px;
+            border: 1px solid var(--muted);
+        }
+
+        .balance-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .balance-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn.primary:hover:not(:disabled) {
+            background: #0284c7;
+            transform: translateY(-2px);
+        }
+
+        .btn.accent {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn.accent:hover:not(:disabled) {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: var(--muted);
+            color: var(--fg);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .result-container {
+            text-align: center;
+            margin: 20px 0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #spinResult {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background: var(--bg);
+            border: 2px dashed var(--muted);
+        }
+
+        .result-success {
+            color: #16a34a;
+            border-color: #16a34a !important;
+            background: #f0fdf4 !important;
+        }
+
+        .result-error {
+            color: #dc2626;
+            border-color: #dc2626 !important;
+            background: #fef2f2 !important;
+        }
+
+        .prizes-section h3, .history-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--muted);
+        }
+
+        .prizes-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .prize-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 6px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .prize-name {
+            font-weight: 600;
+        }
+
+        .prize-probability {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--muted);
+            border-radius: 8px;
+        }
+
+        .history-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .prize-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-points { background: #dbeafe; color: #1e40af; }
+        .badge-wallet { background: #dcfce7; color: #166534; }
+        .badge-game { background: #fef3c7; color: #92400e; }
+        .badge-tryAgain { background: #f3f4f6; color: #374151; }
+
+        .history-date {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .loading {
+            position: relative;
+            color: transparent !important;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-right-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🎡 Spin & Win 🎡</h1>
+            <p>Use your vouchers to spin the wheel and win amazing prizes!</p>
+        </div>
+
+        <div class="spin-grid">
+            <!-- Left Column: Wheel and Controls -->
+            <div class="card">
+                <div class="wheel-container">
+                    <div class="pointer"></div>
+                    <canvas id="wheelCanvas" width="500" height="500"></canvas>
+                </div>
+                
+                <div class="balances">
+                    <div class="balance-item">
+                        <div class="balance-label">Available Vouchers</div>
+                        <div class="balance-value" id="vouchersCount"><%= vouchersAvailable %></div>
+                    </div>
+                    <div class="balance-item">
+                        <div class="balance-label">Your Points</div>
+                        <div class="balance-value" id="pointsCount"><%= points %></div>
+                    </div>
+                    <div class="balance-item">
+                        <div class="balance-label">Total Spins</div>
+                        <div class="balance-value" id="spinsCount"><%= spinHistory.length %></div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn primary" id="spinBtn" <%= vouchersAvailable <= 0 ? 'disabled' : '' %>>
+                        SPIN WHEEL (1 Voucher)
+                    </button>
+                    <button class="btn secondary" id="refreshBtn">Refresh</button>
+                </div>
+
+                <div class="result-container">
+                    <div id="spinResult">Spin the wheel to win prizes!</div>
+                </div>
+            </div>
+
+            <!-- Right Column: Prizes and History -->
+            <div style="display: flex; flex-direction: column; gap: 25px;">
+                <!-- History Card -->
+                <div class="card history-section">
+                    <h3>📜 Spin History</h3>
+                    <div class="history-list" id="spinHistory">
+                        <% if (spinHistory.length === 0) { %>
+                            <div class="history-item" style="justify-content: center; color: #666;">
+                                No spins yet. Spin the wheel to get started!
+                            </div>
+                        <% } else { %>
+                            <% spinHistory.slice(0, 10).forEach(spin => { %>
+                                <div class="history-item">
+                                    <div>
+                                        <%
+                                            let badgeClass = 'badge-tryAgain';
+                                            let prizeText = 'Try Again';
+                                            if (spin.prizeType === 'points') {
+                                                badgeClass = 'badge-points';
+                                                prizeText = `${spin.prizeValue} Points`;
+                                            } else if (spin.prizeType === 'wallet') {
+                                                badgeClass = 'badge-wallet';
+                                                prizeText = `₹${spin.prizeValue}`;
+                                            } else if (spin.prizeType === 'game') {
+                                                badgeClass = 'badge-game';
+                                                prizeText = spin.prizeTitle || 'Game Prize';
+                                            }
+                                        %>
+                                        <span class="prize-badge <%= badgeClass %>"><%= prizeText %></span>
+                                        <div class="history-date">
+                                            <%= new Date(spin.createdAt).toLocaleDateString() %>
+                                        </div>
+                                    </div>
+                                    <span style="font-size: 12px; color: #999;">Voucher</span>
+                                </div>
+                            <% }); %>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+<script>
+    const BASE_URL = '"https://fitboy.xyz";';
+    const prizes = <%- JSON.stringify(prizes) %>;
+    let isSpinning = false;
+    let rotation = 0;
+    
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const spinBtn = document.getElementById('spinBtn');
+    const resultEl = document.getElementById('spinResult');
+    const vouchersEl = document.getElementById('vouchersCount');
+    const pointsEl = document.getElementById('pointsCount');
+    const spinsEl = document.getElementById('spinsCount');
+
+    // Initialize wheel
+    function initWheel() {
+        console.log('Initializing wheel with prizes:', prizes);
+        drawWheel();
+        setupEventListeners();
+    }
+
+    // Draw wheel with prizes
+    function drawWheel() {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = Math.min(centerX, centerY) - 15;
+        
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(rotation);
+
+        if (prizes.length > 0) {
+            const sliceAngle = (2 * Math.PI) / prizes.length;
+            const colors = [
+                '#0ea5e9', '#f59e0b', '#10b981', '#ef4444', 
+                '#8b5cf6', '#f97316', '#06b6d4', '#84cc16',
+                '#eab308', '#dc2626', '#7c3aed', '#ea580c'
+            ];
+            
+            prizes.forEach((prize, index) => {
+                const startAngle = index * sliceAngle;
+                const endAngle = startAngle + sliceAngle;
+
+                // Draw segment
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, startAngle, endAngle);
+                ctx.closePath();
+                
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fill();
+                
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Draw text
+                ctx.save();
+                ctx.rotate(startAngle + sliceAngle / 2);
+                ctx.textAlign = 'right';
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 2;
+                
+                const maxTextWidth = radius - 30;
+                let text = prize.title;
+                const metrics = ctx.measureText(text);
+                
+                if (metrics.width > maxTextWidth) {
+                    while (ctx.measureText(text + '...').width > maxTextWidth && text.length > 3) {
+                        text = text.slice(0, -1);
+                    }
+                    text = text + '...';
+                }
+                
+                ctx.fillText(text, radius - 20, 5);
+                ctx.restore();
+            });
+        }
+
+        // Draw center circle
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 0.12, 0, 2 * Math.PI);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        ctx.restore();
+    }
+
+    // Calculate which prize the pointer is pointing to
+    function getPrizeIndexFromRotation(currentRotation) {
+        if (prizes.length === 0) return 0;
+        
+        // Pointer is at top (12 o'clock = -90 degrees = -π/2 radians)
+        // Normalize rotation to be between 0 and 2π
+        const normalizedRotation = (currentRotation % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        
+        // Calculate angle from pointer position (pointer is at -π/2)
+        const pointerAngle = (normalizedRotation + Math.PI / 2) % (2 * Math.PI);
+        
+        // Calculate prize index (each prize occupies 2π/n radians)
+        const sliceAngle = (2 * Math.PI) / prizes.length;
+        let prizeIndex = Math.floor(pointerAngle / sliceAngle);
+        
+        // Ensure index is within bounds
+        prizeIndex = prizes.length - 1 - prizeIndex;
+        prizeIndex = (prizeIndex + prizes.length) % prizes.length;
+        
+        return prizeIndex;
+    }
+
+    // Process spin
+    async function processSpin() {
+        if (isSpinning) {
+            console.log('Already spinning, please wait...');
+            return;
+        }
+        
+        const vouchersAvailable = parseInt(vouchersEl.textContent);
+        if (vouchersAvailable <= 0) {
+            showResult('No vouchers available! Complete missions to earn more.', 'error');
+            return;
+        }
+
+        isSpinning = true;
+        spinBtn.disabled = true;
+        spinBtn.classList.add('loading');
+        resultEl.textContent = 'Spinning...';
+        resultEl.className = '';
+
+        try {
+            // First, animate the spin and determine the prize
+            const selectedPrizeIndex = await animateSpin();
+            console.log('Selected prize index:', selectedPrizeIndex);
+            
+            // Then send the result to the server
+            const response = await fetch(`${BASE_URL}/api/spin/process`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    prizeIndex: selectedPrizeIndex
+                })
+            });
+
+            console.log('Response status:', response.status);
+            const data = await response.json();
+            console.log('Spin response:', data);
+            
+            if (data.success) {
+                showResult(data.message, 'success');
+                updateUI(data);
+                
+                Swal.fire({
+                    title: 'Congratulations!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonText: 'Awesome!'
+                });
+            } else {
+                showResult(data.message, 'error');
+                Swal.fire({
+                    title: 'Oops!',
+                    text: data.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        } catch (error) {
+            console.error('Spin error:', error);
+            showResult('Network error. Please try again.', 'error');
+            Swal.fire({
+                title: 'Network Error',
+                text: 'Please check your connection and try again.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        } finally {
+            isSpinning = false;
+            spinBtn.disabled = false;
+            spinBtn.classList.remove('loading');
+        }
+    }
+
+    // Animate wheel spin and return the prize index
+    async function animateSpin() {
+        return new Promise(resolve => {
+            const spinDuration = 4000; // 4 seconds for better animation
+            const startTime = performance.now();
+            const startRotation = rotation;
+            
+            // Choose a random target prize (but the pointer will determine the actual prize)
+            const targetPrizeIndex = Math.floor(Math.random() * prizes.length);
+            
+            // Calculate the rotation needed to land the target prize under the pointer
+            // Pointer is at top (-π/2), we want the prize to be at the pointer
+            const sliceAngle = (2 * Math.PI) / prizes.length;
+            
+            // Calculate the angle where the prize should be centered under the pointer
+            const targetPrizeCenterAngle = targetPrizeIndex * sliceAngle + sliceAngle / 2;
+            
+            // We want the pointer (-π/2) to point to the prize center
+            // So the rotation should be: -π/2 - targetPrizeCenterAngle + full rotations
+            const fullRotations = 5; // Number of full spins before stopping
+            const targetRotation = startRotation + 
+                (2 * Math.PI * fullRotations) - 
+                targetPrizeCenterAngle - Math.PI / 2;
+
+            function spin(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / spinDuration, 1);
+                
+                // Easing function for smooth stop
+                const easeOut = 1 - Math.pow(1 - progress, 5);
+                
+                rotation = startRotation + (targetRotation - startRotation) * easeOut;
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(spin);
+                } else {
+                    // Calculate the actual prize based on final pointer position
+                    const finalPrizeIndex = getPrizeIndexFromRotation(rotation);
+                    console.log('Final rotation:', rotation, 'Prize index:', finalPrizeIndex);
+                    resolve(finalPrizeIndex);
+                }
+            }
+            requestAnimationFrame(spin);
+        });
+    }
+
+    // Update UI after spin
+    function updateUI(data) {
+        console.log('Updating UI with:', data);
+        vouchersEl.textContent = data.vouchersAvailable;
+        pointsEl.textContent = data.points;
+        spinsEl.textContent = parseInt(spinsEl.textContent) + 1;
+        
+        if (data.spinHistory && data.spinHistory.length > 0) {
+            updateHistory(data.spinHistory);
+        }
+        
+        if (data.vouchersAvailable <= 0) {
+            spinBtn.disabled = true;
+        }
+    }
+
+    // Update history display
+    function updateHistory(history) {
+        const historyContainer = document.getElementById('spinHistory');
+        historyContainer.innerHTML = history.map(spin => {
+            let badgeClass = 'badge-tryAgain';
+            let prizeText = 'Try Again';
+            
+            if (spin.prizeType === 'points') {
+                badgeClass = 'badge-points';
+                prizeText = `${spin.prizeValue} Points`;
+            } else if (spin.prizeType === 'wallet') {
+                badgeClass = 'badge-wallet';
+                prizeText = `₹${spin.prizeValue}`;
+            } else if (spin.prizeType === 'game') {
+                badgeClass = 'badge-game';
+                prizeText = spin.prizeTitle || 'Game Prize';
+            }
+            
+            return `
+                <div class="history-item">
+                    <div>
+                        <span class="prize-badge ${badgeClass}">${prizeText}</span>
+                        <div class="history-date">
+                            ${new Date(spin.createdAt).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <span style="font-size: 12px; color: #999;">Voucher</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Show result message
+    function showResult(message, type) {
+        resultEl.textContent = message;
+        resultEl.className = '';
+        if (type === 'success') {
+            resultEl.classList.add('result-success');
+        } else if (type === 'error') {
+            resultEl.classList.add('result-error');
+        }
+    }
+
+    // Refresh page data
+    function refreshData() {
+        window.location.reload();
+    }
+
+    // Event listeners
+    function setupEventListeners() {
+        spinBtn.addEventListener('click', processSpin);
+        document.getElementById('refreshBtn').addEventListener('click', refreshData);
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing wheel...');
+        initWheel();
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        drawWheel();
+    });
+</script>
+</body>
+</html>

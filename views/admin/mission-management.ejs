@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fitboy</title>
+    <link rel="icon" type="image/png" href="https://sdmntprwestus.oaiusercontent.com/files/00000000-c55c-5230-a6d3-57d94542e9ce/raw?se=2025-09-26T13%3A21%3A02Z&sp=r&sv=2024-08-04&sr=b&scid=50bc2cad-81b4-51b0-9319-9c4a05e0d387&skoid=e9d2f8b1-028a-4cff-8eb1-d0e66fbefcca&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-26T00%3A00%3A31Z&ske=2025-09-27T00%3A00%3A31Z&sks=b&skv=2024-08-04&sig=dI9OiC4Yadh6f%2B6Ni5bLRwAxrVWqRiKA2VC9SVPY95g%3D"> 
+      <link rel="stylesheet" href="/css/style.css"/>
+  <!-- Add SweetAlert2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="admin-container">
+    <%- include('partials/sidebar', {page: 'mission-management'}) %>
+
+    <div class="main-content">
+      <%- include('partials/header') %>
+
+      <div class="dashboard-content">
+        <div class="page-header">
+          <h1 class="page-title">Mission Management</h1>
+          <button class="add-button" onclick="openAddMissionModal()">Create New Mission</button>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-box">
+            <input type="text" placeholder="Search missions...">
+            <button class="search-button">Search</button>
+          </div>
+          <div class="filter-options">
+            <select>
+              <option value="">All Types</option>
+              <option value="login">Login</option>
+              <option value="referral">Referral</option>
+              <option value="purchase">Purchase</option>
+            </select>
+            <select>
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="expired">Expired</option>
+              <option value="scheduled">Scheduled</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="data-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Mission Name</th>
+                <th>Type</th>
+                <th>Target</th>
+                <th>Reward</th>
+                <th>Start Date</th>
+                <th>Expiry Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% missions.forEach(mission => { %>
+                <tr>
+                  <td><%= mission.title %></td>
+                  <td><%= mission.type.charAt(0).toUpperCase() + mission.type.slice(1) %></td>
+                  <td><%= mission.condition %> <%= mission.type === 'login' ? 'days' : mission.type === 'referral' ? 'referrals' : 'purchases' %></td>
+                  <td><%= mission.rewardValue %> <%= mission.rewardType %></td>
+                  <td><%= new Date(mission.startingDate).toLocaleString() %></td>
+                  <td><%= new Date(mission.expiryDate).toLocaleString() %></td>
+                  <td>
+                    <% 
+                      const now = new Date();
+                      const status = mission.expiryDate < now ? 'Expired' : 
+                                    mission.startingDate > now ? 'Scheduled' : 
+                                    mission.active ? 'Active' : 'Inactive';
+                    %>
+                    <span class="status-badge status-<%= status.toLowerCase() %>"><%= status %></span>
+                  </td>
+                  <td class="actions">
+                    <button class="action-button edit" onclick='openEditMissionModal(<%- JSON.stringify(mission) %>)'>Edit</button>
+                    <button class="action-button delete" onclick="deleteMission('<%= mission._id %>')">Delete</button>
+                    <button class="action-button toggle" onclick="toggleMissionStatus('<%= mission._id %>', <%= mission.active %>)">
+                      <%= mission.active ? 'Deactivate' : 'Activate' %>
+                    </button>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom: 70px;">
+          <%- include('partials/pagination', {currentPage: 1, totalPages: 2}) %>
+        </div>
+      </div>
+      <%- include('partials/footer') %>
+    </div>
+  </div>
+
+  <!-- Add Mission Modal -->
+  <div id="addMissionModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Add Mission</h2>
+      <form id="addMissionForm" action="/admin/add-mission" method="POST">
+        <div class="form-group">
+          <label for="addTitle">Mission Title *</label>
+          <input type="text" id="addTitle" name="title" required>
+          <p class="error hidden" id="addTitleError">Mission Title is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addDescription">Description</label>
+          <textarea id="addDescription" name="description"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="addType">Mission Type *</label>
+          <select id="addType" name="type" required>
+            <option value="" disabled selected>Select Type</option>
+            <option value="login">Login</option>
+          </select>
+          <p class="error hidden" id="addTypeError">Mission Type is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addCondition">Target Condition *</label>
+          <input type="number" id="addCondition" name="condition" min="1" required>
+          <p class="error hidden" id="addConditionError">Target must be greater than zero</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addRewardType">Reward Type *</label>
+          <select id="addRewardType" name="rewardType" required>
+            <option value="" disabled selected>Select Reward Type</option>
+            <option value="points">Points</option>
+            <option value="voucher">Voucher</option>
+          </select>
+          <p class="error hidden" id="addRewardTypeError">Reward Type is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addRewardValue">Reward Value *</label>
+          <input type="number" id="addRewardValue" name="rewardValue" min="1" required>
+          <p class="error hidden" id="addRewardValueError">Reward Value must be greater than zero</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addStartingDate">Start Date & Time *</label>
+          <input type="datetime-local" id="addStartingDate" name="startingDate" required>
+          <p class="error hidden" id="addStartingDateError">Start Date is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addExpiryDate">Expiry Date & Time *</label>
+          <input type="datetime-local" id="addExpiryDate" name="expiryDate" required>
+          <p class="error hidden" id="addExpiryDateError">Expiry Date must be after Start Date</p>
+        </div>
+
+        <div class="form-buttons">
+          <button type="submit">Create</button>
+          <button type="button" onclick="closeAddMissionModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Mission Modal -->
+  <div id="editMissionModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Edit Mission</h2>
+      <form id="editMissionForm" method="POST" action="/admin/edit-mission">
+        <input type="hidden" name="id">
+
+        <div class="form-group">
+          <label for="editTitle">Mission Title *</label>
+          <input type="text" id="editTitle" name="title" required>
+          <p class="error hidden" id="editTitleError">Mission Title is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" name="description"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="editType">Mission Type *</label>
+          <select id="editType" name="type" required>
+            <option value="login">Login</option>
+            <option value="referral">Referral</option>
+            <option value="purchase">Purchase</option>
+          </select>
+          <p class="error hidden" id="editTypeError">Mission Type is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editCondition">Target Condition *</label>
+          <input type="number" id="editCondition" name="condition" min="1" required>
+          <p class="error hidden" id="editConditionError">Target must be greater than zero</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editRewardType">Reward Type *</label>
+          <select id="editRewardType" name="rewardType" required>
+            <option value="points">Points</option>
+            <option value="voucher">Voucher</option>
+          </select>
+          <p class="error hidden" id="editRewardTypeError">Reward Type is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editRewardValue">Reward Value *</label>
+          <input type="number" id="editRewardValue" name="rewardValue" min="1" required>
+          <p class="error hidden" id="editRewardValueError">Reward Value must be greater than zero</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editStartingDate">Start Date & Time *</label>
+          <input type="datetime-local" id="editStartingDate" name="startingDate" required>
+          <p class="error hidden" id="editStartingDateError">Start Date is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editExpiryDate">Expiry Date & Time *</label>
+          <input type="datetime-local" id="editExpiryDate" name="expiryDate" required>
+          <p class="error hidden" id="editExpiryDateError">Expiry Date must be after Start Date</p>
+        </div>
+
+        <div class="form-buttons">
+          <button type="submit">Update</button>
+          <button type="button" onclick="closeEditMissionModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openAddMissionModal() {
+      document.getElementById('addMissionModal').classList.remove('hidden');
+      resetAddForm();
+    }
+
+    function closeAddMissionModal() {
+      document.getElementById('addMissionModal').classList.add('hidden');
+      resetAddForm();
+    }
+
+    function resetAddForm() {
+      const form = document.getElementById('addMissionForm');
+      form.reset();
+      const errors = form.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+    }
+
+    function openEditMissionModal(mission) {
+      const form = document.getElementById('editMissionForm');
+      form.id.value = mission._id;
+      form.title.value = mission.title;
+      form.description.value = mission.description || '';
+      form.type.value = mission.type;
+      form.condition.value = mission.condition;
+      form.rewardType.value = mission.rewardType;
+      form.rewardValue.value = mission.rewardValue;
+      form.startingDate.value = new Date(mission.startingDate).toISOString().slice(0, 16);
+      form.expiryDate.value = new Date(mission.expiryDate).toISOString().slice(0, 16);
+      document.getElementById('editMissionModal').classList.remove('hidden');
+    }
+
+    function closeEditMissionModal() {
+      document.getElementById('editMissionModal').classList.add('hidden');
+    }
+
+    // Client-side validation and submission for Add Mission Form
+    document.getElementById('addMissionForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const errors = this.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+
+      let hasError = false;
+
+      if (!this.title.value.trim()) {
+        document.getElementById('addTitleError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (!this.type.value) {
+        document.getElementById('addTypeError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const condition = Number(this.condition.value);
+      if (isNaN(condition) || condition <= 0) {
+        document.getElementById('addConditionError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (!this.rewardType.value) {
+        document.getElementById('addRewardTypeError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const rewardValue = Number(this.rewardValue.value);
+      if (isNaN(rewardValue) || rewardValue <= 0) {
+        document.getElementById('addRewardValueError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const startDate = new Date(this.startingDate.value);
+      if (!this.startingDate.value || isNaN(startDate)) {
+        document.getElementById('addStartingDateError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const expiryDate = new Date(this.expiryDate.value);
+      if (!this.expiryDate.value || isNaN(expiryDate) || startDate >= expiryDate) {
+        document.getElementById('addExpiryDateError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const formData = new URLSearchParams();
+      formData.append('title', this.title.value);
+      formData.append('description', this.description.value);
+      formData.append('type', this.type.value);
+      formData.append('condition', this.condition.value);
+      formData.append('rewardType', this.rewardType.value);
+      formData.append('rewardValue', this.rewardValue.value);
+      formData.append('startingDate', this.startingDate.value);
+      formData.append('expiryDate', this.expiryDate.value);
+
+      if (!hasError) {
+        try {
+          const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+          });
+          const result = await response.json();
+
+          if (response.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Mission added successfully!',
+              confirmButtonColor: '#007bff',
+            }).then(() => {
+              resetAddForm();
+              closeAddMissionModal();
+              window.location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: result.message || 'Failed to add mission.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        } catch (error) {
+          console.error('Add Mission Fetch Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while adding the mission.',
+            confirmButtonColor: '#007bff',
+          });
+        }
+      }
+    });
+
+    // Client-side validation and submission for Edit Mission Form
+    document.getElementById('editMissionForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const errors = this.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+
+      let hasError = false;
+
+      if (!this.title.value.trim()) {
+        document.getElementById('editTitleError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (!this.type.value) {
+        document.getElementById('editTypeError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const condition = Number(this.condition.value);
+      if (isNaN(condition) || condition <= 0) {
+        document.getElementById('editConditionError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (!this.rewardType.value) {
+        document.getElementById('editRewardTypeError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const rewardValue = Number(this.rewardValue.value);
+      if (isNaN(rewardValue) || rewardValue <= 0) {
+        document.getElementById('editRewardValueError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const startDate = new Date(this.startingDate.value);
+      if (!this.startingDate.value || isNaN(startDate)) {
+        document.getElementById('editStartingDateError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const expiryDate = new Date(this.expiryDate.value);
+      if (!this.expiryDate.value || isNaN(expiryDate) || startDate >= expiryDate) {
+        document.getElementById('editExpiryDateError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const formData = new URLSearchParams();
+      formData.append('id', this.id.value);
+      formData.append('title', this.title.value);
+      formData.append('description', this.description.value);
+      formData.append('type', this.type.value);
+      formData.append('condition', this.condition.value);
+      formData.append('rewardType', this.rewardType.value);
+      formData.append('rewardValue', this.rewardValue.value);
+      formData.append('startingDate', this.startingDate.value);
+      formData.append('expiryDate', this.expiryDate.value);
+
+      if (!hasError) {
+        try {
+          const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+          });
+          const result = await response.json();
+
+          if (response.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Mission updated successfully!',
+              confirmButtonColor: '#007bff',
+            }).then(() => {
+              window.location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: result.message || 'Failed to update mission.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        } catch (error) {
+          console.error('Edit Mission Fetch Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while updating the mission.',
+            confirmButtonColor: '#007bff',
+          });
+        }
+      }
+    });
+
+    // Delete Mission Function
+    async function deleteMission(id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await fetch('/admin/delete-mission', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({ id }),
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Mission has been deleted.',
+                confirmButtonColor: '#007bff',
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Failed to delete mission.',
+                confirmButtonColor: '#007bff',
+              });
+            }
+          } catch (error) {
+            console.error('Delete Mission Fetch Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred while deleting the mission.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        }
+      });
+    }
+
+    // Toggle Mission Status Function
+    async function toggleMissionStatus(id, currentStatus) {
+      const action = currentStatus ? 'deactivate' : 'activate';
+      Swal.fire({
+        title: `Are you sure you want to ${action} this mission?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: `Yes, ${action} it!`,
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await fetch('/admin/toggle-mission-status', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({ id, active: !currentStatus }),
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: `Mission has been ${action}d.`,
+                confirmButtonColor: '#007bff',
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || `Failed to ${action} mission.`,
+                confirmButtonColor: '#007bff',
+              });
+            }
+          } catch (error) {
+            console.error('Toggle Mission Status Fetch Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: `An error occurred while ${action}ing the mission.`,
+              confirmButtonColor: '#007bff',
+            });
+          }
+        }
+      });
+    }
+  </script>
+
+  <style>
+    .modal.hidden { display: none; }
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex;
+      align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #ffffff; padding: 2rem; border-radius: 12px; width: 450px;
+      display: flex; flex-direction: column; gap: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal-content h2 {
+      margin: 0 0 1rem; font-size: 1.5rem; color: #333;
+      border-bottom: 1px solid #eee; padding-bottom: 0.5rem;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .form-group label {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+    
+    .modal-content form input,
+    .modal-content form textarea,
+    .modal-content form select {
+      width: 100%; padding: 0.75rem; border: 1px solid #ddd;
+      border-radius: 6px; font-size: 1rem; transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    .modal-content form input:focus,
+    .modal-content form textarea:focus,
+    .modal-content form select:focus {
+      border-color: #007bff; outline: none;
+    }
+    .modal-content form textarea {
+      resize: vertical; min-height: 80px;
+    }
+    
+    .form-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .modal-content button {
+      padding: 0.75rem 1.5rem; border: none; border-radius: 6px;
+      font-size: 1rem; cursor: pointer; transition: background-color 0.3s;
+      flex: 1;
+    }
+    .modal-content button[type="submit"] {
+      background: #007bff; color: #fff;
+    }
+    .modal-content button[type="submit"]:hover {
+      background: #0056b3;
+    }
+    .modal-content button[type="button"] {
+      background: #f1f1f1; color: #333;
+    }
+    .modal-content button[type="button"]:hover {
+      background: #e0e0e0;
+    }
+    .error {
+      color: #d32f2f; font-size: 0.875rem; margin: 0.25rem 0 0;
+    }
+    .error.hidden {
+      display: none;
+    }
+    .action-button.toggle {
+      background: #ffc107; color: #fff;
+    }
+    .action-button.toggle:hover {
+      background: #e0a800;
+    }
+  </style>
+</body>
+</html>

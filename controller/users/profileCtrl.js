@@ -3,6 +3,9 @@ const bcrypt = require("bcrypt");
 const User = require("../../models/userDb");
 const env = require("dotenv").config();
 const session = require("express-session");
+const StatusCodes=require('../../statusCodes');
+
+
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -29,7 +32,7 @@ async function sendVerificationEmail(email, otp) {
       html: `<h>Your OTP: ${otp}</h>`,
     });
 
-    console.log('Email sent for reset password:', otp);
+    console.log("Email sent for reset password:", otp);
     return info.accepted.length > 0;
   } catch (error) {
     console.error("Error sending email:", error);
@@ -43,7 +46,7 @@ const verifyOtp = async (req, res) => {
 
     if (!/^\d{6}$/.test(otp)) {
       return res
-        .status(400)
+        .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: "Invalid OTP format" });
     }
     if (otp === req.session.userOtp) {
@@ -54,7 +57,7 @@ const verifyOtp = async (req, res) => {
   } catch (error) {
     console.error("Error verifying OTP:", error);
     return res
-      .status(500)
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "An error occurred" });
   }
 };
@@ -65,7 +68,7 @@ const resendOtp = async (req, res) => {
 
     if (!email) {
       return res
-        .status(400)
+        .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: "Email not found in session" });
     }
 
@@ -77,17 +80,17 @@ const resendOtp = async (req, res) => {
     if (emailSend) {
       console.log("Resent OTP:", otp);
       return res
-        .status(200)
+        .status(StatusCodes.OK)
         .json({ success: true, message: "OTP resent successfully" });
     } else {
       return res
-        .status(500)
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
         .json({ success: false, message: "Failed to resend OTP" });
     }
   } catch (error) {
     console.error("Error resending OTP:", error);
     return res
-      .status(500)
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: "Failed to resend OTP" });
   }
 };
@@ -106,17 +109,17 @@ const forgotPassword = async (req, res) => {
         req.session.userOtp = otp;
         req.session.email = email;
         res
-          .status(200)
+          .status(StatusCodes.OK)
           .json({ success: true, message: "OTP sent successfully" });
       } else {
-        res.status(500).json({ success: false, message: "Failed to send OTP" });
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to send OTP" });
       }
     } else {
-      res.status(404).json({ success: false, message: "Email does not exist" });
+      res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Email does not exist" });
     }
   } catch (error) {
     console.error("Error in forgotPassword:", error);
-    res.status(500).json({ success: false, message: "Something went wrong" });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Something went wrong" });
   }
 };
 
@@ -124,41 +127,36 @@ const resetPassword = async (req, res) => {
   try {
     const { email, password, confirmPassword } = req.body;
 
-    // Ensure all fields are provided
     if (!email || !password || !confirmPassword) {
       return res
-        .status(400)
+        .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: "All fields are required" });
     }
 
-    // Validate password match
     if (password !== confirmPassword) {
       return res
-        .status(400)
+        .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: "Passwords do not match" });
     }
 
-    // Validate password length
     if (password.length < 8) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Password should be at least 8 characters",
-        });
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Password should be at least 8 characters",
+      });
     }
 
-    // Validate password is a string and not empty
-    if (typeof password !== 'string' || password.trim() === '') {
+
+    if (typeof password !== "string" || password.trim() === "") {
       return res
-        .status(400)
+        .status(StatusCodes.BAD_REQUEST)
         .json({ success: false, message: "Invalid password" });
     }
 
-    // Hash the password
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Update user password
+
     const user = await User.findOneAndUpdate(
       { email },
       { password: hashedPassword },
@@ -167,31 +165,26 @@ const resetPassword = async (req, res) => {
 
     if (!user) {
       return res
-        .status(404)
+        .status(StatusCodes.NOT_FOUND)
         .json({ success: false, message: "User not found" });
     }
 
-    // Clear session data
+
     req.session.userOtp = null;
     req.session.email = null;
 
     return res
-      .status(200)
+      .status(StatusCodes.OK)
       .json({ success: true, message: "Password reset successful" });
   } catch (error) {
     console.error("Reset password error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: "Server error" });
   }
 };
-
-
-
-
 
 module.exports = {
   forgotPassword,
   resendOtp,
   verifyOtp,
   resetPassword,
-
 };

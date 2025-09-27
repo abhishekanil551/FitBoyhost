@@ -1,5 +1,6 @@
 const User = require('../../models/userDb');
 const Order = require('../../models/orderDb');
+const StatusCodes=require('../../statusCodes')
 
 const orderManagement = async (req, res) => {
   try {
@@ -103,7 +104,7 @@ const orderManagement = async (req, res) => {
     });
   } catch (error) {
     console.error('Order management error:', error);
-    res.status(500).send('Internal Server Error');
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).send('Internal Server Error');
   }
 };
 

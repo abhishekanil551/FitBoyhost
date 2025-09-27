@@ -2,6 +2,7 @@ const User = require('../../models/userDb');
 const path = require('path');
 const express = require('express');
 const app = express();
+const StatusCodes=require('../../statusCodes');
 
 
 const customerInfo=async (req,res)=>{

@@ -2,6 +2,8 @@ const Company = require("../../models/companyDb");
 const Product = require("../../models/productDb");
 const multer = require("multer");
 const cloudinary = require("../../config/cloudinary");
+const { HttpStatusCode } = require("axios");
+const statusCodes=require('../../statusCodes');
 
 const companypage = async (req, res) => {
   try {
@@ -36,19 +38,18 @@ const addCompany = async (req, res) => {
     console.log("Received body:", req.body);
 
     if (!name?.trim() || !email?.trim()) {
-      return res.status(400).json({
+      return res.status(statusCodes.BAD_REQUEST).json({
         success: false,
         message: "Company name and email are required",
       });
     }
     const existingCompany = await Company.findOne({ companyName: name.trim() });
     if (existingCompany) {
-      return res.status(409).json({
+      return res.status(statusCodes.CONFLICT).json({
         success: false,
         message: "A company with this name already exists",
       });
     }
-    // Create company object
     const companyData = {
       companyName: name,
       email,
@@ -56,11 +57,10 @@ const addCompany = async (req, res) => {
       companyLogo: logoUrl,
     };
 
-    // Create and save new company
     const newCompany = new Company(companyData);
     await newCompany.save();
 
-    return res.status(201).json({
+    return res.status(statusCodes.CREATED).json({
       success: true,
       message: "Company added successfully",
       company: {
@@ -70,7 +70,7 @@ const addCompany = async (req, res) => {
     });
   } catch (error) {
     console.error("Company add failed:", error.message);
-    return res.status(500).json({
+    return res.status(statusCodes.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Failed to add company",
     });
@@ -87,7 +87,7 @@ const editCompany = async (req, res) => {
     const { id } = req.params;
 
     if (!name?.trim() || !email?.trim()) {
-      return res.status(400).json({
+      return res.status(statusCodes.BAD_REQUEST).json({
         success: false,
         message: "Company name and email are required",
       });
@@ -97,7 +97,7 @@ const editCompany = async (req, res) => {
     const existingCompany = await Company.findById(id);
 
     if (!existingCompany) {
-      return res.status(404).json({
+      return res.status(statusCodes.NOT_FOUND).json({
         success: false,
         message: "Company not found",
       });
@@ -110,13 +110,12 @@ const editCompany = async (req, res) => {
     });
 
     if (duplicateCompany) {
-      return res.status(409).json({
+      return res.status(statusCodes.CONFLICT).json({
         success: false,
         message: "Another company with this name already exists",
       });
     }
 
-    // Update the company
     await Company.findByIdAndUpdate(id, {
       companyName: name,
       email: email,
@@ -124,8 +123,7 @@ const editCompany = async (req, res) => {
       companyLogo: logoUrl,
     });
 
-    // Return success response
-    return res.status(200).json({
+    return res.status(statusCodes.OK).json({
       success: true,
       message: "Company updated successfully"
     });

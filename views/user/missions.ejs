@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fitboy</title>
+    <link rel="icon" type="image/png" href="https://sdmntprwestus.oaiusercontent.com/files/00000000-c55c-5230-a6d3-57d94542e9ce/raw?se=2025-09-26T13%3A21%3A02Z&sp=r&sv=2024-08-04&sr=b&scid=50bc2cad-81b4-51b0-9319-9c4a05e0d387&skoid=e9d2f8b1-028a-4cff-8eb1-d0e66fbefcca&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-26T00%3A00%3A31Z&ske=2025-09-27T00%3A00%3A31Z&sks=b&skv=2024-08-04&sig=dI9OiC4Yadh6f%2B6Ni5bLRwAxrVWqRiKA2VC9SVPY95g%3D"> 
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+      :root {
+        --primary: #0ea5e9; /* sky-500 */
+        --accent: #f59e0b; /* amber-500 */
+        --bg: #f8fafc; /* slate-50 */
+        --fg: #0f172a; /* slate-900 */
+        --muted: #e2e8f0; /* slate-200 */
+        --radius: 12px;
+      }
+
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        line-height: 1.5;
+      }
+
+      header {
+        border-bottom: 1px solid var(--muted);
+        background: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.2px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border: 1px solid var(--muted);
+        border-radius: 999px;
+        background: #fff;
+        font-size: 14px;
+      }
+      .tickets-count {
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      main {
+        padding: 24px 16px;
+      }
+
+      .card {
+        background: #fff;
+        border: 1px solid var(--muted);
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+      .card + .card { margin-top: 16px; }
+
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      /* Status styles */
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+      
+      .status.claimed {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+        border: 1px solid rgba(107, 114, 128, 0.25);
+      }
+
+      .status.complete {
+        background: rgba(34, 197, 94, 0.1);
+        color: #16a34a;
+        border: 1px solid rgba(34, 197, 94, 0.25);
+      }
+
+      .status.in-progress {
+        background: rgba(14, 165, 233, 0.1);
+        color: var(--primary);
+        border: 1px solid rgba(14, 165, 233, 0.25);
+      }
+
+      /* Button styles */
+      .btn {
+        appearance: none;
+        border: 1px solid var(--muted);
+        background: var(--fg);
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      .btn.claimed {
+        background: #9ca3af;
+        border-color: #9ca3af;
+        cursor: not-allowed;
+      }
+
+      .btn.claim-available {
+        background: #16a34a;
+        border-color: #16a34a;
+      }
+
+      .btn.in-progress {
+        background: #6b7280;
+        border-color: #6b7280;
+        cursor: not-allowed;
+      }
+
+      .btn.claim-available:hover {
+        background: #15803d;
+        border-color: #15803d;
+        transform: translateY(-1px);
+      }
+
+      .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+
+      .balances {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .balance-tile {
+        border: 1px solid var(--muted);
+        border-radius: 10px;
+        padding: 12px;
+        background: #fff;
+      }
+      .balance-tile h4 {
+        margin: 0 0 4px;
+        font-size: 13px;
+        opacity: 0.8;
+      }
+      .balance-tile .val {
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .space-y-8 > * + * { margin-top: 24px; }
+
+      /* Loading spinner */
+      .btn.loading {
+        position: relative;
+        color: transparent;
+      }
+      
+      .btn.loading::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-left: -8px;
+        margin-top: -8px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-right-color: transparent;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container" style="margin-bottom: 30px;">
+        <div class="brand">
+          <%- include('partials/header') %>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <section>
+        <h1 style="color: #000;">Missions</h1>
+        <p style="color: #000;"><%= message %></p>
+        <div class="space-y-8">
+          <% missions.forEach(mission => { %>
+            <% const progress = userProgress.find(p => p.missionId.toString() === mission._id.toString())?.progress || 0; %>
+            <% const isCompleted = userProgress.find(p => p.missionId.toString() === mission._id.toString())?.completed || false; %>
+            <% const isClaimed = userProgress.find(p => p.missionId.toString() === mission._id.toString())?.claimed || false; %>
+            <div class="card">
+              <div class="row">
+                <div>
+                  <h2 style="margin:0 0 6px; font-size:18px; color: #000;"><%= mission.title %></h2>
+                  <p style="margin:0; opacity:0.8; font-size:14px; color:#000"><%= mission.description || 'Complete to earn rewards.' %></p>
+                </div>
+                <span class="status <%= isClaimed ? 'claimed' : isCompleted ? 'complete' : 'in-progress' %>" aria-live="polite">
+                  <%= isClaimed ? 'Claimed' : isCompleted ? 'Complete • Claim Available' : `In Progress: ${progress}/${mission.condition}` %>
+                </span>
+              </div>
+              <div class="row">
+                <div>
+                  <strong style="color: #000;">Reward:</strong>
+                  <p style="color: #000;"><%= mission.rewardType === 'voucher' ? `${mission.rewardValue} Ticket${mission.rewardValue > 1 ? 's' : ''}` : `${mission.rewardValue} Points` %></p>
+                </div>
+                <div>
+                  <button class="btn <%= isClaimed ? 'claimed' : isCompleted ? 'claim-available' : 'in-progress' %>" 
+                          data-mission-id="<%= mission._id %>" 
+                          <%= isClaimed ? 'disabled' : '' %>>
+                    <%= isClaimed ? 'Claimed' : isCompleted ? 'Claim' : 'In Progress' %>
+                  </button>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    </main>
+
+<script>
+  const BASE_URL = '"https://fitboy.xyz";';
+
+  const STORAGE_KEY = "mission_state_v1";
+  const defaultState = {
+    tickets: 0,
+    points: 0,
+    wallet: 0
+  };
+  let state = loadState();
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return { ...defaultState };
+      const data = JSON.parse(raw);
+      return { ...defaultState, ...data };
+    } catch {
+      return { ...defaultState };
+    }
+  }
+  
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function announce(msg, isError = false) {
+    Swal.fire({
+      text: msg,
+      icon: isError ? 'error' : 'success',
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    });
+  }
+
+  function updateBalancesUI() {
+    const ticketsEl = document.getElementById("tickets");
+    const pointsValEl = document.getElementById("pointsVal");
+    const walletValEl = document.getElementById("walletVal");
+    
+    if (ticketsEl) ticketsEl.textContent = String(state.tickets);
+    if (pointsValEl) pointsValEl.textContent = String(state.points);
+    if (walletValEl) walletValEl.textContent = `$${state.wallet.toFixed(2)}`;
+  }
+
+  async function fetchUserData() {
+    try {
+      console.log('User data loaded from server-side rendering');
+      // Data is already available from EJS rendering
+      state.tickets = <%= userData.vouchers?.available || 0 %>;
+      state.points = <%= userData.points || 0 %>;
+      state.wallet = <%= userData.walletBalance || 0 %>;
+      updateBalancesUI();
+      saveState();
+    } catch (error) {
+      console.error('Error initializing user data:', error.message);
+    }
+  }
+
+  function setupMissionClaims() {
+    document.querySelectorAll('.btn[data-mission-id]').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        if (this.disabled || this.classList.contains('claimed') || this.classList.contains('in-progress')) {
+          return;
+        }
+
+        const missionId = this.dataset.missionId;
+        const missionCard = this.closest('.card');
+        const statusEl = missionCard.querySelector('.status');
+        
+        try {
+          this.classList.add('loading');
+          this.disabled = true;
+          
+          console.log(`Claiming mission ${missionId} at ${BASE_URL}/claimMission/${missionId}`);
+          
+          const response = await fetch(`${BASE_URL}/claimMission/${missionId}`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            credentials: 'include'
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error ${response.status}: ${errorText}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            this.textContent = 'Claimed';
+            this.classList.remove('claim-available', 'loading');
+            this.classList.add('claimed');
+            this.disabled = true;
+            
+            statusEl.textContent = 'Claimed';
+            statusEl.className = 'status claimed';
+            
+            if (data.vouchersAvailable !== undefined) {
+              state.tickets = data.vouchersAvailable;
+            }
+            if (data.points !== undefined) {
+              state.points = data.points;
+            }
+            
+            updateBalancesUI();
+            saveState();
+            
+            announce(data.message || 'Reward claimed successfully!');
+            
+          } else {
+            throw new Error(data.message || 'Failed to claim mission');
+          }
+          
+        } catch (error) {
+          console.error('Claim mission error:', error.message);
+          
+          this.classList.remove('loading');
+          this.disabled = false;
+          
+          let errorMessage = error.message;
+          if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            errorMessage = 'Cannot connect to server. Please check your connection.';
+          } else if (error.message.includes('500')) {
+            errorMessage = 'Server error. Please try again later.';
+          } else if (error.message.includes('404')) {
+            errorMessage = 'Mission not found. Please refresh the page.';
+          } else if (error.message.includes('401')) {
+            errorMessage = 'Please login again to claim rewards.';
+          } else if (error.message.includes('400')) {
+            errorMessage = error.message.replace('HTTP error 400: ', '');
+          }
+          
+          announce(errorMessage, true);
+        }
+      });
+    });
+  }
+
+  async function init() {
+    try {
+      await fetchUserData();
+      updateBalancesUI();
+      setupMissionClaims();
+    } catch (error) {
+      console.error('Initialization error:', error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+    
+    <%- include('partials/footer') %>
+  </body>
+</html>

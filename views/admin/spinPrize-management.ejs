@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fitboy</title>
+    <link rel="icon" type="image/png" href="https://sdmntprwestus.oaiusercontent.com/files/00000000-c55c-5230-a6d3-57d94542e9ce/raw?se=2025-09-26T13%3A21%3A02Z&sp=r&sv=2024-08-04&sr=b&scid=50bc2cad-81b4-51b0-9319-9c4a05e0d387&skoid=e9d2f8b1-028a-4cff-8eb1-d0e66fbefcca&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2025-09-26T00%3A00%3A31Z&ske=2025-09-27T00%3A00%3A31Z&sks=b&skv=2024-08-04&sig=dI9OiC4Yadh6f%2B6Ni5bLRwAxrVWqRiKA2VC9SVPY95g%3D"> 
+      <link rel="stylesheet" href="/css/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <div class="admin-container">
+    <%- include('partials/sidebar', {page: 'spin-prize-management'}) %>
+
+    <div class="main-content">
+      <%- include('partials/header') %>
+
+      <div class="dashboard-content">
+        <div class="page-header">
+          <h1 class="page-title">Spin Prize Management</h1>
+          <button class="add-button" onclick="openAddSpinPrizeModal()">Create New Spin Prize</button>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search-box">
+            <input type="text" placeholder="Search spin prizes...">
+            <button class="search-button">Search</button>
+          </div>
+          <div class="filter-options">
+            <select>
+              <option value="">All Types</option>
+              <option value="points">Points</option>
+              <option value="try_again">Try Again</option>
+              <option value="wallet_money">Wallet Money</option>
+            </select>
+            <select>
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="data-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Value</th>
+                <th>Probability</th>
+                <th>Created At</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+           <tbody>
+  <% if (spinPrizes.length === 0) { %>
+    <tr>
+      <td colspan="7" style="text-align: center; padding: 20px;">
+        No spin prizes found. Click "Create New Spin Prize" to add one.
+      </td>
+    </tr>
+  <% } else { %>
+    <% spinPrizes.forEach(prize => { %>
+      <tr>
+        <td><%= prize.title %></td>
+        <td><%= prize.type.charAt(0).toUpperCase() + prize.type.slice(1).replace('_', ' ') %></td>
+        <td><%= prize.type === 'try_again' ? '-' : prize.value %></td>
+        <td><%= (prize.probability * 100).toFixed(2) %>%</td>
+        <td><%= new Date(prize.createdAt).toLocaleString() %></td>
+        <td>
+          <span class="status-badge status-<%= prize.active ? 'active' : 'inactive' %>">
+            <%= prize.active ? 'Active' : 'Inactive' %>
+          </span>
+        </td>
+        <td class="actions">
+          <button class="action-button edit" onclick='openEditSpinPrizeModal(<%- JSON.stringify(prize) %>)'>Edit</button>
+          <button class="action-button delete" onclick="deleteSpinPrize('<%= prize._id %>')">Delete</button>
+          <button class="action-button toggle" onclick="toggleSpinPrizeStatus('<%= prize._id %>', <%= prize.active %>)">
+            <%= prize.active ? 'Deactivate' : 'Activate' %>
+          </button>
+        </td>
+      </tr>
+    <% }) %>
+  <% } %>
+</tbody>
+          </table>
+        </div>
+
+        <div style="margin-bottom: 70px;">
+          <%- include('partials/pagination', {currentPage: 1, totalPages: 2}) %>
+        </div>
+      </div>
+      <%- include('partials/footer') %>
+    </div>
+  </div>
+
+  <!-- Add Spin Prize Modal -->
+  <div id="addSpinPrizeModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Add Spin Prize</h2>
+      <form id="addSpinPrizeForm" action="/admin/add-spinPrize" method="POST">
+        <div class="form-group">
+          <label for="addTitle">Prize Title *</label>
+          <input type="text" id="addTitle" name="title" required>
+          <p class="error hidden" id="addTitleError">Prize Title is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addType">Prize Type *</label>
+          <select id="addType" name="type" required>
+            <option value="" disabled selected>Select Type</option>
+            <option value="game">Game</option>
+            <option value="points">Points</option>
+            <option value="try_again">Try Again</option>
+            <option value="wallet_money">Wallet Money</option>
+          </select>
+          <p class="error hidden" id="addTypeError">Prize Type is required</p>
+        </div>
+
+        <div class="form-group" id="addValueGroup">
+          <label for="addValue">Prize Value *</label>
+          <input type="number" id="addValue" name="value" min="0" step="0.01">
+          <p class="error hidden" id="addValueError">Prize Value must be greater than zero</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addProbability">Probability (0-1) *</label>
+          <input type="number" id="addProbability" name="probability" min="0" max="1" step="0.01" required>
+          <p class="error hidden" id="addProbabilityError">Probability must be between 0 and 1</p>
+        </div>
+
+        <div class="form-group">
+          <label for="addDescription">Description</label>
+          <textarea id="addDescription" name="description"></textarea>
+        </div>
+
+        <div class="form-buttons">
+          <button type="submit">Create</button>
+          <button type="button" onclick="closeAddSpinPrizeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Spin Prize Modal -->
+  <div id="editSpinPrizeModal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Edit Spin Prize</h2>
+      <form id="editSpinPrizeForm" method="POST" action="/admin/edit-spinPrize">
+        <input type="hidden" name="id">
+
+        <div class="form-group">
+          <label for="editTitle">Prize Title *</label>
+          <input type="text" id="editTitle" name="title" required>
+          <p class="error hidden" id="editTitleError">Prize Title is required</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editType">Prize Type *</label>
+          <select id="editType" name="type" required>
+            <option value="game">Game</option>
+            <option value="points">Points</option>
+            <option value="try_again">Try Again</option>
+            <option value="wallet_money">Wallet Money</option>
+          </select>
+          <p class="error hidden" id="editTypeError">Prize Type is required</p>
+        </div>
+
+        <div class="form-group" id="editValueGroup">
+          <label for="editValue">Prize Value *</label>
+          <input type="number" id="editValue" name="value" min="0" step="0.01">
+          <p class="error hidden" id="editValueError">Prize Value must be greater than zero</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editProbability">Probability (0-1) *</label>
+          <input type="number" id="editProbability" name="probability" min="0" max="1" step="0.01" required>
+          <p class="error hidden" id="editProbabilityError">Probability must be between 0 and 1</p>
+        </div>
+
+        <div class="form-group">
+          <label for="editDescription">Description</label>
+          <textarea id="editDescription" name="description"></textarea>
+        </div>
+
+        <div class="form-buttons">
+          <button type="submit">Update</button>
+          <button type="button" onclick="closeEditSpinPrizeModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openAddSpinPrizeModal() {
+      document.getElementById('addSpinPrizeModal').classList.remove('hidden');
+      resetAddForm();
+    }
+
+    function closeAddSpinPrizeModal() {
+      document.getElementById('addSpinPrizeModal').classList.add('hidden');
+      resetAddForm();
+    }
+
+    function resetAddForm() {
+      const form = document.getElementById('addSpinPrizeForm');
+      form.reset();
+      const errors = form.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+      toggleValueField('addType', 'addValueGroup', 'addValue');
+    }
+
+    function openEditSpinPrizeModal(prize) {
+      const form = document.getElementById('editSpinPrizeForm');
+      form.id.value = prize._id;
+      form.title.value = prize.title;
+      form.type.value = prize.type;
+      form.value.value = prize.value;
+      form.probability.value = prize.probability;
+      form.description.value = prize.description || '';
+      toggleValueField('editType', 'editValueGroup', 'editValue', prize.type);
+      document.getElementById('editSpinPrizeModal').classList.remove('hidden');
+    }
+
+    function closeEditSpinPrizeModal() {
+      document.getElementById('editSpinPrizeModal').classList.add('hidden');
+    }
+
+    function toggleValueField(selectId, groupId, inputId, type = null) {
+      const select = document.getElementById(selectId);
+      const valueGroup = document.getElementById(groupId);
+      const valueInput = document.getElementById(inputId);
+      const selectedType = type || select.value;
+
+      if (selectedType === 'try_again') {
+        valueGroup.style.display = 'none';
+        valueInput.removeAttribute('required');
+        valueInput.value = 0;
+      } else {
+        valueGroup.style.display = 'block';
+        valueInput.setAttribute('required', 'required');
+      }
+
+      select.addEventListener('change', () => {
+        if (select.value === 'try_again') {
+          valueGroup.style.display = 'none';
+          valueInput.removeAttribute('required');
+          valueInput.value = 0;
+        } else {
+          valueGroup.style.display = 'block';
+          valueInput.setAttribute('required', 'required');
+        }
+      });
+    }
+
+    // Initialize value field visibility for add form
+    toggleValueField('addType', 'addValueGroup', 'addValue');
+
+    // Client-side validation and submission for Add Spin Prize Form
+    document.getElementById('addSpinPrizeForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const errors = this.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+
+      let hasError = false;
+
+      if (!this.title.value.trim()) {
+        document.getElementById('addTitleError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (!this.type.value) {
+        document.getElementById('addTypeError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (this.type.value !== 'try_again') {
+        const value = Number(this.value.value);
+        if (isNaN(value) || value <= 0) {
+          document.getElementById('addValueError').classList.remove('hidden');
+          hasError = true;
+        }
+      }
+
+      const probability = Number(this.probability.value);
+      if (isNaN(probability) || probability < 0 || probability > 1) {
+        document.getElementById('addProbabilityError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const formData = new URLSearchParams();
+      formData.append('title', this.title.value);
+      formData.append('type', this.type.value);
+      formData.append('value', this.type.value === 'try_again' ? 0 : this.value.value);
+      formData.append('description', this.description.value);
+      formData.append('probability', this.probability.value);
+
+      if (!hasError) {
+        try {
+          const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+          });
+          const result = await response.json();
+
+          if (response.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Spin prize added successfully!',
+              confirmButtonColor: '#007bff',
+            }).then(() => {
+              resetAddForm();
+              closeAddSpinPrizeModal();
+              window.location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: result.message || 'Failed to add spin prize.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        } catch (error) {
+          console.error('Add Spin Prize Fetch Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while adding the spin prize.',
+            confirmButtonColor: '#007bff',
+          });
+        }
+      }
+    });
+
+    // Client-side validation and submission for Edit Spin Prize Form
+    document.getElementById('editSpinPrizeForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const errors = this.querySelectorAll('.error');
+      errors.forEach(err => err.classList.add('hidden'));
+
+      let hasError = false;
+
+      if (!this.title.value.trim()) {
+        document.getElementById('editTitleError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (!this.type.value) {
+        document.getElementById('editTypeError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      if (this.type.value !== 'try_again') {
+        const value = Number(this.value.value);
+        if (isNaN(value) || value <= 0) {
+          document.getElementById('editValueError').classList.remove('hidden');
+          hasError = true;
+        }
+      }
+
+      const probability = Number(this.probability.value);
+      if (isNaN(probability) || probability < 0 || probability > 1) {
+        document.getElementById('editProbabilityError').classList.remove('hidden');
+        hasError = true;
+      }
+
+      const formData = new URLSearchParams();
+      formData.append('id', this.id.value);
+      formData.append('title', this.title.value);
+      formData.append('type', this.type.value);
+      formData.append('value', this.type.value === 'try_again' ? 0 : this.value.value);
+      formData.append('description', this.description.value);
+      formData.append('probability', this.probability.value);
+
+      if (!hasError) {
+        try {
+          const response = await fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
+            },
+          });
+          const result = await response.json();
+
+          if (response.ok) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Spin prize updated successfully!',
+              confirmButtonColor: '#007bff',
+            }).then(() => {
+              window.location.reload();
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: result.message || 'Failed to update spin prize.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        } catch (error) {
+          console.error('Edit Spin Prize Fetch Error:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while updating the spin prize.',
+            confirmButtonColor: '#007bff',
+          });
+        }
+      }
+    });
+
+    // Delete Spin Prize Function
+    async function deleteSpinPrize(id) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!',
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await fetch('/admin/delete-spinPrize', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({ id }),
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Spin prize has been deleted.',
+                confirmButtonColor: '#007bff',
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Failed to delete spin prize.',
+                confirmButtonColor: '#007bff',
+              });
+            }
+          } catch (error) {
+            console.error('Delete Spin Prize Fetch Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred while deleting the spin prize.',
+              confirmButtonColor: '#007bff',
+            });
+          }
+        }
+      });
+    }
+
+    // Toggle Spin Prize Status Function
+    async function toggleSpinPrizeStatus(id, currentStatus) {
+      const action = currentStatus ? 'deactivate' : 'activate';
+      Swal.fire({
+        title: `Are you sure you want to ${action} this spin prize?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#d33',
+        confirmButtonText: `Yes, ${action} it!`,
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await fetch('/admin/toggle-status-spinPrize', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify({ id, active: !currentStatus }),
+            });
+            const result = await response.json();
+
+            if (response.ok) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: `Spin prize has been ${action}d.`,
+                confirmButtonColor: '#007bff',
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || `Failed to ${action} spin prize.`,
+                confirmButtonColor: '#007bff',
+              });
+            }
+          } catch (error) {
+            console.error('Toggle Spin Prize Status Fetch Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: `An error occurred while ${action}ing the spin prize.`,
+              confirmButtonColor: '#007bff',
+            });
+          }
+        }
+      });
+    }
+  </script>
+
+  <style>
+    .modal.hidden { display: none; }
+    .modal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5); display: flex;
+      align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #ffffff; padding: 2rem; border-radius: 12px; width: 450px;
+      display: flex; flex-direction: column; gap: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      max-height: 80vh; overflow-y: auto;
+    }
+    .modal-content h2 {
+      margin: 0 0 1rem; font-size: 1.5rem; color: #333;
+      border-bottom: 1px solid #eee; padding-bottom: 0.5rem;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .form-group label {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9rem;
+    }
+    
+    .modal-content form input,
+    .modal-content form textarea,
+    .modal-content form select {
+      width: 100%; padding: 0.75rem; border: 1px solid #ddd;
+      border-radius: 6px; font-size: 1rem; transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    .modal-content form input:focus,
+    .modal-content form textarea:focus,
+    .modal-content form select:focus {
+      border-color: #007bff; outline: none;
+    }
+    .modal-content form textarea {
+      resize: vertical; min-height: 80px;
+    }
+    
+    .form-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .modal-content button {
+      padding: 0.75rem 1.5rem; border: none; border-radius: 6px;
+      font-size: 1rem; cursor: pointer; transition: background-color 0.3s;
+      flex: 1;
+    }
+    .modal-content button[type="submit"] {
+      background: #007bff; color: #fff;
+    }
+    .modal-content button[type="submit"]:hover {
+      background: #0056b3;
+    }
+    .modal-content button[type="button"] {
+      background: #f1f1f1; color: #333;
+    }
+    .modal-content button[type="button"]:hover {
+      background: #e0e0e0;
+    }
+    .error {
+      color: #d32f2f; font-size: 0.875rem; margin: 0.25rem 0 0;
+    }
+    .error.hidden {
+      display: none;
+    }
+    .action-button.toggle {
+      background: #ffc107; color: #fff;
+    }
+    .action-button.toggle:hover {
+      background: #e0a800;
+    }
+  </style>
+</body>
+</html>

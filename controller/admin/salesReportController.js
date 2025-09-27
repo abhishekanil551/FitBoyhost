@@ -7,6 +7,7 @@ const Coupon = require('../../models/couponDb');
 const Offer = require('../../models/offerDb');
 const Category = require('../../models/categoryDb');
 const ExcelJS = require('exceljs');
+const statusCodes=require('../../statusCodes');
 
 const getDateRange = (period, customFrom, customTo) => {
     const today = new Date();
@@ -55,7 +56,7 @@ const getSalesReport = async (req, res) => {
         const { fromDate: startDate, toDate: endDate } = getDateRange(period, fromDate, toDate);
 
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-            return res.status(400).json({ success: false, message: 'Invalid date range' });
+            return res.status(statusCodes.BAD_REQUEST).json({ success: false, message: 'Invalid date range' });
         }
 
         const orders = await Order.find({
@@ -286,10 +287,10 @@ const getSalesReport = async (req, res) => {
             salesChartData,
         };
 
-        res.status(200).json(response);
+        res.status(statusCodes.OK).json(response);
     } catch (error) {
         console.error('Error in getSalesReport:', error.message, error.stack);
-        res.status(500).json({ success: 'false', message: 'Internal server error', error: error.message });
+        res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ success: 'false', message: 'Internal server error', error: error.message });
     }
 };
 
@@ -301,16 +302,11 @@ const downloadExcelReport = async (req, res) => {
         const startDate = fromDate ? new Date(fromDate) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
         const endDate = toDate ? new Date(toDate) : new Date();
 
-        // Log query parameters for debugging
         console.log('Query parameters:', { period, startDate: startDate.toISOString(), endDate: endDate.toISOString() });
-
-        // Validate dates
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
             console.error('Invalid date range:', { fromDate, toDate });
             return res.status(400).json({ error: 'Invalid date range' });
         }
-
-        // Fetch orders
         const orders = await Order.find({
             orderDate: { $gte: startDate, $lte: endDate },
             status: 'paid'
@@ -326,20 +322,16 @@ const downloadExcelReport = async (req, res) => {
                 ]
             });
 
-        // Log fetched orders for debugging
         console.log('Fetched orders count:', orders.length);
         if (orders.length > 0) {
             console.log('Sample order:', JSON.stringify(orders[0], null, 2));
         } else {
             console.warn('No orders found for the specified criteria.');
         }
-
-        // Create Excel workbook and worksheets
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Sales Report');
         const productWorksheet = workbook.addWorksheet('Product Statistics');
 
-        // Define columns for Sales Report worksheet
         worksheet.columns = [
             { header: 'Order ID', key: 'orderId', width: 20 },
             { header: 'User Email', key: 'email', width: 30 },
@@ -355,19 +347,16 @@ const downloadExcelReport = async (req, res) => {
             { header: 'Order Notes', key: 'notes', width: 40 }
         ];
 
-        // Style header row for Sales Report
         worksheet.getRow(1).font = { bold: true };
         worksheet.getRow(1).fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FFD3D3D3' } // Light gray
+            fgColor: { argb: 'FFD3D3D3' }
         };
         worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
 
-        // Process orders and calculate product statistics
         const productStats = {};
         orders.forEach((order) => {
-            // Calculate offer discount
             let offerDiscount = 0;
             const productDetails = order.order_items.map((item) => {
                 const product = item.productId;
@@ -381,7 +370,6 @@ const downloadExcelReport = async (req, res) => {
                     offerDiscount += discount;
                 }
 
-                // Update product statistics (1 unit per OrderItem, as no quantity field)
                 const productId = product._id.toString();
                 if (!productStats[productId]) {
                     productStats[productId] = {
@@ -399,13 +387,11 @@ const downloadExcelReport = async (req, res) => {
                 return `${product.name || 'Unknown'} (Unit Price: ₹${item.price.toFixed(2)}, Discount: ₹${discount.toFixed(2)})`;
             }).join('; ');
 
-            // Get category names
             const categoryNames = order.order_items
                 .map((item) => item.productId?.categoryId?.map((cat) => cat.name || 'Unknown').join(', ') || 'N/A')
                 .filter((cat, index, self) => cat !== 'N/A' && self.indexOf(cat) === index)
                 .join('; ');
 
-            // Add order row
             worksheet.addRow({
                 orderId: order.orderNumber || 'N/A',
                 email: order.userId?.email || 'Unknown',
@@ -428,7 +414,6 @@ const downloadExcelReport = async (req, res) => {
             });
         });
 
-        // Style data rows for Sales Report
         worksheet.eachRow((row, rowNumber) => {
             if (rowNumber > 1) {
                 row.eachCell((cell) => {
@@ -442,7 +427,6 @@ const downloadExcelReport = async (req, res) => {
             }
         });
 
-        // Add summary for Sales Report
         const totalOrders = orders.length;
         const totalSales = orders.reduce((sum, order) => sum + (order.total || 0), 0).toFixed(2);
         const averageOrder = totalOrders ? (totalSales / totalOrders).toFixed(2) : '0.00';
@@ -458,7 +442,7 @@ const downloadExcelReport = async (req, res) => {
         }, 0).toFixed(2);
         const totalDiscount = (parseFloat(totalCouponDiscount) + parseFloat(totalOfferDiscount)).toFixed(2);
 
-        worksheet.addRow([]); // Empty row
+        worksheet.addRow([]); 
         worksheet.addRow({
             orderId: 'Summary',
             email: '',
@@ -480,10 +464,9 @@ const downloadExcelReport = async (req, res) => {
         summaryRow.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FFF0F0F0' } // Light gray
+            fgColor: { argb: 'FFF0F0F0' } 
         };
 
-        // Define columns for Product Statistics worksheet
         productWorksheet.columns = [
             { header: 'Product Name', key: 'name', width: 30 },
             { header: 'Units Sold', key: 'units', width: 15 },
@@ -492,7 +475,6 @@ const downloadExcelReport = async (req, res) => {
             { header: 'Categories', key: 'categories', width: 30 }
         ];
 
-        // Style header row for Product Statistics
         productWorksheet.getRow(1).font = { bold: true };
         productWorksheet.getRow(1).fill = {
             type: 'pattern',
@@ -501,7 +483,6 @@ const downloadExcelReport = async (req, res) => {
         };
         productWorksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
 
-        // Add product data
         const productData = Object.values(productStats);
         productData.forEach((product) => {
             productWorksheet.addRow({
@@ -513,7 +494,6 @@ const downloadExcelReport = async (req, res) => {
             });
         });
 
-        // Style product data rows
         productWorksheet.eachRow((row, rowNumber) => {
             if (rowNumber > 1) {
                 row.eachCell((cell) => {
@@ -527,12 +507,11 @@ const downloadExcelReport = async (req, res) => {
             }
         });
 
-        // Add product summary
         const totalUnitsSold = productData.reduce((sum, p) => sum + p.units, 0);
         const totalProductRevenue = productData.reduce((sum, p) => sum + p.revenue, 0).toFixed(2);
         const totalProductDiscount = productData.reduce((sum, p) => sum + p.discount, 0).toFixed(2);
 
-        productWorksheet.addRow([]); // Empty row
+        productWorksheet.addRow([]); 
         productWorksheet.addRow({
             name: 'Total',
             units: totalUnitsSold,
@@ -541,7 +520,6 @@ const downloadExcelReport = async (req, res) => {
             categories: ''
         });
 
-        // Style product summary row
         const productSummaryRow = productWorksheet.lastRow;
         productSummaryRow.font = { bold: true };
         productSummaryRow.fill = {
@@ -550,16 +528,14 @@ const downloadExcelReport = async (req, res) => {
             fgColor: { argb: 'FFF0F0F0' }
         };
 
-        // Set response headers
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename=sales-report-${new Date().toISOString().split('T')[0]}.xlsx`);
 
-        // Write workbook
         await workbook.xlsx.write(res);
         res.end();
     } catch (error) {
         console.error('Error in downloadExcelReport:', error.message, error.stack);
-        res.status(500).json({ error: 'Failed to generate Excel report', details: error.message });
+        res.status(statusCodes.INTERNAL_SERVER_ERROR).json({ error: 'Failed to generate Excel report', details: error.message });
     }
 };
 
